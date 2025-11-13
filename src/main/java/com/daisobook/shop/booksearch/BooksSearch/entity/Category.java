@@ -1,9 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 /*
     `category_id`	BIGINT	NOT NULL,
@@ -12,14 +11,20 @@ import jakarta.persistence.Table;
 */
 
 @Entity
+@Getter
 @Table(name = "Categories")
 public class Category {
+
     @Id
+    @Column(name="category_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Setter
     @Column(name = "category_name")
     private String categoryName;
 
+    @Setter
     @Column(name = "pre_category_id")
     private long preId;
 }

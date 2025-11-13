@@ -1,24 +1,19 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
-@Getter
-@Table(name ="Book_Tags")
-public class BookTag {
+@Table(name="Likes")
+public class Like {
 
     @Id
-    @Column(name="book_tag_id")
+    @Column(name="like_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Setter
     @Column(name="book_id")
     private long bookId;
 
-    @Setter
-    @Column(name="tag_id")
-    private long tagId;
+    @Column(name="user_created_id")
+    private long userId;
 }
