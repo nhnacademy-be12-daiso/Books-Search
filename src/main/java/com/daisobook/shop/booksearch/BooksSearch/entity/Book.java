@@ -1,26 +1,14 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.AddBookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.ZonedDateTime;
-
-/*
-    `book_id`	BIGINT	NOT NULL,
-	`isbn`	VARCHAR(17)	NOT NULL,
-	`title`	VARCHAR2(100)	NOT NULL,
-	`contents`	TEXT	NULL,
-	`description`	TEXT	NULL,
-	`author`	VARCHAR2(60)	NULL,
-	`publisher`	VARCHAR(60)	NULL,
-	`publication_date`	TIMESTAMP	NULL,
-	`price`	INT	NOT NULL,
-	`is_packaging`	BOOLEAN	NOT NULL,
-	`stock`	INT	NOT NULL,
-	`status`	ENUM('DISCONTINUE', 'ON_SALE')	NULL	DEFAULT ON_SALE
-*/
+import java.time.LocalDate;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -41,8 +29,8 @@ public class Book {
     private String title;
 
     @Setter
-    @Column(name="contents", columnDefinition = "TEXT")
-    private String contents;
+    @Column(name="index", columnDefinition = "TEXT")
+    private String index;
 
     @Setter
     @Column(name="description", columnDefinition = "TEXT")
@@ -58,7 +46,7 @@ public class Book {
 
     @Setter
     @Column(name="publication_date")
-    private ZonedDateTime publication_date;
+    private LocalDate publicationDate;
 
     @Setter
     @Column(name="price", nullable = false)
@@ -69,9 +57,37 @@ public class Book {
     private boolean isPackaging;
 
     @Column(name="stock", nullable = false)
-    private int stock;
+    private Integer stock;
 
     @Enumerated(EnumType.STRING)
     @Column(name="status", columnDefinition = "ENUM('DISCONTINUE', 'ON_SALE') DEFAULT 'ON_SALE'")
     private Status status;
+
+    public Book(String isbn, String title, String index, String description, String author, String publisher,
+                LocalDate publicationDate, int price, boolean isPackaging, Integer stock, Status status){
+        this.isbn = isbn;
+        this.title = title;
+        this.index = index;
+        this.description = description;
+        this.author = author;
+        this.publisher = publisher;
+        this.publicationDate = publicationDate;
+        this.price = price;
+        this.isPackaging = isPackaging;
+        this.stock = stock;
+        this.status = status;
+    }
+
+    public static Book create(AddBookReqDTO dto){
+        return new Book(dto.isbn(), dto.title(), dto.index(), dto.description(), dto.author(), dto.publisher(),
+                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status());
+    }
+
+    @Setter
+    @OneToMany(mappedBy = "book")
+    private List<BookCategory> bookCategories;
+
+    @Setter
+    @OneToMany(mappedBy = "book")
+    private List<BookTag> bookTags;
 }
