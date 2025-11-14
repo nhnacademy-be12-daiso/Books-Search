@@ -1,0 +1,33 @@
+spring:
+  main:
+    web-application-type: none
+
+aladin:
+  # ★ 여기 알라딘 TTB 키를 직접 입력하세요
+  ttb-key: "ttbjun030310923001"
+
+  # 여러 장르를 고르게 선택한 카테고리 ID 목록 (중복 최소화)
+  category-ids: 50973,336,2551,351,35138
+
+  # 하루 한 번 실행 시 목표 도서 수
+  target-item-count: 100
+
+  # 카테고리 별로 몇 페이지까지 가져올지
+  max-pages-per-category: 5
+
+  # 알라딘 API 호출 제한 대비 안전값
+  max-api-calls-per-day: 400
+
+gemini:
+  # ★ 여기 Gemini 무료 API 키를 직접 입력하세요
+  api-key: "AIzaSyAPjRTWLiLXhJBCiCKoCNi3aPVMNGkU4go"
+
+  # 추천 모델
+  model: "gemini-2.5-flash"
+
+job:
+  # 저장되는 결과 JSON 파일의 위치
+  output-dir: "./data"
+
+  # false로 하면 Gemini enrichment 없이 알라딘 데이터만 저장
+  enable-enrichment: true

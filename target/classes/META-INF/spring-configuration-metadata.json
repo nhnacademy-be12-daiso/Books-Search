@@ -1,0 +1,76 @@
+{
+  "groups": [
+    {
+      "name": "aladin",
+      "type": "com.example.aladingemini.AladinProperties",
+      "sourceType": "com.example.aladingemini.AladinProperties"
+    },
+    {
+      "name": "gemini",
+      "type": "com.example.aladingemini.GeminiProperties",
+      "sourceType": "com.example.aladingemini.GeminiProperties"
+    },
+    {
+      "name": "job",
+      "type": "com.example.aladingemini.JobProperties",
+      "sourceType": "com.example.aladingemini.JobProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "aladin.category-ids",
+      "type": "java.lang.String",
+      "description": "가져올 CategoryId 목록. application.yml 에서는 콤마 구분 문자열로 넣고, 여기서 List<Integer> 로 파싱해서 사용한다.",
+      "sourceType": "com.example.aladingemini.AladinProperties"
+    },
+    {
+      "name": "aladin.max-api-calls-per-day",
+      "type": "java.lang.Integer",
+      "description": "하루 알라딘 API 호출 상한 (제한 5000보다 살짝 낮게).",
+      "sourceType": "com.example.aladingemini.AladinProperties"
+    },
+    {
+      "name": "aladin.max-pages-per-category",
+      "type": "java.lang.Integer",
+      "description": "카테고리별 최대 페이지 수.",
+      "sourceType": "com.example.aladingemini.AladinProperties"
+    },
+    {
+      "name": "aladin.target-item-count",
+      "type": "java.lang.Integer",
+      "description": "오늘 한 번 실행에서 목표로 하는 최대 도서 수.",
+      "sourceType": "com.example.aladingemini.AladinProperties"
+    },
+    {
+      "name": "aladin.ttb-key",
+      "type": "java.lang.String",
+      "description": "알라딘 TTB Key (환경 변수로 설정 추천)",
+      "sourceType": "com.example.aladingemini.AladinProperties"
+    },
+    {
+      "name": "gemini.api-key",
+      "type": "java.lang.String",
+      "description": "Gemini API Key (Google AI Studio에서 발급)",
+      "sourceType": "com.example.aladingemini.GeminiProperties"
+    },
+    {
+      "name": "gemini.model",
+      "type": "java.lang.String",
+      "description": "사용할 모델 이름 (예: gemini-2.5-flash)",
+      "sourceType": "com.example.aladingemini.GeminiProperties"
+    },
+    {
+      "name": "job.enable-enrichment",
+      "type": "java.lang.Boolean",
+      "description": "true 이면 Gemini 로 enrichment 수행, false 이면 알라딘 데이터만 기록.",
+      "sourceType": "com.example.aladingemini.JobProperties"
+    },
+    {
+      "name": "job.output-dir",
+      "type": "java.lang.String",
+      "description": "결과 JSON 파일이 저장될 디렉터리.",
+      "sourceType": "com.example.aladingemini.JobProperties"
+    }
+  ],
+  "hints": []
+}
