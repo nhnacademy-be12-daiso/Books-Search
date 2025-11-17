@@ -11,4 +11,6 @@ public interface BookTagRepository extends JpaRepository<BookTag, Long> {
     List<BookTag> findAllByBook_Id(long bookId);
 
     void deleteBookTagsByIdIn(List<Long> ids);
+
+    List<BookTag> findAllByBook_IdAndTag_IdIn(long bookId, List<Long> tagsId);
 }

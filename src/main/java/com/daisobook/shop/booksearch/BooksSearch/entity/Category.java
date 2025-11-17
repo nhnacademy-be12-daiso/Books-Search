@@ -31,6 +31,7 @@ public class Category {
 //    private long preId;
     @Setter
     @ManyToOne
+    @JoinColumn(name = "pre_category_id")
     private Category preCategory;
 
     public Category(String name, int deep, Category preCategory){

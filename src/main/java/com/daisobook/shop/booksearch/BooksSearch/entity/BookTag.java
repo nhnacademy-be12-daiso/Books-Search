@@ -21,6 +21,7 @@ public class BookTag {
 //    private long bookId;
     @Setter
     @ManyToOne
+    @JoinColumn(name = "book_id")
     private Book book;
 
 //    @Setter
@@ -28,6 +29,7 @@ public class BookTag {
 //    private long tagId;
     @Setter
     @ManyToOne
+    @JoinColumn(name = "tag_id")
     private Tag tag;
 
     public BookTag(Book book, Tag tag){

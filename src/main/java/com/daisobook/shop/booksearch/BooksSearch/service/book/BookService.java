@@ -11,7 +11,7 @@ public interface BookService {
     void validateExistsByIsbn(String isbn);
     void validateNotExistsByIsbn(String isbn);
     void assignCategoriesToBook(Book book, List<AddCategoryReqDTO> categories);
-    void assignTagsToBook(Book book, List<AddTagReqDTO> tags);
+    void assignTagsToBook(Book book, List<String> tags);
     void registerBook(AddBookReqDTO addBookReqDTO);
     void registerBooks(List<AddBookReqDTO> addBookReqDTOS);
     BookRespDTO findBookById(long id);

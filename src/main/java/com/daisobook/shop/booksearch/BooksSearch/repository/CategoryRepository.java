@@ -4,6 +4,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
@@ -16,4 +17,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByIdIn(List<Long> ids);
 
     Category findCategoryByNameAndDeep(String name, int deep);
+
+    List<Category> findAllByNameInAndDeepIn(Collection<String> names, List<Integer> deeps);
 }
