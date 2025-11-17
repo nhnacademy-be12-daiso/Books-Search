@@ -56,9 +56,11 @@ public class Book {
     @Column(name="is_packaging")
     private boolean isPackaging;
 
+    @Setter
     @Column(name="stock", nullable = false)
     private Integer stock;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(name="status", columnDefinition = "ENUM('DISCONTINUE', 'ON_SALE') DEFAULT 'ON_SALE'")
     private Status status;

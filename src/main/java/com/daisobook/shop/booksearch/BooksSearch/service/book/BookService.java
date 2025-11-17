@@ -1,8 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.AddBookReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.AddCategoryReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.AddTagReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
 
@@ -22,4 +20,6 @@ public interface BookService {
     List<BookRespDTO> findBooksByTag(String tagNam);
     List<BookRespDTO> findBooksByAuthor(String author);
     List<BookRespDTO> findBooksByPublisher(String publisher);
+    void updateBook(UpdateBookReqDTO updateBookReqDTO);
+    void deleteBook(DeleteBookReqDTO deleteBookReqDTO);
 }
