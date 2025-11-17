@@ -18,6 +18,6 @@ public record UpdateBookReqDTO (
         boolean isPackaging,
         Integer stock,
         Status status,
-        List<AddCategoryReqDTO> categories,
-        List<AddTagReqDTO> tags){
+        List<UpdateCategoryReqDTO> categories,
+        List<UpdateTagReqDTO> tags){
 }

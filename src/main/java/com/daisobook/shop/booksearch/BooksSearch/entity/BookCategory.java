@@ -20,6 +20,7 @@ public class BookCategory {
 //    private long bookId;
     @Setter
     @ManyToOne
+    @JoinColumn(name = "book_id")
     private Book book;
 
 //    @Setter
@@ -27,6 +28,7 @@ public class BookCategory {
 //    private long categoryId;
     @Setter
     @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
 
     public BookCategory(Book book, Category category){

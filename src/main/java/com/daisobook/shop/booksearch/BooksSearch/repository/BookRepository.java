@@ -2,6 +2,8 @@ package com.daisobook.shop.booksearch.BooksSearch.repository;
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,4 +24,16 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findAllByPublisher(String publisher);
 
     List<Book> findAllByIsbnIn(Collection<String> isbns);
+
+    @Query("SELECT b FROM Book b " +
+            "JOIN FETCH b.bookCategories bc " +
+            "JOIN FETCH bc.category c " +
+            "WHERE c.name = ?1")
+    List<Book> findBooksByCategoryName(String categoryName);
+
+    @Query("SELECT b FROM Book b " +
+            "JOIN FETCH b.bookTags bt " +
+            "JOIN FETCH bt.tag t " +
+            "WHERE t.name = ?1")
+    List<Book> findBooksByTagName(String tagName);
 }
