@@ -13,7 +13,7 @@ public record AddBookReqDTO(
         String author,
         String publisher,
         LocalDate publicationDate,
-        int price,
+        Integer price,
         boolean isPackaging,
         Integer stock,
         Status status,
