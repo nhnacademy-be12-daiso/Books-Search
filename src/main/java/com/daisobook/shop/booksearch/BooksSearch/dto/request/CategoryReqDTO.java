@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.request;
 
-public record AddCategoryReqDTO(
+public record CategoryReqDTO(
         String categoryName,
-        int deep) {
+        int deep,
+        String preCategoryName) {
 }

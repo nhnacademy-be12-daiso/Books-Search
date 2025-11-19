@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.AddBookReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookReqDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +28,7 @@ public class Book {
     private String title;
 
     @Setter
-    @Column(name="index", columnDefinition = "TEXT")
+    @Column(name="indexs", columnDefinition = "TEXT")
     private String index;
 
     @Setter
@@ -65,8 +64,17 @@ public class Book {
     @Column(name="status", columnDefinition = "ENUM('DISCONTINUE', 'ON_SALE') DEFAULT 'ON_SALE'")
     private Status status;
 
+    @Setter
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Setter
+    @Column(name = "volume_no")
+    private Integer volumeNo;
+
     public Book(String isbn, String title, String index, String description, String author, String publisher,
-                LocalDate publicationDate, Integer price, boolean isPackaging, Integer stock, Status status){
+                LocalDate publicationDate, Integer price, boolean isPackaging, Integer stock, Status status,
+                String imageUrl, Integer volumeNo){
         this.isbn = isbn;
         this.title = title;
         this.index = index;
@@ -78,11 +86,13 @@ public class Book {
         this.isPackaging = isPackaging;
         this.stock = stock;
         this.status = status;
+        this.imageUrl = imageUrl;
+        this.volumeNo = volumeNo;
     }
 
-    public static Book create(AddBookReqDTO dto){
+    public static Book create(BookReqDTO dto){
         return new Book(dto.isbn(), dto.title(), dto.index(), dto.description(), dto.author(), dto.publisher(),
-                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status());
+                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status(), dto.imageUrl(), dto.volumeNo());
     }
 
     @Setter
