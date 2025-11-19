@@ -10,16 +10,13 @@ public interface BookService {
     void validateExistsById(long bookId);
     void validateExistsByIsbn(String isbn);
     void validateNotExistsByIsbn(String isbn);
-    void assignCategoriesToBook(Book book, List<AddCategoryReqDTO> categories);
+    void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories);
     void assignTagsToBook(Book book, List<String> tags);
-    void registerBook(AddBookReqDTO addBookReqDTO);
-    void registerBooks(List<AddBookReqDTO> addBookReqDTOS);
-    BookRespDTO findBookById(long id);
+    void registerBook(BookReqDTO bookReqDTO);
+    void registerBooks(List<BookReqDTO> bookReqDTOS);
+    BookRespDTO findBookById(long bookId);
     BookRespDTO findBookByIsbn(String isbn);
-    List<BookRespDTO> findBooksByCategory(String categoryNam);
-    List<BookRespDTO> findBooksByTag(String tagNam);
-    List<BookRespDTO> findBooksByAuthor(String author);
-    List<BookRespDTO> findBooksByPublisher(String publisher);
-    void updateBook(UpdateBookReqDTO updateBookReqDTO);
+    List<BookRespDTO> findBooks(String categoryName, String tagName, String author, String publisher);
+    void updateBook(long bookId, BookReqDTO BookReqDTO);
     void deleteBook(DeleteBookReqDTO deleteBookReqDTO);
 }

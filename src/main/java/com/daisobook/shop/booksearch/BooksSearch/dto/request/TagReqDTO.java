@@ -1,5 +1,5 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.request;
 
-public record AddTagReqDTO(
+public record TagReqDTO(
         String tagName){
 }

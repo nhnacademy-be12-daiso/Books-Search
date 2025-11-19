@@ -2,5 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.dto.request;
 
 public record LikeReqDTO(
         long bookId,
-        long userId
+        long userId,
+        String title,
+        String imageUrl
 ) { }

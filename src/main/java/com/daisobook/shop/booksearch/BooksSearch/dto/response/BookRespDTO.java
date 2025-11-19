@@ -18,6 +18,8 @@ public record BookRespDTO(
         boolean isPackaging,
         Integer stock,
         Status status,
+        String imageUrl,
+        Integer volumeNo,
         List<CategoryRespDTO> categories,
         List<TagRespDTO> tags){
 }

@@ -1,13 +1,13 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.AddBookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,9 +16,43 @@ public class BookController {
 
     private final BookService bookService;
 
-    @PostMapping("/book")
-    public ResponseEntity addBook(@RequestBody AddBookReqDTO addBookReqDTO){
-        bookService.registerBook(addBookReqDTO);
+    @PostMapping
+    public ResponseEntity addBook(@RequestBody BookReqDTO bookReqDTO){
+        bookService.registerBook(bookReqDTO);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity addBooks(@RequestBody List<BookReqDTO> bookReqDTOS){
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("{bookId}")
+    public Object getBookId(@PathVariable("bookId") long bookId){
+        return bookService.findBookById(bookId);
+    }
+
+    @GetMapping("/ISBN-search/{bookIsbn}")
+    public Object getBookIsbn(@PathVariable("bookIsbn") String bookIsbn){
+        return bookService.findBookByIsbn(bookIsbn);
+    }
+
+    @GetMapping
+    public List<BookRespDTO> getBooks(@RequestParam(value = "categoryName", required = false) String categoryName,
+                                      @RequestParam(value = "tagName", required = false) String tagName,
+                                      @RequestParam(value = "author", required = false) String author,
+                                      @RequestParam(value = "publisher", required = false) String publisher){
+        return bookService.findBooks(categoryName, tagName, author, publisher);
+    }
+
+    @PatchMapping("{bookId}")
+    public ResponseEntity modifyBook(@PathVariable("bookId") long bookId,
+                                     @RequestBody BookReqDTO bookReqDTO){
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("{bookId}")
+    public ResponseEntity deleteBook(@PathVariable("bookId") long bookId){
         return ResponseEntity.ok().build();
     }
 }

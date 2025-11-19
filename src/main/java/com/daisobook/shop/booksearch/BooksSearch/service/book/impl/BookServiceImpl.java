@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,9 +55,12 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public void assignCategoriesToBook(Book book, List<AddCategoryReqDTO> categories) {
+    public void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories) {
+        if(categories == null || categories.isEmpty()){
+            return;
+        }
 
-        for(AddCategoryReqDTO c: categories) {
+        for(CategoryReqDTO c: categories) {
             Category category = categoryRepository.findCategoryByNameAndDeep(c.categoryName(), c.deep());
 
             if(category == null){
@@ -97,15 +99,17 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public void registerBook(AddBookReqDTO addBookReqDTO) {
-        validateNotExistsByIsbn(addBookReqDTO.isbn());
+    public void registerBook(BookReqDTO bookReqDTO) {
+        validateNotExistsByIsbn(bookReqDTO.isbn());
 
-        Book newBook = Book.create(addBookReqDTO);
+        Book newBook = Book.create(bookReqDTO);
 
-        assignCategoriesToBook(newBook, addBookReqDTO.categories());
-        assignTagsToBook(newBook, addBookReqDTO.tags().stream()
-                .map(AddTagReqDTO::tagName)
-                .toList());
+        assignCategoriesToBook(newBook, bookReqDTO.categories());
+        if(bookReqDTO.tags() != null) {
+            assignTagsToBook(newBook, bookReqDTO.tags().stream()
+                    .map(TagReqDTO::tagName)
+                    .toList());
+        }
 
         bookRepository.save(newBook);
         log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(), newBook.getAuthor());
@@ -114,37 +118,14 @@ public class BookServiceImpl implements BookService {
     //초기 데이터 넣기 가공된 올바른 데이터라고 가정
     @Override
     @Transactional
-    public void registerBooks(List<AddBookReqDTO> addBookReqDTOS) {
-//        List<String> isbns = bookRepository.findAllByIsbnIn(addBookReqDTOS.stream()
-//                        .map(AddBookReqDTO::isbn)
-//                        .toList())
-//                .stream()
-//                .map(Book::getIsbn)
-//                .toList();
-//
-//        boolean nullCheck = CollectionUtils.isEmpty(isbns);
+    public void registerBooks(List<BookReqDTO> bookReqDTOS) {
 
         Set<String> existingIsbns = bookRepository.findAllByIsbnIn(
-                        addBookReqDTOS.stream().map(AddBookReqDTO::isbn).toList())
+                        bookReqDTOS.stream().map(BookReqDTO::isbn).toList())
                 .stream().map(Book::getIsbn)
                 .collect(Collectors.toSet());
 
-        for(AddBookReqDTO b: addBookReqDTOS){
-//            if(!nullCheck){
-//                boolean index = false;
-//                for(String isbn: isbns){
-//                    if(isbn.equals(b.isbn())){
-//                        index = true;
-//                        break;
-//                    }
-//                }
-//
-//                if(index){
-//                    log.error("데이터베이스에 있는 ISBN을 등록 시도 - ISBN: {}", b.isbn());
-//                    continue;
-//                }
-//            }
-
+        for(BookReqDTO b: bookReqDTOS){
             if (existingIsbns.contains(b.isbn())) {
                 log.error("데이터베이스에 있는 ISBN을 등록 시도 - ISBN: {}", b.isbn());
                 continue;
@@ -154,7 +135,7 @@ public class BookServiceImpl implements BookService {
 
             assignCategoriesToBook(newBook, b.categories());
             assignTagsToBook(newBook, b.tags().stream()
-                    .map(AddTagReqDTO::tagName)
+                    .map(TagReqDTO::tagName)
                     .toList());
 
             bookRepository.save(newBook);
@@ -164,10 +145,10 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public BookRespDTO findBookById(long id) {
-        validateExistsById(id);
+    public BookRespDTO findBookById(long bookId) {
+        validateExistsById(bookId);
 
-        Book book = bookRepository.findBookById(id);
+        Book book = bookRepository.findBookById(bookId);
         log.debug("도서ID로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(), book.getAuthor());
 
         return createdBookRespDTO(book);
@@ -185,25 +166,16 @@ public class BookServiceImpl implements BookService {
     }
 
     private BookRespDTO createdBookRespDTO(Book book){
-//        List<Category> categories = new ArrayList<>();
-//        List<Tag> tags = new ArrayList<>();
-
-//        for(BookCategory c: book.getBookCategories()){
-//            categories.add(categoryRepository.findCategoryById(c.getCategory().getId()));
-//        }
         List<Category> categories = categoryRepository.findAllByIdIn(book.getBookCategories().stream()
                 .map(bc -> bc.getCategory().getId())
                 .toList());
 
-//        for(BookTag t: book.getBookTags()){
-//            tags.add(tagRepository.findTagById(t.getTag().getId()));
-//        }
         List<Tag> tags = tagRepository.findAllByIdIn(book.getBookTags().stream()
                 .map(bt -> bt.getTag().getId())
                 .toList());
 
         List<CategoryRespDTO> categoryRespDTOS = categories.stream()
-                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep()))
+                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(), c.getPreCategory().getName()))
                 .toList();
         List<TagRespDTO> tagRespDTOS = tags.stream()
                 .map(t -> new TagRespDTO(t.getId(), t.getName()))
@@ -211,78 +183,25 @@ public class BookServiceImpl implements BookService {
 
         return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(), book.getAuthor(),
                 book.getPublisher(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
-                categoryRespDTOS, tagRespDTOS);
+                book.getImageUrl(), book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
     }
 
     @Override
-    @Transactional
-    public List<BookRespDTO> findBooksByCategory(String categoryName) {
-//        long categoryId = categoryRepository.findCategoryByName(categoryName).getId();
-//        long bookId = bookCategoryRepository.findAllById(categoryId).getBook().getId();
-//
-//        return createdBookRespDTOs(bookRepository.findAllById(bookId));
-        return createdBookRespDTOs(bookRepository.findBooksByCategoryName(categoryName));
-    }
+    public List<BookRespDTO> findBooks(String categoryName, String tagName, String author, String publisher) {
+        if(categoryName != null){
+            return createdBookRespDTOs(bookRepository.findBooksByCategoryName(categoryName));
+        } else if (tagName != null) {
+            return createdBookRespDTOs(bookRepository.findBooksByTagName(tagName));
+        } else if (author != null) {
+            return createdBookRespDTOs(bookRepository.findAllByAuthor(author));
+        } else if (publisher != null) {
+            return createdBookRespDTOs(bookRepository.findAllByPublisher(publisher));
+        }
 
-    @Override
-    @Transactional
-    public List<BookRespDTO> findBooksByTag(String tagName) {
-//        long tagId = tagRepository.findTagByName(tagName).getId();
-//        long bookId = bookTagRepository.findAllById(tagId).getBook().getId();
-//
-//        return createdBookRespDTOs(bookRepository.findAllById(bookId));
-        return createdBookRespDTOs(bookRepository.findBooksByTagName(tagName));
-    }
-
-    @Override
-    public List<BookRespDTO> findBooksByAuthor(String author) {
-        return createdBookRespDTOs(bookRepository.findAllByAuthor(author));
-    }
-
-    @Override
-    @Transactional
-    public List<BookRespDTO> findBooksByPublisher(String publisher) {
-        return createdBookRespDTOs(bookRepository.findAllByPublisher(publisher));
+        return List.of();
     }
 
     private List<BookRespDTO> createdBookRespDTOs(List<Book> books){
-//        List<Category> categories = new ArrayList<>();
-//        List<Tag> tags = new ArrayList<>();
-
-//        for(Book b: books){
-//            for(BookCategory c: b.getBookCategories()){
-//                categories.add(categoryRepository.findCategoryById(c.getCategory().getId()));
-//            }
-//
-//            for(BookTag t: b.getBookTags()){
-//                tags.add(tagRepository.findTagById(t.getTag().getId()));
-//            }
-//        }
-
-        // 이중 list 발생
-//        List<Category> categories = categoryRepository.findAllByIdIn(books.stream()
-//                .map(book -> book.getBookCategories().stream()
-//                        .map(BookCategory::getId)
-//                        .toList())
-//                .toList());
-
-//        List<Category> categories = categoryRepository.findAllByIdIn(books.stream()
-//                .flatMap(book -> book.getBookCategories().stream())
-//                .map(bc -> bc.getCategory().getId())
-//                .toList());
-//
-//        List<Tag> tags = tagRepository.findAllByIdIn(books.stream()
-//                .flatMap(book -> book.getBookTags().stream())
-//                .map(bt -> bt.getTag().getId())
-//                .toList());
-//
-//        return books.stream()
-//                .map(b -> new BookRespDTO(b.getId(), b.getIsbn(), b.getTitle(), b.getIndex(), b.getDescription(), b.getAuthor(),
-//                        b.getPublisher(), b.getPublicationDate(), b.getPrice(), b.isPackaging(), b.getStock(), b.getStatus(),
-//                        categories.stream().map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep())).toList(),
-//                        tags.stream().map(t -> new TagRespDTO(t.getId(), t.getName())).toList()))
-//                .toList();
-
         List<BookRespDTO> bookRespDTOS = new ArrayList<>();
         for(Book book:books) {
             bookRespDTOS.add(createdBookRespDTO(book));
@@ -292,49 +211,49 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public void updateBook(UpdateBookReqDTO updateBookReqDTO) {
-        Book book = getBook_IdOrISBN(updateBookReqDTO.id(), updateBookReqDTO.isbn(), "수정");
+    public void updateBook(long bookId, BookReqDTO bookReqDTO) {
+        Book book = getBook_IdOrISBN(bookId, bookReqDTO.isbn(), "수정");
 
         //book 기본 필드값 수정사항
-        if(!updateBookReqDTO.isbn().equals(book.getIsbn())){
-            book.setIsbn(updateBookReqDTO.isbn());
+        if(!bookReqDTO.isbn().equals(book.getIsbn())){
+            book.setIsbn(bookReqDTO.isbn());
         }
-        if(!updateBookReqDTO.title().equals(book.getTitle())){
-            book.setTitle(updateBookReqDTO.title());
+        if(!bookReqDTO.title().equals(book.getTitle())){
+            book.setTitle(bookReqDTO.title());
         }
-        if(!updateBookReqDTO.author().equals(book.getAuthor())){
-            book.setAuthor(updateBookReqDTO.author());
+        if(!bookReqDTO.author().equals(book.getAuthor())){
+            book.setAuthor(bookReqDTO.author());
         }
-        if(!updateBookReqDTO.index().equals(book.getIndex())){
-            book.setIndex(updateBookReqDTO.index());
+        if(!bookReqDTO.index().equals(book.getIndex())){
+            book.setIndex(bookReqDTO.index());
         }
-        if(!updateBookReqDTO.description().equals(book.getDescription())){
-            book.setDescription(updateBookReqDTO.description());
+        if(!bookReqDTO.description().equals(book.getDescription())){
+            book.setDescription(bookReqDTO.description());
         }
-        if(!updateBookReqDTO.publisher().equals(book.getPublisher())){
-            book.setPublisher(updateBookReqDTO.publisher());
+        if(!bookReqDTO.publisher().equals(book.getPublisher())){
+            book.setPublisher(bookReqDTO.publisher());
         }
-        if(!updateBookReqDTO.publicationDate().equals(book.getPublicationDate())){
-            book.setPublicationDate(updateBookReqDTO.publicationDate());
+        if(!bookReqDTO.publicationDate().equals(book.getPublicationDate())){
+            book.setPublicationDate(bookReqDTO.publicationDate());
         }
-        if(updateBookReqDTO.price() != book.getPrice()){
-            book.setPrice(updateBookReqDTO.price());
+        if(!bookReqDTO.price().equals(book.getPrice())){
+            book.setPrice(bookReqDTO.price());
         }
-        if(updateBookReqDTO.isPackaging() != book.isPackaging()){
-            book.setPackaging(updateBookReqDTO.isPackaging());
+        if(bookReqDTO.isPackaging() != book.isPackaging()){
+            book.setPackaging(bookReqDTO.isPackaging());
         }
-        if(!updateBookReqDTO.stock().equals(book.getStock())){
-            book.setStock(updateBookReqDTO.stock());
+        if(!bookReqDTO.stock().equals(book.getStock())){
+            book.setStock(bookReqDTO.stock());
         }
-        if(!updateBookReqDTO.status().equals(book.getStatus())){
-            book.setStatus(updateBookReqDTO.status());
+        if(!bookReqDTO.status().equals(book.getStatus())){
+            book.setStatus(bookReqDTO.status());
         }
 
         //연결된 부분 수정
         List<BookCategory> preBookCategories = bookCategoryRepository.findAllByBook_Id(book.getId());
 
-        List<Category> updateCategories = categoryRepository.findAllByNameInAndDeepIn(updateBookReqDTO.categories().stream().map(UpdateCategoryReqDTO::categoryName).toList(),
-                updateBookReqDTO.categories().stream().map(UpdateCategoryReqDTO::deep).toList());
+        List<Category> updateCategories = categoryRepository.findAllByNameInAndDeepIn(bookReqDTO.categories().stream().map(CategoryReqDTO::categoryName).toList(),
+                bookReqDTO.categories().stream().map(CategoryReqDTO::deep).toList());
 
         List<Category> preCategories = categoryRepository.findAllByBookCategories(preBookCategories);
 
@@ -364,8 +283,8 @@ public class BookServiceImpl implements BookService {
         List<BookTag> preBookTags = bookTagRepository.findAllByBook_Id(book.getId());
         List<Tag> preTags = tagRepository.findAllByBookTags(preBookTags);
 
-        Set<String> updateTagNames = updateBookReqDTO.tags().stream()
-                .map(UpdateTagReqDTO::tagName)
+        Set<String> updateTagNames = bookReqDTO.tags().stream()
+                .map(TagReqDTO::tagName)
                 .collect(Collectors.toSet());
 
         List<Long> tagIdsToDelete = preTags.stream()
@@ -386,8 +305,8 @@ public class BookServiceImpl implements BookService {
                 .map(Tag::getName)
                 .collect(Collectors.toSet());
 
-        List<String> assignTags = updateBookReqDTO.tags().stream()
-                .map(UpdateTagReqDTO::tagName)
+        List<String> assignTags = bookReqDTO.tags().stream()
+                .map(TagReqDTO::tagName)
                 .filter(updateTagName -> !preTagNames.contains(updateTagName))
                 .toList();
 
