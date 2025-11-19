@@ -43,8 +43,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # ★ 이미지 이름을 'booksSearch'으로 변경
-          tags: ${{ secrets.DOCKER_USERNAME }}/booksSearch:latest
+          # ★ 이미지 이름을 'booksearch'으로 변경
+          tags: ${{ secrets.DOCKER_USERNAME }}/booksearch:latest
 
       # 6. 서버 배포
       - name: Deploy to Server
@@ -62,27 +62,27 @@ jobs:
             # 네트워크 보장
             docker network create team3-network || true
             
-            # 기존 컨테이너 정리 (이름: booksSearch)
-            if [ "$(docker ps -aq -f name=booksSearch)" ]; then
-                echo "🧹 기존 BooksSearch 컨테이너 삭제..."
-                docker rm -f booksSearch
+            # 기존 컨테이너 정리 (이름: booksearch)
+            if [ "$(docker ps -aq -f name=booksearch)" ]; then
+                echo "🧹 기존 booksearch 컨테이너 삭제..."
+                docker rm -f booksearch
             fi
             
             # 이미지 Pull
-            docker pull ${{ secrets.DOCKER_USERNAME }}/booksSearch:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/booksearch:latest
             
-            # ★ BooksSearch 실행
+            # ★ BookSearch 실행
             # - 포트: 없음 (외부 노출 X, Gateway 통해서만 접근)
-            # - 이름: booksSearch
+            # - 이름: booksearch
             # - 네트워크: team3-network
-            echo "🚀 BooksSearch 실행 중..."
+            echo "🚀 BookSearch 실행 중..."
             docker run -d \
-              --name booksSearch \
+              --name booksearch \
               --network team3-network \
               --restart unless-stopped \
               -e EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://eureka:8761/eureka/" \
-              ${{ secrets.DOCKER_USERNAME }}/booksSearch:latest
+              ${{ secrets.DOCKER_USERNAME }}/booksearch:latest
             
             # 실행 확인
             sleep 5
-            docker logs --tail 20 booksSearch
+            docker logs --tail 20 booksearch
