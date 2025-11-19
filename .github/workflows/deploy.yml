@@ -63,10 +63,7 @@ jobs:
             docker network create team3-network || true
             
             # 기존 컨테이너 정리 (이름: booksearch)
-            if [ "$(docker ps -aq -f name=booksearch)" ]; then
-                echo "🧹 기존 booksearch 컨테이너 삭제..."
-                docker rm -f booksearch
-            fi
+            docker rm -f booksearch || true
             
             # 이미지 Pull
             docker pull ${{ secrets.DOCKER_USERNAME }}/booksearch:latest
