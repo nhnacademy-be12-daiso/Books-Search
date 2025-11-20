@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,9 +46,22 @@ public class Category {
         this.preCategory.getAfterCategories().add(this);
     }
 
+    public Category(String name, int deep){
+        if(name == null || deep == 0 || (deep == 1 && preCategory == null)){
+            throw new IllegalArgumentException("null");
+        }
+
+        this.name = name;
+        this.deep = deep;
+    }
+
     @OneToMany(mappedBy = "preCategory")
     private List<Category> afterCategories;
 
     @OneToMany(mappedBy = "category")
     private List<BookCategory> bookCategories;
+
+    public static Category create(CategoryReqDTO dto){
+        return new Category(dto.categoryName(), dto.deep());
+    }
 }

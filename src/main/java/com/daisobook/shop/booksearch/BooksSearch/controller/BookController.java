@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import lombok.RequiredArgsConstructor;
@@ -23,17 +24,18 @@ public class BookController {
     }
 
     @PostMapping("/batch")
-    public ResponseEntity addBooks(@RequestBody List<BookReqDTO> bookReqDTOS){
+    public ResponseEntity addBooks(@RequestBody List<BookReqDTO> bookReqDTOs){
+        bookService.registerBooks(bookReqDTOs);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("{bookId}")
-    public Object getBookId(@PathVariable("bookId") long bookId){
+    public BookRespDTO getBookId(@PathVariable("bookId") long bookId){
         return bookService.findBookById(bookId);
     }
 
     @GetMapping("/ISBN-search/{bookIsbn}")
-    public Object getBookIsbn(@PathVariable("bookIsbn") String bookIsbn){
+    public BookRespDTO getBookIsbn(@PathVariable("bookIsbn") String bookIsbn){
         return bookService.findBookByIsbn(bookIsbn);
     }
 
@@ -48,11 +50,13 @@ public class BookController {
     @PatchMapping("{bookId}")
     public ResponseEntity modifyBook(@PathVariable("bookId") long bookId,
                                      @RequestBody BookReqDTO bookReqDTO){
+        bookService.updateBook(bookId, bookReqDTO);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("{bookId}")
-    public ResponseEntity deleteBook(@PathVariable("bookId") long bookId){
+    @DeleteMapping
+    public ResponseEntity deleteBook(@RequestBody DeleteBookReqDTO deleteBookReqDTO){
+        bookService.deleteBook(deleteBookReqDTO);
         return ResponseEntity.ok().build();
     }
 }
