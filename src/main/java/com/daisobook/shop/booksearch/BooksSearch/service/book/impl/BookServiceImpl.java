@@ -7,6 +7,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.TagRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
 import com.daisobook.shop.booksearch.BooksSearch.repository.*;
+import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
 import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherService;
@@ -32,6 +33,8 @@ public class BookServiceImpl implements BookService {
     private final BookTagRepository bookTagRepository;
     private final TagService tagService;
     private final PublisherService publisherService;
+    private final BookAuthorRepository bookAuthorRepository;
+    private final AuthorService authorService;
 
     @Override
     public void validateExistsById(long bookId) {
@@ -93,6 +96,12 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public void assignAuthorToBook(Book book, String author) {
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+//        authorService
+    }
+
+    @Override
     @Transactional
     public void registerBook(BookReqDTO bookReqDTO) {
         validateNotExistsByIsbn(bookReqDTO.isbn());
@@ -107,7 +116,9 @@ public class BookServiceImpl implements BookService {
         }
 
         bookRepository.save(newBook);
-        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(), newBook.getAuthor());
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
+                newBook.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
     }
 
     //초기 데이터 넣기 가공된 올바른 데이터라고 가정
@@ -134,7 +145,9 @@ public class BookServiceImpl implements BookService {
                     .toList());
 
             bookRepository.save(newBook);
-            log.debug("도서 저장(여러개 도서 저장중) - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(), newBook.getAuthor());
+            //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+            log.debug("도서 저장(여러개 도서 저장중) - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
+                    newBook.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
         }
     }
 
@@ -144,7 +157,9 @@ public class BookServiceImpl implements BookService {
         validateExistsById(bookId);
 
         Book book = bookRepository.findBookById(bookId);
-        log.debug("도서ID로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(), book.getAuthor());
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        log.debug("도서ID로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
+                book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
 
         return createdBookRespDTO(book);
     }
@@ -155,7 +170,9 @@ public class BookServiceImpl implements BookService {
         validateExistsByIsbn(isbn);
 
         Book book = bookRepository.findBookByIsbn(isbn);
-        log.debug("도로ISBN으로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(), book.getAuthor());
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        log.debug("도로ISBN으로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
+                book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
 
         return createdBookRespDTO(book);
     }
@@ -179,7 +196,9 @@ public class BookServiceImpl implements BookService {
                 .map(t -> new TagRespDTO(t.getId(), t.getName()))
                 .toList();
 
-        return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(), book.getAuthor(),
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(), book
+                .getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString(),
                 book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
                 book.getImageUrl(), book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
     }
@@ -191,7 +210,8 @@ public class BookServiceImpl implements BookService {
         } else if (tagName != null) {
             return createdBookRespDTOs(bookRepository.findBooksByTagName(tagName));
         } else if (author != null) {
-            return createdBookRespDTOs(bookRepository.findAllByAuthor(author));
+            //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+//            return createdBookRespDTOs(bookRepository.findAllByAuthor(author));
         } else if (publisher != null) {
             return createdBookRespDTOs(bookRepository.findAllByPublisher_Name(publisher));
         }
@@ -219,8 +239,9 @@ public class BookServiceImpl implements BookService {
         if(!bookReqDTO.title().equals(book.getTitle())){
             book.setTitle(bookReqDTO.title());
         }
-        if(!bookReqDTO.author().equals(book.getAuthor())){
-            book.setAuthor(bookReqDTO.author());
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        if(!bookReqDTO.author().equals(book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString())){
+//            book.setAuthor(bookReqDTO.author());
         }
         if(!bookReqDTO.index().equals(book.getIndex())){
             book.setIndex(bookReqDTO.index());
@@ -356,7 +377,9 @@ public class BookServiceImpl implements BookService {
         book.getPublisher().getBookList().remove(book);
 
         bookRepository.delete(book);
-        log.debug("도서 제거 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(), book.getAuthor());
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        log.debug("도서 제거 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
+                book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
     }
 
     private Book getBook_IdOrISBN(long id, String isbn, String methodName){
@@ -376,11 +399,6 @@ public class BookServiceImpl implements BookService {
         }
 
         return book;
-    }
-
-    @Override
-    public List<Book> getBooksByUser(List<Long> bookIds) {
-        return bookTagRepository.findAllByIdIn(bookIds);
     }
 
     @Override
