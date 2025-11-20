@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,18 +24,8 @@ public class Like {
     @Column(name="user_created_id")
     private long userId;
 
-    @Setter
-    @Column(name = "title")
-    private String title;
-
-    @Setter
-    @Column(name = "image_url")
-    private String imageUrl;
-
-    public Like(Book book, long userId, String title, String imageUrl){
+    public Like(Book book, long userId){
         this.book = book;
         this.userId = userId;
-        this.title = title;
-        this.imageUrl = imageUrl;
     }
 }

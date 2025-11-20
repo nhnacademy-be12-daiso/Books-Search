@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,10 @@ public class Tag {
 
     public Tag(String name){
         this.name = name;
+    }
+
+    public static Tag create(TagReqDTO tagReqDTO){
+        return new Tag(tagReqDTO.tagName());
     }
 
     @OneToMany(mappedBy = "tag")
