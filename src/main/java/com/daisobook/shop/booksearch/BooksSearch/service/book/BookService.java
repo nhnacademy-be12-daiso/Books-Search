@@ -15,7 +15,7 @@ public interface BookService {
     void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories);
     void assignTagsToBook(Book book, List<String> tagNames);
     void registerBook(BookReqDTO bookReqDTO);
-    void registerBooks(List<BookReqDTO> bookReqDTOS);
+    void registerBooks(List<BookReqDTO> bookReqDTOSs);
     BookRespDTO findBookById(long bookId);
     BookRespDTO findBookByIsbn(String isbn);
     List<BookRespDTO> findBooks(String categoryName, String tagName, String author, String publisher);

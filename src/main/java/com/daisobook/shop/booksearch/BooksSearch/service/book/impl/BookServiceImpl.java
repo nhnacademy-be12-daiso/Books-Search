@@ -9,6 +9,7 @@ import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
 import com.daisobook.shop.booksearch.BooksSearch.repository.*;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
+import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherService;
 import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +29,9 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookCategoryRepository bookCategoryRepository;
     private final CategoryService categoryService;
-    private final TagService tagService;
     private final BookTagRepository bookTagRepository;
+    private final TagService tagService;
+    private final PublisherService publisherService;
 
     @Override
     public void validateExistsById(long bookId) {
@@ -51,7 +53,7 @@ public class BookServiceImpl implements BookService {
     public void validateNotExistsByIsbn(String isbn) {
         if(bookRepository.existsBookByIsbn(isbn)) {
             log.error("이미 존재하는 ISBN: {}", isbn);
-            throw new DuplicatedBookISBN("이미 존재하는 ISBN 입니다.");
+            throw new DuplicatedBook("이미 존재하는 ISBN 입니다.");
         }
     }
 
@@ -95,7 +97,7 @@ public class BookServiceImpl implements BookService {
     public void registerBook(BookReqDTO bookReqDTO) {
         validateNotExistsByIsbn(bookReqDTO.isbn());
 
-        Book newBook = Book.create(bookReqDTO);
+        Book newBook = Book.create(bookReqDTO, publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
 
         assignCategoriesToBook(newBook, bookReqDTO.categories());
         if(bookReqDTO.tags() != null) {
@@ -124,7 +126,7 @@ public class BookServiceImpl implements BookService {
                 continue;
             }
 
-            Book newBook = Book.create(b);
+            Book newBook = Book.create(b, publisherService.getPublisherRegisterBook(b.publisher()));
 
             assignCategoriesToBook(newBook, b.categories());
             assignTagsToBook(newBook, b.tags().stream()
@@ -178,7 +180,7 @@ public class BookServiceImpl implements BookService {
                 .toList();
 
         return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(), book.getAuthor(),
-                book.getPublisher(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
                 book.getImageUrl(), book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
     }
 
@@ -191,7 +193,7 @@ public class BookServiceImpl implements BookService {
         } else if (author != null) {
             return createdBookRespDTOs(bookRepository.findAllByAuthor(author));
         } else if (publisher != null) {
-            return createdBookRespDTOs(bookRepository.findAllByPublisher(publisher));
+            return createdBookRespDTOs(bookRepository.findAllByPublisher_Name(publisher));
         }
 
         return List.of();
@@ -226,8 +228,8 @@ public class BookServiceImpl implements BookService {
         if(!bookReqDTO.description().equals(book.getDescription())){
             book.setDescription(bookReqDTO.description());
         }
-        if(!bookReqDTO.publisher().equals(book.getPublisher())){
-            book.setPublisher(bookReqDTO.publisher());
+        if(!bookReqDTO.publisher().equals(book.getPublisher().getName())){
+            book.setPublisher(publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
         }
         if(!bookReqDTO.publicationDate().equals(book.getPublicationDate())){
             book.setPublicationDate(bookReqDTO.publicationDate());
@@ -350,6 +352,8 @@ public class BookServiceImpl implements BookService {
         bookTagRepository.deleteBookTagsByIdIn(bookTags.stream()
                 .map(bt -> bt.getTag().getId())
                 .toList());
+
+        book.getPublisher().getBookList().remove(book);
 
         bookRepository.delete(book);
         log.debug("도서 제거 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(), book.getAuthor());
