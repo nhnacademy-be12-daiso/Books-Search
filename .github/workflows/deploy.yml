@@ -1,10 +1,10 @@
-name: BooksSearch - Build and Deploy
+name: BooksSearch - Build and Deploy (Compose HA)
 
 on:
   push:
-    branches: [ main, feature/cicd ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, feature/cicd ]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
@@ -40,7 +40,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/team3-booksearch:latest
 
-      - name: Deploy to Server (Docker Compose Orchestration)
+      - name: Deploy to Server (Docker Compose Rolling Update)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -49,18 +49,26 @@ jobs:
           port: 8822
           script: |
             set -e
-
-            echo "team3-booksearch 배포 시작 (Compose Integration)..."
-   
+            
+            echo "Booksearch Server 이중화 배포 시작 (Rolling Update)..."
+            
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
-
             cd ~/infra
 
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker compose pull team3-booksearch-1
             
-            docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch
+            echo "Booksearch-1 컨테이너 재시작..."
+            docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-1
             
-            echo "team3-booksearch 실행 완료!"
+            echo "Booksearch-1 부팅 및 Eureka 등록 대기 (30초)..."
+            sleep 30
+            
+            echo "Booksearch-2 컨테이너 재시작..."
+            docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-2
+            
+            echo "Booksearch Server 이중화 배포 완료!"
+            
             sleep 5
-            docker logs --tail 20 team3-booksearch
+            docker logs --tail 20 team3-booksearch-1
