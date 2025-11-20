@@ -20,7 +20,7 @@ public class Book {
     private long id;
 
     @Setter
-    @Column(name="isbn", nullable = false, length = 17)
+    @Column(name="isbn", nullable = false, length = 17, unique = true)
     private String isbn;
 
     @Setter
@@ -35,9 +35,9 @@ public class Book {
     @Column(name="description", columnDefinition = "TEXT")
     private String description;
 
-    @Setter
-    @Column(name="author", length = 60)
-    private String author;
+//    @Setter
+//    @Column(name="author", length = 60)
+//    private String author;
 
 //    @Setter
 //    @Column(name="publisher", length = 60)
@@ -72,14 +72,14 @@ public class Book {
     @Column(name = "volume_no")
     private Integer volumeNo;
 
-    public Book(String isbn, String title, String index, String description, String author/*, String publisher*/,
+    public Book(String isbn, String title, String index, String description/*, String author*//*, String publisher*/,
                 LocalDate publicationDate, Integer price, boolean isPackaging, Integer stock, Status status,
                 String imageUrl, Integer volumeNo){
         this.isbn = isbn;
         this.title = title;
         this.index = index;
         this.description = description;
-        this.author = author;
+//        this.author = author;
 //        this.publisher = publisher;
         this.publicationDate = publicationDate;
         this.price = price;
@@ -91,7 +91,7 @@ public class Book {
     }
 
     public static Book create(BookReqDTO dto, Publisher publisher){
-        Book newBook = new Book(dto.isbn(), dto.title(), dto.index(), dto.description(), dto.author()/*, dto.publisher()*/,
+        Book newBook = new Book(dto.isbn(), dto.title(), dto.index(), dto.description()/*, dto.author()*//*, dto.publisher()*/,
                 dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status(), dto.imageUrl(), dto.volumeNo());
         newBook.setPublisher(publisher);
         return newBook;
@@ -107,6 +107,10 @@ public class Book {
 
     @Setter
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "publisher_id")
     private Publisher publisher;
+
+    @Setter
+    @OneToMany(mappedBy = "book")
+    private List<BookAuthor> bookAuthors;
 }

@@ -14,6 +14,7 @@ public interface BookService {
     void validateNotExistsByIsbn(String isbn);
     void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories);
     void assignTagsToBook(Book book, List<String> tagNames);
+    void assignAuthorToBook(Book book, String author);
     void registerBook(BookReqDTO bookReqDTO);
     void registerBooks(List<BookReqDTO> bookReqDTOSs);
     BookRespDTO findBookById(long bookId);
@@ -23,6 +24,5 @@ public interface BookService {
     void deleteBook(DeleteBookReqDTO deleteBookReqDTO);
 
     //다른 서비스에서 사용하는 메서드
-    List<Book> getBooksByUser(List<Long> bookIds);
     Book getBookById(long bookId);
 }
