@@ -18,8 +18,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     List<Book> findAllByAuthor(String author);
 
-    List<Book> findAllByPublisher(String publisher);
-
     List<Book> findAllByIsbnIn(Collection<String> isbns);
 
     @Query("SELECT b FROM Book b " +
@@ -33,4 +31,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             "JOIN FETCH bt.tag t " +
             "WHERE t.name = ?1")
     List<Book> findBooksByTagName(String tagName);
+
+    List<Book> findAllByPublisher_Name(String publisherName);
 }
