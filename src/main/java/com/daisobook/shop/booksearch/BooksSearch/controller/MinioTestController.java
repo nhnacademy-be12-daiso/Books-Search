@@ -1,6 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
-import com.daisobook.shop.booksearch.BooksSearch.service.MinioService;
+import com.daisobook.shop.booksearch.BooksSearch.service.MinIOService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/minio-test")
 public class MinioTestController {
 
-    private final MinioService minioService;
+    private final MinIOService minioService;
 
-    public MinioTestController(MinioService minioService) {
+    public MinioTestController(MinIOService minioService) {
         this.minioService = minioService;
     }
 
