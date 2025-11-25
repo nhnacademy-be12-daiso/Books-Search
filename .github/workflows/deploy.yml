@@ -50,7 +50,7 @@ jobs:
           script: |
             set -e
             
-            echo "Booksearch Server 이중화 배포 시작 (Rolling Update)..."
+            echo "Booksearch Server Update Start"
             
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
@@ -59,16 +59,45 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
             docker compose pull team3-booksearch-1
             
-            echo "Booksearch-1 컨테이너 재시작..."
+            echo "Booksearch-1 Restart"
             docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-1
             
-            echo "Booksearch-1 부팅 및 Eureka 등록 대기 (30초)..."
-            sleep 30
+            echo "Booksearch-1 Health Check"
+            for retry in {1..30}; do
+              if docker exec team3-booksearch-1 curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
+                  echo "Booksearch-1 UP"
+                  break
+              fi
             
-            echo "Booksearch-2 컨테이너 재시작..."
+              echo "Waiting... ($retry/30)"
+              sleep 3
+            
+              if [ $retry -eq 30 ]; then
+                echo "Booksearch-1 Failed"
+                exit 1
+              fi
+            done
+            
+            echo "Booksearch-2 Restart"
             docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-2
             
-            echo "Booksearch Server 이중화 배포 완료!"
+            echo "Booksearch-2 Health Check"
+            for retry in {1..30}; do
+              if docker exec team3-booksearch-2 curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
+                  echo "Booksearch-2 UP"
+                  break
+              fi
             
-            sleep 5
+              echo "Waiting... ($retry/30)"
+              sleep 3
+            
+              if [ $retry -eq 30 ]; then
+                echo "Booksearch-2 Failed"
+                exit 1
+              fi
+            done
+            
+            echo "Booksearch Server Deploy Complete"
+            
+            sleep 2
             docker logs --tail 20 team3-booksearch-1
