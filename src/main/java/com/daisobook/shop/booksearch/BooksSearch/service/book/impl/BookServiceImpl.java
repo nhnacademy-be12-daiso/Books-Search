@@ -1,31 +1,51 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TagRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
-import com.daisobook.shop.booksearch.BooksSearch.repository.*;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.DuplicatedBook;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBook;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBookISBN;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBookId;
+import com.daisobook.shop.booksearch.BooksSearch.repository.BookAuthorRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.BookCategoryRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.BookRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.BookTagRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
+import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherService;
 import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
+
+    @Value("${app.batch.size}")
+    private int BATCH_SIZE;
+
+    private final int MAX_SIZE = 1000;
 
     private final BookRepository bookRepository;
     private final BookCategoryRepository bookCategoryRepository;
@@ -35,6 +55,46 @@ public class BookServiceImpl implements BookService {
     private final PublisherService publisherService;
     private final BookAuthorRepository bookAuthorRepository;
     private final AuthorService authorService;
+    private final BookImageServiceImpl imageService;
+
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public BookGroupReqDTO parsing(BookMetadataReqDTO dto) throws JsonProcessingException {
+        if(dto == null){
+            throw new RuntimeException("null");
+        }
+
+        final int MAX_FILE_COUNT = 5;
+
+        BookReqDTO metadata = objectMapper.readValue(dto.metadata(), BookReqDTO.class);
+        Map<String, MultipartFile> files = new HashMap<>();
+        Class<?> clazz = dto.getClass();
+
+        for(int i = 0; i < MAX_FILE_COUNT; i++) {
+            String key = "image%d".formatted(i);
+            try {
+                // DTO에서 필드를 찾아 접근 권한 설정
+                Field field = clazz.getDeclaredField(key);
+                field.setAccessible(true);
+
+                // DTO 인스턴스에서 해당 필드의 값(MultipartFile) 추출
+                MultipartFile file = (MultipartFile) field.get(dto);
+
+                // 파일이 비어있지 않은 경우에만 Map에 추가 (Key는 "image0", "image1"...)
+                if (file != null && !file.isEmpty()) {
+                    files.put(key, file);
+                }
+            } catch (NoSuchFieldException e) {
+                // 필드가 없으면 종료
+                break;
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return new BookGroupReqDTO(metadata, files);
+    }
 
     @Override
     public void validateExistsById(long bookId) {
@@ -102,8 +162,16 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public void assignImages(Book book, List<ImageMetadataReqDTO> dto, Map<String, MultipartFile> fileMap) {
+        ImagesReqDTO reqDTO = new ImagesReqDTO(book.getId(), dto);
+        List<BookImage> bookImages = imageService.addBookImage(reqDTO, fileMap);
+        bookImages.forEach(bi -> bi.setBook(book));
+        book.setBookImages(bookImages);
+    }
+
+    @Override
     @Transactional
-    public void registerBook(BookReqDTO bookReqDTO) {
+    public void registerBook(BookReqDTO bookReqDTO, Map<String, MultipartFile> fileMap) {
         validateNotExistsByIsbn(bookReqDTO.isbn());
 
         Book newBook = Book.create(bookReqDTO, publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
@@ -116,6 +184,7 @@ public class BookServiceImpl implements BookService {
         }
 
         bookRepository.save(newBook);
+        assignImages(newBook, bookReqDTO.imageMetadataReqDTOList(), fileMap);
         //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
         log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
                 newBook.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
@@ -131,6 +200,9 @@ public class BookServiceImpl implements BookService {
                 .stream().map(Book::getIsbn)
                 .collect(Collectors.toSet());
 
+        int count = 0;
+        List<Book> addBooks = new ArrayList<>();
+        List<List<ImageMetadataReqDTO>> imageMetadataReqDTOs = new ArrayList<>();
         for(BookReqDTO b: bookReqDTOS){
             if (existingIsbns.contains(b.isbn())) {
                 log.error("데이터베이스에 있는 ISBN을 등록 시도 - ISBN: {}", b.isbn());
@@ -144,10 +216,26 @@ public class BookServiceImpl implements BookService {
                     .map(TagReqDTO::tagName)
                     .toList());
 
-            bookRepository.save(newBook);
             //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
             log.debug("도서 저장(여러개 도서 저장중) - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
                     newBook.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
+            addBooks.add(newBook);
+            imageMetadataReqDTOs.add(b.imageMetadataReqDTOList());
+            count++;
+            if(count >= MAX_SIZE){
+                List<Book> books = bookRepository.saveAll(addBooks);
+                List<ImagesReqDTO> imagesReqDTOsForProcess = new ArrayList<>();
+                for(int i = 0; i < books.size(); i++){
+                    imagesReqDTOsForProcess.add(new ImagesReqDTO(books.get(i).getId(), imageMetadataReqDTOs.get(i)));
+                }
+
+                List<List<BookImage>> newImagesList = imageService.addBookImages(imagesReqDTOsForProcess);
+
+                for (int i = 0; i < books.size(); i++) {
+                    Book book = books.get(i);
+                    newImagesList.get(i).forEach(bookImage -> bookImage.setBook(book));
+                }
+            }
         }
     }
 
@@ -196,11 +284,13 @@ public class BookServiceImpl implements BookService {
                 .map(t -> new TagRespDTO(t.getId(), t.getName()))
                 .toList();
 
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream().map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType())).toList();
+
+        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지) + 이미지
         return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(), book
                 .getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString(),
                 book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
-                book.getImageUrl(), book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
+                imageRespDTOS, book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
     }
 
     @Override
@@ -229,7 +319,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public void updateBook(long bookId, BookReqDTO bookReqDTO) {
+    public void updateBook(long bookId, BookReqDTO bookReqDTO, Map<String, MultipartFile> fileMap) {
         Book book = getBook_IdOrISBN(bookId, bookReqDTO.isbn(), "수정");
 
         //book 기본 필드값 수정사항
@@ -240,9 +330,9 @@ public class BookServiceImpl implements BookService {
             book.setTitle(bookReqDTO.title());
         }
         //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
-        if(!bookReqDTO.author().equals(book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString())){
-//            book.setAuthor(bookReqDTO.author());
-        }
+//        if(!bookReqDTO.author().equals(book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString())){
+////            book.setAuthor(bookReqDTO.author());
+//        }
         if(!bookReqDTO.index().equals(book.getIndex())){
             book.setIndex(bookReqDTO.index());
         }
@@ -266,6 +356,46 @@ public class BookServiceImpl implements BookService {
         }
         if(!bookReqDTO.status().equals(book.getStatus())){
             book.setStatus(bookReqDTO.status());
+        }
+
+        //이미지 수정사항 확인
+        List<BookImage> bookImages = book.getBookImages();
+        List<ImageMetadataReqDTO> imageMetadataReqDTOs = bookReqDTO.imageMetadataReqDTOList();
+        Map<Integer, String> bookImageUrl = bookImages.stream().collect(Collectors.toMap(BookImage::getNo, BookImage::getPath));
+        Map<Integer, String> metadataReqDTOUrl = imageMetadataReqDTOs.stream().collect(Collectors.toMap(ImageMetadataReqDTO::sequence, ImageMetadataReqDTO::dataUrl));
+
+        boolean imageChangeDetected = false;
+        for(int i = 0; i < 5; i++){
+            boolean pre = bookImageUrl.containsKey(i);
+            boolean update = metadataReqDTOUrl.containsKey(i);
+
+            if (imageMetadataReqDTOs.size() > i)
+                if(
+                    imageMetadataReqDTOs.get(i) != null &&
+                    imageMetadataReqDTOs.get(i).fileKey() != null &&
+                    fileMap.containsKey(imageMetadataReqDTOs.get(i).fileKey())) {
+
+                imageChangeDetected = true;
+                break;
+            }
+
+            if(pre && update) {
+                if (!bookImageUrl.get(i).equals(metadataReqDTOUrl.get(i))) {
+                    imageChangeDetected = true;
+                    break;
+                }
+            } else if (pre || update) {
+                imageChangeDetected = true;
+                break;
+            }
+        }
+        if(imageChangeDetected){
+            ImagesReqDTO reqDTO = new ImagesReqDTO(book.getId(), imageMetadataReqDTOs);
+            List<BookImage> bookImageList = imageService.updateBookImage(reqDTO, fileMap);
+            book.setBookImages(bookImageList);
+            if(bookImageList != null) {
+                bookImageList.forEach(bi -> bi.setBook(book));
+            }
         }
 
         //연결된 부분 수정

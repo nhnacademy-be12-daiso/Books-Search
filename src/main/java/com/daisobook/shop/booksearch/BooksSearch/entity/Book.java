@@ -1,6 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -64,9 +64,9 @@ public class Book {
     @Column(name="status", columnDefinition = "ENUM('DISCONTINUE', 'ON_SALE') DEFAULT 'ON_SALE'")
     private Status status;
 
-    @Setter
-    @Column(name = "image_url")
-    private String imageUrl;
+//    @Setter
+//    @Column(name = "image_url")
+//    private String imageUrl;
 
     @Setter
     @Column(name = "volume_no")
@@ -74,7 +74,7 @@ public class Book {
 
     public Book(String isbn, String title, String index, String description/*, String author*//*, String publisher*/,
                 LocalDate publicationDate, Integer price, boolean isPackaging, Integer stock, Status status,
-                String imageUrl, Integer volumeNo){
+                /*String imageUrl,*/ Integer volumeNo){
         this.isbn = isbn;
         this.title = title;
         this.index = index;
@@ -86,13 +86,13 @@ public class Book {
         this.isPackaging = isPackaging;
         this.stock = stock;
         this.status = status;
-        this.imageUrl = imageUrl;
+//        this.imageUrl = imageUrl;
         this.volumeNo = volumeNo;
     }
 
     public static Book create(BookReqDTO dto, Publisher publisher){
         Book newBook = new Book(dto.isbn(), dto.title(), dto.index(), dto.description()/*, dto.author()*//*, dto.publisher()*/,
-                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status(), dto.imageUrl(), dto.volumeNo());
+                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status()/*, dto.imageUrl()*/, dto.volumeNo());
         newBook.setPublisher(publisher);
         return newBook;
     }
@@ -113,4 +113,8 @@ public class Book {
     @Setter
     @OneToMany(mappedBy = "book")
     private List<BookAuthor> bookAuthors;
+
+    @Setter
+    @OneToMany(mappedBy = "book")
+    private List<BookImage> bookImages;
 }

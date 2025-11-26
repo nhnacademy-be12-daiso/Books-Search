@@ -1,10 +1,14 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +21,16 @@ public class BookController {
 
     private final BookService bookService;
 
-    @PostMapping
-    public ResponseEntity addBook(@RequestBody BookReqDTO bookReqDTO){
-        bookService.registerBook(bookReqDTO);
+//    @PostMapping
+//    public ResponseEntity addBook(@RequestBody BookReqDTO bookReqDTO){
+////        bookService.registerBook(bookReqDTO);
+//        return ResponseEntity.ok().build();
+//    }
+
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity addBook(@RequestBody BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
+        BookGroupReqDTO bookGroupReqDTO = bookService.parsing(bookMetadataReqDTO);
+        bookService.registerBook(bookGroupReqDTO.bookReqDTO(), bookGroupReqDTO.fileMap());
         return ResponseEntity.ok().build();
     }
 
@@ -47,10 +58,19 @@ public class BookController {
         return bookService.findBooks(categoryName, tagName, author, publisher);
     }
 
-    @PatchMapping("{bookId}")
+//    @PatchMapping("{bookId}")
+//    public ResponseEntity modifyBook(@PathVariable("bookId") long bookId,
+//                                     @RequestBody BookReqDTO bookReqDTO){
+////        bookService.updateBook(bookId, bookReqDTO);
+//        return ResponseEntity.ok().build();
+//    }
+
+
+    @PatchMapping(value = "{bookId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity modifyBook(@PathVariable("bookId") long bookId,
-                                     @RequestBody BookReqDTO bookReqDTO){
-        bookService.updateBook(bookId, bookReqDTO);
+                                     @RequestBody BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
+        BookGroupReqDTO bookGroupReqDTO = bookService.parsing(bookMetadataReqDTO);
+        bookService.registerBook(bookGroupReqDTO.bookReqDTO(), bookGroupReqDTO.fileMap());
         return ResponseEntity.ok().build();
     }
 
