@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -88,6 +89,12 @@ public class Book {
         this.status = status;
 //        this.imageUrl = imageUrl;
         this.volumeNo = volumeNo;
+
+        this.bookCategories = new ArrayList<>();
+        this.bookTags = new ArrayList<>();
+        this.bookAuthors = new ArrayList<>();
+        this.bookImages = new ArrayList<>();
+        this.reviews = new ArrayList<>();
     }
 
     public static Book create(BookReqDTO dto, Publisher publisher){
@@ -117,4 +124,8 @@ public class Book {
     @Setter
     @OneToMany(mappedBy = "book")
     private List<BookImage> bookImages;
+
+    @Setter
+    @OneToMany(mappedBy = "book")
+    private List<Review> reviews;
 }

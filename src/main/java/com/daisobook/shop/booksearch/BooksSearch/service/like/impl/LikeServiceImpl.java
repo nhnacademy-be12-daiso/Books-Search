@@ -23,6 +23,12 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final BookService bookService;
 
+    //TODO 해당 유저가 존재하는 지 확인이 필요
+    boolean check(long userId){
+        //user 에 해당 유저가 있는지 확인
+        return false;
+    }
+
     @Override
     public void exist(long likeId) {
         if(!likeRepository.existsLikeById(likeId)){
@@ -59,7 +65,8 @@ public class LikeServiceImpl implements LikeService {
         }
 
         return likes.stream()
-                .map(l -> new LikeRespDTO(l.getId() ,l.getBook().getId(), l.getUserId(), l.getBook().getTitle(), l.getBook().getImageUrl()))
+                .map(l -> new LikeRespDTO(l.getId() ,l.getBook().getId(), l.getUserId(),
+                        l.getBook().getTitle(), l.getBook().getBookImages().getFirst().getPath()))
                 .toList();
     }
 

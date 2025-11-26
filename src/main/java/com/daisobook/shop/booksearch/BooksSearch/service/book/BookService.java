@@ -19,13 +19,13 @@ public interface BookService {
     void validateNotExistsByIsbn(String isbn);
     void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories);
     void assignTagsToBook(Book book, List<String> tagNames);
-    void assignAuthorToBook(Book book, String author);
+    void assignAuthorToBook(Book book, List<AuthorReqDTO> authorReqDTOs);
     void assignImages(Book book, List<ImageMetadataReqDTO> dto, Map<String, MultipartFile> fileMap);
     void registerBook(BookReqDTO bookReqDTO, Map<String, MultipartFile> fileMap);
     void registerBooks(List<BookReqDTO> bookReqDTOSs);
     BookRespDTO findBookById(long bookId);
     BookRespDTO findBookByIsbn(String isbn);
-    List<BookRespDTO> findBooks(String categoryName, String tagName, String author, String publisher);
+    List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName);
     void updateBook(long bookId, BookReqDTO BookReqDTO,Map<String, MultipartFile> fileMap);
     void deleteBook(DeleteBookReqDTO deleteBookReqDTO);
 

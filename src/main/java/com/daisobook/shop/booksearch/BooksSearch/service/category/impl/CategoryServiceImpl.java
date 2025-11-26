@@ -270,4 +270,9 @@ public class CategoryServiceImpl implements CategoryService {
     public List<Category> findAllByBookCategories(List<BookCategory> bookCategories) {
         return categoryRepository.findAllByBookCategories(bookCategories);
     }
+
+    @Override
+    public Category findCategoryByName(String categoryName){
+        return categoryRepository.findCategoryByName(categoryName);
+    }
 }

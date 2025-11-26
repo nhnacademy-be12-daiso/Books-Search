@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -24,6 +25,7 @@ public class Publisher {
 
     public Publisher(String name){
         this.name = name;
+        this.bookList = new ArrayList<>();
     }
 
     public static Publisher create(PublisherReqDTO dto){

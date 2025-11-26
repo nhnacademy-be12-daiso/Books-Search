@@ -1,10 +1,12 @@
 package com.daisobook.shop.booksearch.BooksSearch.entity;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -23,6 +25,11 @@ public class Author {
 
     public Author(String name){
         this.name = name;
+        this.bookAuthors = new ArrayList<>();
+    }
+
+    public static Author create(AuthorReqDTO dto){
+        return new Author(dto.roleName());
     }
 
     @Setter

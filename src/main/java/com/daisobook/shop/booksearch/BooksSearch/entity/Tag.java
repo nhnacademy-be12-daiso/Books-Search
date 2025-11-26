@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -25,6 +26,7 @@ public class Tag {
 
     public Tag(String name){
         this.name = name;
+        this.bookTags = new ArrayList<>();
     }
 
     public static Tag create(TagReqDTO tagReqDTO){

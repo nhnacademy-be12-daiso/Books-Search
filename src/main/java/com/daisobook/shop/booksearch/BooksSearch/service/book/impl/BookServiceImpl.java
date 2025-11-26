@@ -4,16 +4,10 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.TagRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.DuplicatedBook;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBook;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBookISBN;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBookId;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
 import com.daisobook.shop.booksearch.BooksSearch.repository.BookAuthorRepository;
 import com.daisobook.shop.booksearch.BooksSearch.repository.BookCategoryRepository;
 import com.daisobook.shop.booksearch.BooksSearch.repository.BookRepository;
@@ -121,44 +115,87 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    @Transactional
     public void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories) {
         if(categories == null || categories.isEmpty()){
             return;
         }
 
+        Map<String, Category> categoryMap = categoryService.findCategoriesByNamesAndDeeps(categories.stream()
+                        .map(CategoryReqDTO::categoryName)
+                        .toList(),
+                categories.stream()
+                        .map(CategoryReqDTO::deep).
+                        toList()).stream()
+                .collect(Collectors.toMap(Category::getName, category -> category));
+
         for(CategoryReqDTO c: categories) {
-            Category category = categoryService.findValidCategoryByNameAndDeep(c.categoryName(), c.deep());
+//            Category category = categoryService.findValidCategoryByNameAndDeep(c.categoryName(), c.deep());
+            Category category = categoryMap.get(c.categoryName());
+            if(category == null){
+                log.error("존재하지 않는 카테고리입니다 - 요청한 카테고리:{}", c.categoryName());
+                throw new NotFoundCategoryName("존재하지 않는 카테고리입니다");
+            }
 
             BookCategory bookCategory = new BookCategory(book, category);
 
             category.getBookCategories().add(bookCategory);
             book.getBookCategories().add(bookCategory);
 
-            bookCategoryRepository.save(bookCategory);
+//            bookCategoryRepository.save(bookCategory);
         }
     }
 
     @Override
-    @Transactional
     public void assignTagsToBook(Book book, List<String> tagNames) {
 
+        Map<String, Tag> tagMap = tagService.findAllByNameIn(tagNames).stream()
+                .collect(Collectors.toMap(Tag::getName, tag -> tag));
+
         for(String t: tagNames){
-            Tag tag = tagService.findTagByName(t);
+//            Tag tag = tagService.findTagByName(t);
+            Tag tag = tagMap.get(t);
+            if(tag == null){
+                tag = new Tag(t);
+            }
 
             BookTag bookTag = new BookTag(book, tag);
 
             tag.getBookTags().add(bookTag);
             book.getBookTags().add(bookTag);
 
-            bookTagRepository.save(bookTag);
+//            bookTagRepository.save(bookTag);
         }
     }
 
     @Override
-    public void assignAuthorToBook(Book book, String author) {
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
-//        authorService
+    public void assignAuthorToBook(Book book, List<AuthorReqDTO> authorReqDTOs) {
+        Map<String, Author> authorMap = authorService.findAuthorsByNameIn(authorReqDTOs.stream()
+                        .map(AuthorReqDTO::authorName)
+                        .toList()).stream()
+                .collect(Collectors.toMap(Author::getName, author -> author));
+
+        Map<String, Role> roleMap = authorService.findRolesByNameIn(authorReqDTOs.stream()
+                        .map(AuthorReqDTO::roleName)
+                        .toList()).stream()
+                .collect(Collectors.toMap(Role::getName, role -> role));
+
+        for(AuthorReqDTO a: authorReqDTOs){
+            Author author = authorMap.get(a.authorName());
+            if(author == null){
+                author = new Author(a.authorName());
+            }
+
+            Role role = roleMap.get(a.roleName());
+
+            BookAuthor newBookAuthor = new BookAuthor(book, author);
+            book.getBookAuthors().add(newBookAuthor);
+            author.getBookAuthors().add(newBookAuthor);
+
+            if(role != null){
+                newBookAuthor.setRole(role);
+                role.getBookAuthors().add(newBookAuthor);
+            }
+        }
     }
 
     @Override
@@ -185,9 +222,11 @@ public class BookServiceImpl implements BookService {
 
         bookRepository.save(newBook);
         assignImages(newBook, bookReqDTO.imageMetadataReqDTOList(), fileMap);
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        assignAuthorToBook(newBook, bookReqDTO.authorReqDTOList());
         log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
-                newBook.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
+                newBook.getBookAuthors().stream()
+                        .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
+                        .toList());
     }
 
     //초기 데이터 넣기 가공된 올바른 데이터라고 가정
@@ -215,10 +254,12 @@ public class BookServiceImpl implements BookService {
             assignTagsToBook(newBook, b.tags().stream()
                     .map(TagReqDTO::tagName)
                     .toList());
-
-            //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+            assignAuthorToBook(newBook, b.authorReqDTOList());
             log.debug("도서 저장(여러개 도서 저장중) - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
-                    newBook.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
+                    newBook.getBookAuthors().stream()
+                            .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
+                            .toList());
+
             addBooks.add(newBook);
             imageMetadataReqDTOs.add(b.imageMetadataReqDTOList());
             count++;
@@ -235,6 +276,8 @@ public class BookServiceImpl implements BookService {
                     Book book = books.get(i);
                     newImagesList.get(i).forEach(bookImage -> bookImage.setBook(book));
                 }
+
+                count = 0;
             }
         }
     }
@@ -245,9 +288,10 @@ public class BookServiceImpl implements BookService {
         validateExistsById(bookId);
 
         Book book = bookRepository.findBookById(bookId);
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
         log.debug("도서ID로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
-                book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
+                book.getBookAuthors().stream()
+                        .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
+                        .toList());
 
         return createdBookRespDTO(book);
     }
@@ -258,9 +302,10 @@ public class BookServiceImpl implements BookService {
         validateExistsByIsbn(isbn);
 
         Book book = bookRepository.findBookByIsbn(isbn);
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
         log.debug("도로ISBN으로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
-                book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
+                book.getBookAuthors().stream()
+                        .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
+                        .toList());
 
         return createdBookRespDTO(book);
     }
@@ -284,26 +329,50 @@ public class BookServiceImpl implements BookService {
                 .map(t -> new TagRespDTO(t.getId(), t.getName()))
                 .toList();
 
-        List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream().map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType())).toList();
+        List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream()
+                .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
+                .toList();
 
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지) + 이미지
-        return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(), book
-                .getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString(),
+        return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(),
+                book.getBookAuthors().stream()
+                        .map(ba ->
+                                new AuthorRespDTO(ba.getAuthor() != null ? ba.getAuthor().getId() : null,
+                                        ba.getAuthor() != null ? ba.getAuthor().getName() : null,
+                                        ba.getRole() != null ? ba.getRole().getId() : null,
+                                        ba.getRole() != null ? ba.getRole().getName() : null))
+                        .toList(),
                 book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
                 imageRespDTOS, book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
     }
 
     @Override
-    public List<BookRespDTO> findBooks(String categoryName, String tagName, String author, String publisher) {
+    public List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName) {
         if(categoryName != null){
-            return createdBookRespDTOs(bookRepository.findBooksByCategoryName(categoryName));
+            Category category = categoryService.findCategoryByName(categoryName);
+            List<Book> bookList = category.getBookCategories().stream()
+                    .map(BookCategory::getBook)
+                    .toList();
+
+            return createdBookRespDTOs(bookList);
         } else if (tagName != null) {
-            return createdBookRespDTOs(bookRepository.findBooksByTagName(tagName));
-        } else if (author != null) {
-            //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
-//            return createdBookRespDTOs(bookRepository.findAllByAuthor(author));
-        } else if (publisher != null) {
-            return createdBookRespDTOs(bookRepository.findAllByPublisher_Name(publisher));
+            Tag tag = tagService.findTagByName(tagName);
+            List<Book> bookList = tag.getBookTags().stream()
+                    .map(BookTag::getBook)
+                    .toList();
+
+            return createdBookRespDTOs(bookList);
+        } else if (authorName != null) {
+            Author author = authorService.findAuthorByName(authorName);
+            List<Book> bookList = author.getBookAuthors().stream()
+                    .map(BookAuthor::getBook)
+                    .toList();
+
+            return createdBookRespDTOs(bookList);
+        } else if (publisherName != null) {
+            Publisher publisher = publisherService.getPublisherByName(publisherName);
+            List<Book> bookList = publisher.getBookList();
+
+            return createdBookRespDTOs(bookList);
         }
 
         return List.of();
@@ -356,6 +425,75 @@ public class BookServiceImpl implements BookService {
         }
         if(!bookReqDTO.status().equals(book.getStatus())){
             book.setStatus(bookReqDTO.status());
+        }
+
+        //작가 수정사항 확인
+        Set<String> updateAuthorNames = bookReqDTO.authorReqDTOList().stream()
+                .map(AuthorReqDTO::authorName)
+                .collect(Collectors.toSet());
+
+        List<BookAuthor> bookAuthorsToDelete = book.getBookAuthors().stream()
+                .filter(ba -> !updateAuthorNames.contains(ba.getAuthor().getName())) // 요청 목록에 없는 작가만 필터링
+                .toList();
+
+        if (!bookAuthorsToDelete.isEmpty()) {
+            bookAuthorsToDelete.forEach(ba -> {
+                ba.getAuthor().getBookAuthors().remove(ba); // Author 측 관계 제거
+                if (ba.getRole() != null) {
+                    ba.getRole().getBookAuthors().remove(ba); // Role 측 관계 제거
+                }
+            });
+
+            book.getBookAuthors().removeAll(bookAuthorsToDelete);
+
+            bookAuthorRepository.deleteAllById(bookAuthorsToDelete.stream()
+                    .map(BookAuthor::getId)
+                    .toList());
+        }
+
+        Map<String, BookAuthor> existingBookAuthorMap = book.getBookAuthors().stream()
+                .collect(Collectors.toMap(
+                        ba -> ba.getAuthor().getName(),
+                        ba -> ba
+                ));
+
+        for (AuthorReqDTO a : bookReqDTO.authorReqDTOList()) {
+            Role role = authorService.findRoleByName(a.roleName());
+
+            BookAuthor existingBookAuthor = existingBookAuthorMap.get(a.authorName());
+
+            if (existingBookAuthor != null) { // 관계가 있으면 명칭이 변경이 있는지만 확인
+                Role currentRole = existingBookAuthor.getRole();
+
+                if ((role == null && currentRole != null) || //명칭이 null -> notNull
+                        (role != null && currentRole == null) || //명칭이 notNull -> null
+                        (role != null && currentRole != null && role.getId() != currentRole.getId())) { //명칭이 변경
+
+                    if (currentRole != null) {
+                        currentRole.getBookAuthors().remove(existingBookAuthor);
+                    }
+
+                    existingBookAuthor.setRole(role);
+                    if (role != null) {
+                        role.getBookAuthors().add(existingBookAuthor);
+                    }
+                }
+            } else { // 관계가 없으면 새로운 작가를 등록
+                Author author = authorService.findAuthorByName(a.authorName());
+                if(author == null){
+                    author = new Author(a.authorName());
+                }
+
+                BookAuthor newBookAuthor = new BookAuthor(book, author);
+
+                if (role != null) {
+                    newBookAuthor.setRole(role);
+                    role.getBookAuthors().add(newBookAuthor);
+                }
+
+                book.getBookAuthors().add(newBookAuthor);
+                author.getBookAuthors().add(newBookAuthor);
+            }
         }
 
         //이미지 수정사항 확인
@@ -498,18 +636,30 @@ public class BookServiceImpl implements BookService {
 //        bookCategoryRepository.deleteBookCategoriesByIdIn(bookCategoriesId);
 //        bookTagRepository.deleteBookTagsByIdIn(bookTagsId);
         bookCategoryRepository.deleteBookCategoriesByIdIn(bookCategories.stream()
-                .map(bc -> bc.getCategory().getId())
+                .map(BookCategory::getId)
                 .toList());
         bookTagRepository.deleteBookTagsByIdIn(bookTags.stream()
-                .map(bt -> bt.getTag().getId())
+                .map(BookTag::getId)
                 .toList());
 
         book.getPublisher().getBookList().remove(book);
 
-        bookRepository.delete(book);
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
+        List<BookAuthor> bookAuthors = book.getBookAuthors();
+        List<Author> authors = bookAuthors.stream().map(BookAuthor::getAuthor).toList();
+        List<Role> roles = bookAuthors.stream().map(BookAuthor::getRole).toList();
+
+        authors.forEach(a -> a.getBookAuthors().removeAll(bookAuthors));
+        roles.forEach(r -> r.getBookAuthors().removeAll(bookAuthors)); //이게 null인 경우
+
+        bookAuthorRepository.deleteAllByIdIn(bookAuthors.stream()
+                .map(BookAuthor::getId)
+                .toList());
+
         log.debug("도서 제거 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
-                book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList());
+                book.getBookAuthors().stream()
+                        .map(b -> b.getAuthor().getName() + b.getRole().getName())
+                        .toList());
+        bookRepository.delete(book);
     }
 
     private Book getBook_IdOrISBN(long id, String isbn, String methodName){

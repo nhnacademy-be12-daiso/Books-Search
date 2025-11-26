@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -44,6 +45,9 @@ public class Category {
         this.deep = deep;
         this.preCategory = preCategory;
         this.preCategory.getAfterCategories().add(this);
+
+        this.afterCategories = new ArrayList<>();
+        this.bookCategories = new ArrayList<>();
     }
 
     public Category(String name, int deep){
