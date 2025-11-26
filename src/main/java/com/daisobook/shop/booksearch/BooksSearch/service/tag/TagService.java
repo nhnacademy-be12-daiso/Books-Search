@@ -22,6 +22,7 @@ public interface TagService {
     // book 서비스에서 사용하는 메서드
     Tag findTagByName(String tagName);
     List<TagRespDTO> findAllByIdIn(List<Long> tagId);
+    List<Tag> findAllByNameIn(List<String> tagName);
     List<Tag> findAllByBookTags(List<BookTag> bookTags);
     List<Tag> getAllByIdIn(List<Long> tagId);
 }

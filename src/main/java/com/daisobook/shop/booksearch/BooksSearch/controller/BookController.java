@@ -28,7 +28,7 @@ public class BookController {
 //    }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity addBook(@RequestBody BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
+    public ResponseEntity addBook(@RequestPart BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
         BookGroupReqDTO bookGroupReqDTO = bookService.parsing(bookMetadataReqDTO);
         bookService.registerBook(bookGroupReqDTO.bookReqDTO(), bookGroupReqDTO.fileMap());
         return ResponseEntity.ok().build();
@@ -68,7 +68,7 @@ public class BookController {
 
     @PatchMapping(value = "{bookId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity modifyBook(@PathVariable("bookId") long bookId,
-                                     @RequestBody BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
+                                     @RequestPart BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
         BookGroupReqDTO bookGroupReqDTO = bookService.parsing(bookMetadataReqDTO);
         bookService.registerBook(bookGroupReqDTO.bookReqDTO(), bookGroupReqDTO.fileMap());
         return ResponseEntity.ok().build();

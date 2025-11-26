@@ -11,7 +11,7 @@ public record BookRespDTO(
         String title,
         String index,
         String description,
-        String author,
+        List<AuthorRespDTO> authorList,
         String publisher,
         LocalDate publicationDate,
         int price,

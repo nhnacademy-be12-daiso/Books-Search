@@ -29,4 +29,5 @@ public interface CategoryService {
     List<CategoryRespDTO> getCategoryDTOsByIds(List<Long> categoryIds);
     List<Category> findCategoriesByNamesAndDeeps(List<String> categoryNames, List<Integer> deeps);
     List<Category> findAllByBookCategories(List<BookCategory> bookCategories);
+    Category findCategoryByName(String categoryName);
 }

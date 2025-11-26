@@ -150,6 +150,11 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    public List<Tag> findAllByNameIn(List<String> tagName){
+        return tagRepository.findAllByNameIn(tagName);
+    }
+
+    @Override
     public List<Tag> findAllByBookTags(List<BookTag> bookTags) {
         return tagRepository.findAllByBookTags(bookTags);
     }

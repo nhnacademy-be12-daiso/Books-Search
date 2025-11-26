@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
@@ -18,11 +19,18 @@ public class BookAuthor {
     @JoinColumn(name = "book_id")
     private Book book;
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "author_id")
     private Author author;
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
+
+    public BookAuthor(Book book, Author author){
+        this.book = book;
+        this.author = author;
+    }
 }

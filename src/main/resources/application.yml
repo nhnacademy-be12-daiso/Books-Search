@@ -20,9 +20,9 @@ spring:
       max-request-size: 50MB
 
 minio:
-  url: http://127.0.0.1:9000  # MiniIO 서버의 엔드포인트 주소
-  accessKey: your-minio-access-key  # MiniIO 사용자 Access Key
-  secretKey: your-minio-secret-key  # MiniIO 사용자 Secret Key
+  url: http://storage.java21.net  # MiniIO 서버의 엔드포인트 주소
+  accessKey: nhnacademy  # MiniIO 사용자 Access Key
+  secretKey: nhnacademy123!  # MiniIO 사용자 Secret Key
   bucketName:
     book: book-image
     review: review-image

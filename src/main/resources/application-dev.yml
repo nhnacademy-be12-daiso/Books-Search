@@ -21,4 +21,3 @@ minio:
   url: http://127.0.0.1:9000  # MiniIO 서버의 엔드포인트 주소
   accessKey: your-minio-access-key  # MiniIO 사용자 Access Key
   secretKey: your-minio-secret-key  # MiniIO 사용자 Secret Key
-  bucketName: book-covers       # 이미지를 저장할 버킷 이름

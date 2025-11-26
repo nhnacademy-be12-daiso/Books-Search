@@ -20,4 +20,5 @@ public interface PublisherService {
 
     //book 서비스에서 사용하는 메서드
     Publisher getPublisherRegisterBook(String publisherName);
+    Publisher getPublisherByName(String publisherName);
 }

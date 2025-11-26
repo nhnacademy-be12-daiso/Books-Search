@@ -145,4 +145,9 @@ public class PublisherServiceImpl implements PublisherService {
 
         return publisher;
     }
+
+    @Override
+    public Publisher getPublisherByName(String publisherName){
+        return publisherRepository.findPublisherByName(publisherName);
+    }
 }
