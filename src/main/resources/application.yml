@@ -5,11 +5,11 @@ app:
 
 spring:
   jpa:
-    hibernate:
-      ddl-auto: update # \uAC1C\uBC1C\uC6A9
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true     # SQL \uB85C\uADF8 \uBCF4\uAE30
+#    hibernate:
+#      ddl-auto: update # \uAC1C\uBC1C\uC6A9
+#      naming:
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+#    show-sql: true     # SQL \uB85C\uADF8 \uBCF4\uAE30
 
     properties:
       hibernate:
@@ -17,8 +17,8 @@ spring:
         order_inserts: true   # 삽입 순서를 최적화
         order_updates: true   # 업데이트 순서를 최적화
 
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+#        format_sql: true
+#        dialect: org.hibernate.dialect.MySQLDialect
 
   application:
     name: team3-booksearch
@@ -30,16 +30,16 @@ spring:
       max-request-size: 50MB
 
 
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST}
-    port: ${SPRING_RABBITMQ_PORT}
-    username: ${SPRING_RABBITMQ_USERNAME}
-    password: ${SPRING_RABBITMQ_PASSWORD}
+#  datasource:
+#    url: ${SPRING_DATASOURCE_URL}
+#    username: ${SPRING_DATASOURCE_USERNAME}
+#    password: ${SPRING_DATASOURCE_PASSWORD}
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#  rabbitmq:
+#    host: ${SPRING_RABBITMQ_HOST}
+#    port: ${SPRING_RABBITMQ_PORT}
+#    username: ${SPRING_RABBITMQ_USERNAME}
+#    password: ${SPRING_RABBITMQ_PASSWORD}
 
 
 eureka:
@@ -48,8 +48,8 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+#    service-url:
+#      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
 
 logging:
   level:
