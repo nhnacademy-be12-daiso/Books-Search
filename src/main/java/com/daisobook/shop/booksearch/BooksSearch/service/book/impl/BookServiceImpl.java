@@ -381,8 +381,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<BookListRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO) {
-        List<Book> bookList = bookRepository.findBooksByIdIn(bookIdListReqDTO);
+    public List<BookListRespDTO> getBooksByIdIn(List<Long> bookIds) {
+        List<Book> bookList = bookRepository.findBooksByIdIn(bookIds);
         if(bookList == null || bookList.isEmpty()){
             return List.of();
         }

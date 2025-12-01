@@ -54,7 +54,8 @@ public class BookController {
 
     @GetMapping("/list")
     public List<BookListRespDTO> getBookList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
-        return bookService.getBooksByIdIn(bookIdListReqDTO);
+        List<Long> bookIds = bookIdListReqDTO.bookIdList();
+        return bookService.getBooksByIdIn(bookIds);
     }
 
     @GetMapping
