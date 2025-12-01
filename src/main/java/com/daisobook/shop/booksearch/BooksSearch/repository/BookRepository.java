@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.BooksSearch.repository;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -35,5 +34,5 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     List<Book> findAllByPublisher_Name(String publisherName);
 
-    List<Book> findBooksByIdIn(BookIdListReqDTO ids);
+    List<Book> findBooksByIdIn(List<Long> ids);
 }
