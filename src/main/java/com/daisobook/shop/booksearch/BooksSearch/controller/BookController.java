@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
@@ -48,6 +49,11 @@ public class BookController {
     @GetMapping("/ISBN-search/{bookIsbn}")
     public BookRespDTO getBookIsbn(@PathVariable("bookIsbn") String bookIsbn){
         return bookService.findBookByIsbn(bookIsbn);
+    }
+
+    @GetMapping("/list")
+    public List<BookRespDTO> getBookList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
+        return bookService.getBooksByIdIn(bookIdListReqDTO);
     }
 
     @GetMapping

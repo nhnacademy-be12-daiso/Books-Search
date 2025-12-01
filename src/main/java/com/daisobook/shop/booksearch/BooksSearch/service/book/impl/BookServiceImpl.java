@@ -380,6 +380,15 @@ public class BookServiceImpl implements BookService {
         return List.of();
     }
 
+    @Override
+    public List<BookRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO) {
+        List<Book> bookList = bookRepository.findBooksByIdIn(bookIdListReqDTO);
+        if(bookList == null || bookList.isEmpty()){
+            return List.of();
+        }
+        return createdBookRespDTOs(bookList);
+    }
+
     private List<BookRespDTO> createdBookRespDTOs(List<Book> books){
         List<BookRespDTO> bookRespDTOS = new ArrayList<>();
         for(Book book:books) {
