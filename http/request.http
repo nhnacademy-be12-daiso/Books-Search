@@ -1,0 +1,2 @@
+### 도서 리스트 요청 (id)
+POST http://localhost:8088/api/books/list

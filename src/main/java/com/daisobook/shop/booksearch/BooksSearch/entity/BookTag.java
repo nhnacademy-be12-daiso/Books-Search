@@ -8,7 +8,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Getter
-@Table(name ="Book_Tags", uniqueConstraints = {@UniqueConstraint(columnNames = {"book_id", "tag_id"})})
+@Table(name ="book_tags", uniqueConstraints = {@UniqueConstraint(columnNames = {"book_id", "tag_id"})})
 public class BookTag {
 
     @Id

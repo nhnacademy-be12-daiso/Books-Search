@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Getter
-@Table(name="Reviews", uniqueConstraints = {@UniqueConstraint(columnNames = {"book_id", "user_created_id", "oder_detail_id"})})
+@Table(name="reviews", uniqueConstraints = {@UniqueConstraint(columnNames = {"book_id", "user_created_id", "oder_detail_id"})})
 public class Review {
 
     @Id

@@ -52,7 +52,7 @@ public class BookController {
         return bookService.findBookByIsbn(bookIsbn);
     }
 
-    @GetMapping("/list")
+    @PostMapping("/list")
     public List<BookListRespDTO> getBookList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
         List<Long> bookIds = bookIdListReqDTO.bookIdList();
         return bookService.getBooksByIdIn(bookIds);
