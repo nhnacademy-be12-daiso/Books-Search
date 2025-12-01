@@ -4,6 +4,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,7 +27,7 @@ public interface BookService {
     BookRespDTO findBookById(long bookId);
     BookRespDTO findBookByIsbn(String isbn);
     List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName);
-    List<BookRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO);
+    List<BookListRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO);
     void updateBook(long bookId, BookReqDTO BookReqDTO,Map<String, MultipartFile> fileMap);
     void deleteBook(DeleteBookReqDTO deleteBookReqDTO);
 
