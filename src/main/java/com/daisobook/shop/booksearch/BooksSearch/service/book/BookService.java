@@ -26,6 +26,7 @@ public interface BookService {
     BookRespDTO findBookById(long bookId);
     BookRespDTO findBookByIsbn(String isbn);
     List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName);
+    List<BookRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO);
     void updateBook(long bookId, BookReqDTO BookReqDTO,Map<String, MultipartFile> fileMap);
     void deleteBook(DeleteBookReqDTO deleteBookReqDTO);
 
