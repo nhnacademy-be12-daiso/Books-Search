@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "Book_Images")
+@Table(name = "book_images")
 public class BookImage {
     @Id
     @Column(name = "book_image_id")
