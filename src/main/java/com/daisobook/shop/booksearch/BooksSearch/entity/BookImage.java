@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "BookImages")
+@Table(name = "Book_Images")
 public class BookImage {
     @Id
     @Column(name = "book_image_id")
@@ -26,7 +26,7 @@ public class BookImage {
     private int no;
 
     @Setter
-    @Column(name = "book_imgae_path")
+    @Column(name = "book_image_path")
     private String path;
 
     @Setter

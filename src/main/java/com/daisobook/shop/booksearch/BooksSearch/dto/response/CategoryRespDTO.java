@@ -4,4 +4,5 @@ public record CategoryRespDTO(
         long categoryId,
         String categoryName,
         int deep,
+        Long preCategoryId,
         String preCategoryName) { }

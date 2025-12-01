@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8088
 
   servlet:
     encoding:
@@ -7,10 +7,13 @@ server:
       force: true
 
 spring:
+  application:
+    name: team3-booksearch
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+#    url: jdbc:mysql://220.67.216.14:13306/nhn_exam_8?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://s4.java21.net:13306/project_be12_team3?serverTimezone=Asia/Seoul
+    username: project_be12_team3
+    password: Vu52gc0i(mNxDJyI
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -24,11 +27,11 @@ spring:
       dialect: org.hibernate.dialect.MySQLDialect
     show-sql: true     # SQL \uB85C\uADF8 \uBCF4\uAE30
 
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST}
-    port: ${SPRING_RABBITMQ_PORT}
-    username: ${SPRING_RABBITMQ_USERNAME}
-    password: ${SPRING_RABBITMQ_PASSWORD}
+#  rabbitmq:
+#    host: ${SPRING_RABBITMQ_HOST}
+#    port: ${SPRING_RABBITMQ_PORT}
+#    username: ${SPRING_RABBITMQ_USERNAME}
+#    password: ${SPRING_RABBITMQ_PASSWORD}
 
 eureka:
   instance:
@@ -37,7 +40,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      defaultZone: http://localhost:8761/eureka
 
 management:
   endpoints:

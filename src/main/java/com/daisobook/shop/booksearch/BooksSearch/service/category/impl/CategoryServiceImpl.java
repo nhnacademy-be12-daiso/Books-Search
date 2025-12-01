@@ -125,12 +125,15 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryRespDTO> getCategoriesByDeep(int deep) {
         List<Category> categories = categoryRepository.findAllByDeep(deep);
         return categories.stream()
-                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(), c.getPreCategory().getName()))
+                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(),
+                        c.getPreCategory() != null ? c.getPreCategory().getId() : null,
+                        c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
     }
 
     private CategoryRespDTO createCategoryReqDTO(Category category){
         return new CategoryRespDTO(category.getId(), category.getName(), category.getDeep(),
+                category.getPreCategory() != null ? category.getPreCategory().getId() : null,
                 category.getPreCategory() != null ? category.getPreCategory().getName() : null);
     }
 
@@ -149,6 +152,7 @@ public class CategoryServiceImpl implements CategoryService {
     private List<CategoryRespDTO> createCategoryRespDTOs(List<Category> categories){
         return categories.stream()
                 .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(),
+                        c.getPreCategory() != null ? c.getPreCategory().getId() : null,
                         c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
     }
@@ -257,7 +261,9 @@ public class CategoryServiceImpl implements CategoryService {
         List<Category> categories = findCategoriesByIds(categoryIds);
 
         return categories.stream()
-                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(), c.getPreCategory().getName()))
+                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(),
+                        c.getPreCategory() != null ? c.getPreCategory().getId() : null,
+                        c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
     }
 

@@ -317,7 +317,9 @@ public class BookServiceImpl implements BookService {
 
         List<CategoryRespDTO> categoryRespDTOS = book.getBookCategories().stream()
                 .map(BookCategory::getCategory)
-                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(), c.getPreCategory().getName()))
+                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(),
+                        c.getPreCategory() != null ? c.getPreCategory().getId() : null,
+                        c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
 
 //        List<TagRespDTO> tagRespDTOS = tagService.findAllByIdIn(book.getBookTags().stream()
