@@ -12,7 +12,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-@RequestMapping("/authors")
+@RequestMapping("/api/books/authors")
 public class AuthorController {
 
     private final AuthorService authorService;

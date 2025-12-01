@@ -11,7 +11,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/tags")
+@RequestMapping("/api/books/tags")
 public class TagController {
 
     private final TagService tagService;
