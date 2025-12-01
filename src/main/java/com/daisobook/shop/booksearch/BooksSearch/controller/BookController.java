@@ -5,6 +5,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDT
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -52,7 +53,7 @@ public class BookController {
     }
 
     @GetMapping("/list")
-    public List<BookRespDTO> getBookList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
+    public List<BookListRespDTO> getBookList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
         return bookService.getBooksByIdIn(bookIdListReqDTO);
     }
 

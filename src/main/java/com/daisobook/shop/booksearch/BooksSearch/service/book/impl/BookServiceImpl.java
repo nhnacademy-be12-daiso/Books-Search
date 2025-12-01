@@ -381,12 +381,12 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<BookRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO) {
+    public List<BookListRespDTO> getBooksByIdIn(BookIdListReqDTO bookIdListReqDTO) {
         List<Book> bookList = bookRepository.findBooksByIdIn(bookIdListReqDTO);
         if(bookList == null || bookList.isEmpty()){
             return List.of();
         }
-        return createdBookRespDTOs(bookList);
+        return createdBookListRespDTOs(bookList);
     }
 
     private List<BookRespDTO> createdBookRespDTOs(List<Book> books){
@@ -395,6 +395,31 @@ public class BookServiceImpl implements BookService {
             bookRespDTOS.add(createdBookRespDTO(book));
         }
         return bookRespDTOS;
+    }
+
+    private BookListRespDTO createdBooksRespDTO(Book book){
+        List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream()
+                .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
+                .toList();
+
+        return new BookListRespDTO(book.getId(), book.getTitle(),
+                book.getBookAuthors().stream()
+                        .map(ba ->
+                                new AuthorRespDTO(ba.getAuthor() != null ? ba.getAuthor().getId() : null,
+                                        ba.getAuthor() != null ? ba.getAuthor().getName() : null,
+                                        ba.getRole() != null ? ba.getRole().getId() : null,
+                                        ba.getRole() != null ? ba.getRole().getName() : null))
+                        .toList(),
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.getStatus(),
+                imageRespDTOS, book.getVolumeNo());
+    }
+
+    private List<BookListRespDTO> createdBookListRespDTOs(List<Book> books){
+        List<BookListRespDTO> bookListRespDTOs = new ArrayList<>();
+        for(Book book:books) {
+            bookListRespDTOs.add(createdBooksRespDTO(book));
+        }
+        return bookListRespDTOs;
     }
 
     @Override
