@@ -27,3 +27,12 @@ management:
   endpoint:
     health:
       show-details: always
+
+minio:
+  url: http://storage.java21.net  # MiniIO 서버의 엔드포인트 주소
+  accessKey: nhnacademy  # MiniIO 사용자 Access Key
+  secretKey: nhnacademy123!  # MiniIO 사용자 Secret Key
+  bucketName:
+    book: book-image
+    review: review-image
+    test: book-cover
