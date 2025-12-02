@@ -14,5 +14,6 @@ public record BookListRespDTO(
         int price,
         Status status,
         List<ImageRespDTO> imageList,
+        List<CategoryRespDTO> categories,
         Integer volumeNo){
 }

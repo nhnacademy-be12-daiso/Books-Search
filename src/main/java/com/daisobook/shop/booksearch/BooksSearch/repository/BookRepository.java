@@ -1,9 +1,12 @@
 package com.daisobook.shop.booksearch.BooksSearch.repository;
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,4 +40,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findBooksByIdIn(List<Long> ids);
 
     List<Book> findAllByIdIn(List<Long> ids);
+
+    List<Book> findAllByPublicationDateAfterOrderByPublicationDateDesc(LocalDate publicationDateAfter, Sort sort, Limit limit);
 }
