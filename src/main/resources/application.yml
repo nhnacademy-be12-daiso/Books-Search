@@ -3,6 +3,10 @@ spring:
     properties:
       hibernate:
 
+app:
+  batch:
+    size: 1000
+
 eureka:
   instance:
     prefer-ip-address: true
