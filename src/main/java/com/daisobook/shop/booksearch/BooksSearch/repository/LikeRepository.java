@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.repository;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.Like;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -18,4 +19,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     boolean existsLikeByBook_IdAndUserId(long bookId, long userId);
 
     void deleteLikeById(long id);
+
+    void deleteLikeByBookAndUserId(Book book, long userId);
 }

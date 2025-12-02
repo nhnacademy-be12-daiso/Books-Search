@@ -7,6 +7,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataRe
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.HomeBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -42,14 +43,27 @@ public class BookController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/home")
+    public HomeBookListRespDTO getHome(){
+        return bookService.getHomeBookLists();
+    }
+
     @GetMapping("{bookId}")
-    public BookRespDTO getBookId(@PathVariable("bookId") long bookId){
-        return bookService.findBookById(bookId);
+    public BookRespDTO getBookId(@PathVariable("bookId") long bookId,
+                                 @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return bookService.findBookById(bookId, userId);
     }
 
     @GetMapping("/ISBN-search/{bookIsbn}")
-    public BookRespDTO getBookIsbn(@PathVariable("bookIsbn") String bookIsbn){
-        return bookService.findBookByIsbn(bookIsbn);
+    public BookRespDTO getBookIsbn(@PathVariable("bookIsbn") String bookIsbn,
+                                   @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return bookService.findBookByIsbn(bookIsbn, userId);
+    }
+
+    @GetMapping("/lists")
+    public HomeBookListRespDTO getHomeBookLists(){
+        HomeBookListRespDTO homeBookLists = bookService.getHomeBookLists();
+        return homeBookLists;
     }
 
     @PostMapping("/list")

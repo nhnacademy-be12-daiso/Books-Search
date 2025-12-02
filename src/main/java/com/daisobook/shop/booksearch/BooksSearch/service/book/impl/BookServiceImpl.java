@@ -4,30 +4,33 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookAuthorRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookCategoryRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookTagRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.*;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
+import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
 import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherService;
+import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +39,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
 
+    private final LikeService likeService;
+    private final ReviewService reviewService;
     @Value("${app.batch.size}")
     private int BATCH_SIZE;
 
@@ -50,6 +55,7 @@ public class BookServiceImpl implements BookService {
     private final BookAuthorRepository bookAuthorRepository;
     private final AuthorService authorService;
     private final BookImageServiceImpl imageService;
+    private final BookOfTheWeekRepository bookOfTheWeekRepository;
 
     private final ObjectMapper objectMapper;
 
@@ -284,7 +290,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public BookRespDTO findBookById(long bookId) {
+    public BookRespDTO findBookById(long bookId, Long userId) {
         validateExistsById(bookId);
 
         Book book = bookRepository.findBookById(bookId);
@@ -293,12 +299,12 @@ public class BookServiceImpl implements BookService {
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
 
-        return createdBookRespDTO(book);
+        return createdBookRespDTO(book, userId);
     }
 
     @Override
     @Transactional
-    public BookRespDTO findBookByIsbn(String isbn) {
+    public BookRespDTO findBookByIsbn(String isbn, Long userId) {
         validateExistsByIsbn(isbn);
 
         Book book = bookRepository.findBookByIsbn(isbn);
@@ -307,10 +313,10 @@ public class BookServiceImpl implements BookService {
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
 
-        return createdBookRespDTO(book);
+        return createdBookRespDTO(book, userId);
     }
 
-    private BookRespDTO createdBookRespDTO(Book book){
+    private BookRespDTO createdBookRespDTO(Book book, Long userId){
 //        List<CategoryRespDTO> categoryRespDTOS = categoryService.getCategoryDTOsByIds(book.getBookCategories().stream()
 //                .map(bc -> bc.getCategory().getId())
 //                .toList());
@@ -335,6 +341,11 @@ public class BookServiceImpl implements BookService {
                 .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
                 .toList();
 
+        int count = likeService.likeCount(book.getId());
+        boolean check = likeService.likeCheck(book.getId(), userId);
+
+        List<ReviewRespDTO> reviews = reviewService.getReviewsByBookId(book.getId());
+
         return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(),
                 book.getBookAuthors().stream()
                         .map(ba ->
@@ -344,10 +355,11 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
                 book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
-                imageRespDTOS, book.getVolumeNo(), categoryRespDTOS, tagRespDTOS);
+                imageRespDTOS, book.getVolumeNo(), categoryRespDTOS, tagRespDTOS, count, check, reviews);
     }
 
     @Override
+    @Transactional
     public List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName) {
         if(categoryName != null){
             Category category = categoryService.findCategoryByName(categoryName);
@@ -381,6 +393,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public List<BookListRespDTO> getBooksByIdIn(List<Long> bookIds) {
         List<Book> bookList = bookRepository.findAllByIdIn(bookIds);
         if(bookList == null || bookList.isEmpty()){
@@ -389,10 +402,53 @@ public class BookServiceImpl implements BookService {
         return createdBookListRespDTOs(bookList);
     }
 
+    @Override
+    @Transactional
+    public HomeBookListRespDTO getHomeBookLists() {
+        Map<String, List<BookListRespDTO>> bookLists = new HashMap<>();
+
+        String newReleases = "newReleases"; //신간도서
+        String bookOfTheWeek = "bookOfTheWeek"; //금주 추천 도서
+
+        //신간 도서
+        Sort sort = Sort.by(Sort.Direction.DESC, "publicationDate");
+        List<Book> bookList = bookRepository.findAllByPublicationDateAfterOrderByPublicationDateDesc(
+                LocalDate.now().minusMonths(240), sort, Limit.of(10));
+
+        if(bookList == null || bookList.isEmpty()){
+            bookLists.put(newReleases, List.of());
+        } else {
+            bookLists.put(newReleases, createdBookListRespDTOs(bookList));
+        }
+
+        //금주 추천 도서
+        sort = Sort.by(Sort.Direction.ASC, "no");
+        List<BookOfTheWeek> bookOfTheWeeks = bookOfTheWeekRepository.findAllByIsActiveOrderByAppliedDateDesc(
+                true, sort, Limit.of(10));
+
+        if(bookOfTheWeeks == null || bookOfTheWeeks.isEmpty()){
+            bookLists.put(newReleases, List.of());
+        } else {
+            Map<Long, Book> bookMap = bookRepository.findAllByIdIn(bookOfTheWeeks.stream()
+                        .map(BookOfTheWeek::getBookId)
+                        .toList()).stream()
+                    .collect(Collectors.toMap(Book::getId, b -> b));
+
+            List<Book> bookList1 = bookOfTheWeeks.stream()
+                    .map(bo -> bookMap.get(bo.getBookId()))
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            bookLists.put(bookOfTheWeek, createdBookListRespDTOs(bookList1));
+        }
+
+        return new HomeBookListRespDTO(bookLists);
+    }
+
     private List<BookRespDTO> createdBookRespDTOs(List<Book> books){
         List<BookRespDTO> bookRespDTOS = new ArrayList<>();
         for(Book book:books) {
-            bookRespDTOS.add(createdBookRespDTO(book));
+            bookRespDTOS.add(createdBookRespDTO(book, null));
         }
         return bookRespDTOS;
     }
@@ -400,6 +456,13 @@ public class BookServiceImpl implements BookService {
     private BookListRespDTO createdBooksRespDTO(Book book){
         List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream()
                 .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
+                .toList();
+
+        List<CategoryRespDTO> categoryRespDTOS = book.getBookCategories().stream()
+                .map(BookCategory::getCategory)
+                .map(c -> new CategoryRespDTO(c.getId(), c.getName(), c.getDeep(),
+                        c.getPreCategory() != null ? c.getPreCategory().getId() : null,
+                        c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
 
         return new BookListRespDTO(book.getId(), book.getTitle(),
@@ -411,7 +474,7 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
                 book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.getStatus(),
-                imageRespDTOS, book.getVolumeNo());
+                imageRespDTOS, categoryRespDTOS, book.getVolumeNo());
     }
 
     private List<BookListRespDTO> createdBookListRespDTOs(List<Book> books){
@@ -696,6 +759,27 @@ public class BookServiceImpl implements BookService {
                         .map(b -> b.getAuthor().getName() + b.getRole().getName())
                         .toList());
         bookRepository.delete(book);
+    }
+
+    @Override
+    @Transactional
+    public void addLike(long bookId, long userId) {
+        Book book = bookRepository.findBookById(bookId);
+        likeService.createLike(userId, book);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLike(long booId, long userId) {
+        Book book = bookRepository.findBookById(booId);
+        likeService.deleteLike(userId, book);
+    }
+
+    @Override
+    @Transactional
+    public void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap) {
+        Book book = bookRepository.findBookById(reviewReqDTO.bookId());
+        reviewService.registerReview(reviewReqDTO, fileMap, book);
     }
 
     private Book getBook_IdOrISBN(long id, String isbn, String methodName){

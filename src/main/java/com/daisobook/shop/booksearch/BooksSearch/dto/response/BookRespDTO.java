@@ -22,5 +22,8 @@ public record BookRespDTO(
         List<ImageRespDTO> imageList,
         Integer volumeNo,
         List<CategoryRespDTO> categories,
-        List<TagRespDTO> tags){
+        List<TagRespDTO> tags,
+        int likeCount,
+        boolean isLike,
+        List<ReviewRespDTO> reviewList){
 }

@@ -42,16 +42,9 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final BookService bookService;
     private final ReviewImageServiceImpl imageService;
 
     private final ObjectMapper objectMapper;
-
-    //TODO 해당 리뷰 창을 요청하는 거에 대해 권한이 있는지 확인(해당 도서의 주문 디테일이 있는 사용자이며 요청을 보내는 자가 해당 사용자인지 검증이 필요)
-    boolean check(long userId, long bookId, long oderDetailId){
-        //주문에 보내서 체크하기
-        return false;
-    }
 
     @Override
     public ReviewGroupReqDTO parsing(ReviewMetadataReqDTO dto) throws JsonProcessingException {
@@ -92,16 +85,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
-    public void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap){
+    public void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap, Book book){
         if(reviewRepository.existsReviewByBook_IdAndUserIdAndOderDetailId(reviewReqDTO.bookId(), reviewReqDTO.userId(), reviewReqDTO.orderDetailId())){
             log.error("이미 존재하는 리뷰 생성 요청입니다-  bookId:{}, userId:{}, oderDetailId:{}",
                     reviewReqDTO.bookId(), reviewReqDTO.userId(), reviewReqDTO.orderDetailId());
             throw new DuplicatedReview("이미 존재하는 리뷰 생성 요청입니다");
         }
 
-        check(reviewReqDTO.userId(), reviewReqDTO.bookId(), reviewReqDTO.orderDetailId());
-
-        Book book = bookService.getBookById(reviewReqDTO.bookId());
         if(book == null){
             log.error("해당 아이디의 도서를 찾지 못하였습니다 - 도서ID:{}", reviewReqDTO.bookId());
             throw new NotFoundBook("해당 아이디의 도서를 찾지 못하였습니다");
