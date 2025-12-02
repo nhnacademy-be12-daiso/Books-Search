@@ -1,0 +1,38 @@
+package com.daisobook.shop.booksearch.BooksSearch.entity;
+
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.PublisherReqDTO;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@NoArgsConstructor
+@Getter
+@Entity
+@Table(name = "publishers")
+public class Publisher {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "publisher_id")
+    private long id;
+
+    @Setter
+    @Column(name = "publisher_name")
+    private String name;
+
+    public Publisher(String name){
+        this.name = name;
+        this.bookList = new ArrayList<>();
+    }
+
+    public static Publisher create(PublisherReqDTO dto){
+        return new Publisher(dto.name());
+    }
+
+    @Setter
+    @OneToMany(mappedBy = "publisher")
+    private List<Book> bookList;
+}
