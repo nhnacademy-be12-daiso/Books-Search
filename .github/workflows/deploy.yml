@@ -60,8 +60,7 @@ jobs:
             docker compose pull team3-booksearch-1
             
             echo "Booksearch-1 Restart"
-            # docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-1
-            SPRING_PROFILES_ACTIVE=prod docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-1
+            docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-1
             
             echo "Booksearch-1 Health Check"
             for retry in {1..30}; do
@@ -80,8 +79,7 @@ jobs:
             done
             
             echo "Booksearch-2 Restart"
-            # docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-2
-            SPRING_PROFILES_ACTIVE=prod docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-2
+            docker compose --env-file .env up -d --no-deps --force-recreate team3-booksearch-2
             
             echo "Booksearch-2 Health Check"
             for retry in {1..30}; do
