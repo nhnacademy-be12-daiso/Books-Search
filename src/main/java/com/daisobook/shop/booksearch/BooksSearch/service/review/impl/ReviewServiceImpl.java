@@ -221,4 +221,9 @@ public class ReviewServiceImpl implements ReviewService {
             }
         }
     }
+
+    @Override
+    public Review findReviewByUserIdAndBookIdAndOrderDetailId(long userId, long bookId, long orderDetailId) {
+        return reviewRepository.findReviewByUserIdAndBook_IdAndOderDetailId(userId, bookId, orderDetailId);
+    }
 }
