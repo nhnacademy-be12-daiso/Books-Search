@@ -5,6 +5,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewMetada
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.Review;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,4 +19,5 @@ public interface ReviewService {
     List<ReviewRespDTO> getReviewsByUserId(long userId);
     List<ReviewRespDTO> getReviewsByBookId(long bookId);
     void updateReview(long reviewId, ReviewReqDTO reviewReqDTO, Map<String , MultipartFile> fileMap);
+    Review findReviewByUserIdAndBookIdAndOrderDetailId(long userId, long bookId, long orderDetailId);
 }

@@ -42,4 +42,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findAllByIdIn(List<Long> ids);
 
     List<Book> findAllByPublicationDateAfterOrderByPublicationDateDesc(LocalDate publicationDateAfter, Sort sort, Limit limit);
+
+    @Query("SELECT b FROM Book b JOIN FETCH b.reviews WHERE b.id IN :bookIds")
+    List<Book> findAllByIdWithReviews(List<Long> bookIds);
 }

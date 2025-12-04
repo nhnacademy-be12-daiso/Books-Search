@@ -4,8 +4,11 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookOrderDetailRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
@@ -483,6 +486,30 @@ public class BookServiceImpl implements BookService {
             bookListRespDTOs.add(createdBooksRespDTO(book));
         }
         return bookListRespDTOs;
+    }
+
+    @Override
+    @Transactional
+    public List<BookReviewResponse> getBooksByIdIn_ReviewId(long userId, List<BookOrderDetailRequest> bookOrderDetailRequests) {
+        Map<Long, Book> bookMap = bookRepository.findAllByIdIn(bookOrderDetailRequests.stream()
+                    .map(BookOrderDetailRequest::bookId)
+                    .toList()).stream()
+                .collect(Collectors.toMap(Book::getId, b->b));
+
+        List<BookReviewResponse> bookReviewResponses = new ArrayList<>();
+        for(BookOrderDetailRequest bod: bookOrderDetailRequests){
+            Book book = bookMap.get(bod.bookId());
+            BookResponse bookResponse = new BookResponse(book.getId(), book.getTitle(),
+                    book.getBookImages().stream()
+                            .map(bi ->
+                                    new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
+                            .toList());
+
+            Review review = reviewService.findReviewByUserIdAndBookIdAndOrderDetailId(userId, bod.bookId(), bod.orderDetailId());
+
+            bookReviewResponses.add(new BookReviewResponse(bookResponse, bod.orderDetailId(), review != null ? review.getId() : null));
+        }
+        return bookReviewResponses;
     }
 
     @Override

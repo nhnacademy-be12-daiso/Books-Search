@@ -5,9 +5,11 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDT
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.HomeBookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +72,11 @@ public class BookController {
     public List<BookListRespDTO> getBookList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
         List<Long> bookIds = bookIdListReqDTO.bookIdList();
         return bookService.getBooksByIdIn(bookIds);
+    }
+
+    @PostMapping("/list/book-review")
+    List<BookReviewResponse> getBookReviewList(@RequestBody BookReviewRequest bookReviewRequest){
+        return bookService.getBooksByIdIn_ReviewId(bookReviewRequest.userId(), bookReviewRequest.bookOrderDetailRequests());
     }
 
     @GetMapping
