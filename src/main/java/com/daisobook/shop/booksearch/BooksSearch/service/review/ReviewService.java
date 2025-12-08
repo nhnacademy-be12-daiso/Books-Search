@@ -14,6 +14,7 @@ import java.util.Map;
 
 public interface ReviewService {
     ReviewGroupReqDTO parsing(ReviewMetadataReqDTO dto) throws JsonProcessingException;
+    ReviewGroupReqDTO parsing2(String metadataJson, MultipartFile image0, MultipartFile image1, MultipartFile image2) throws JsonProcessingException;
     void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap, Book book);
     ReviewRespDTO getReviewById(long id);
     List<ReviewRespDTO> getReviewsByUserId(long userId);

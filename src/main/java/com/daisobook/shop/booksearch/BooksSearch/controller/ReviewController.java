@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,10 +22,20 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final BookService bookService;
 
+//    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+//    public ResponseEntity addReview(@RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO) throws JsonProcessingException {
+//        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing(reviewMetadataReqDTO);
+////        reviewService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
+//        bookService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
+//        return ResponseEntity.ok().build();
+//    }
+
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity addReview(@RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO) throws JsonProcessingException {
-        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing(reviewMetadataReqDTO);
-//        reviewService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
+    public ResponseEntity addReview(@RequestPart("metadata") String metadataJson,
+                                    @RequestPart(value = "image0", required = false) MultipartFile image0,
+                                    @RequestPart(value = "image1", required = false) MultipartFile image1,
+                                    @RequestPart(value = "image2", required = false) MultipartFile image2) throws JsonProcessingException {
+        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing2(metadataJson, image0, image1, image2);
         bookService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
         return ResponseEntity.ok().build();
     }
@@ -44,11 +55,22 @@ public class ReviewController {
         return reviewService.getReviewById(reviewId);
     }
 
+//    @PutMapping(value = "/{reviewId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+//    public ResponseEntity updateReviewById(@RequestParam("reviewId") long reviewId,
+//                                           @RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO,
+//                                           @RequestHeader("X-User-Id")long userId) throws JsonProcessingException {
+//        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing(reviewMetadataReqDTO);
+//        reviewService.updateReview(reviewId, reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
+//        return ResponseEntity.ok().build();
+//    }
+
     @PutMapping(value = "/{reviewId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity updateReviewById(@RequestParam("reviewId") long reviewId,
-                                           @RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO,
-                                           @RequestHeader("X-User-Id")long userId) throws JsonProcessingException {
-        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing(reviewMetadataReqDTO);
+                                           @RequestPart("metadata") String metadataJson,
+                                           @RequestPart(value = "image0", required = false) MultipartFile image0,
+                                           @RequestPart(value = "image1", required = false) MultipartFile image1,
+                                           @RequestPart(value = "image2", required = false) MultipartFile image2) throws JsonProcessingException {
+        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing2(metadataJson, image0, image1, image2);
         reviewService.updateReview(reviewId, reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
         return ResponseEntity.ok().build();
     }

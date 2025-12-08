@@ -52,7 +52,7 @@ public class ReviewServiceImpl implements ReviewService {
             throw new RuntimeException("null");
         }
 
-        final int MAX_FILE_COUNT = 5;
+        final int MAX_FILE_COUNT = 3;
 
         ReviewReqDTO metadata = objectMapper.readValue(dto.metadata(), ReviewReqDTO.class);
         Map<String, MultipartFile> files = new HashMap<>();
@@ -78,6 +78,26 @@ public class ReviewServiceImpl implements ReviewService {
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        return new ReviewGroupReqDTO(metadata, files);
+    }
+
+    @Override
+    public ReviewGroupReqDTO parsing2(String metadataJson, MultipartFile image0, MultipartFile image1, MultipartFile image2) throws JsonProcessingException {
+        final int MAX_FILE_COUNT = 5;
+
+        ReviewReqDTO metadata = objectMapper.readValue(metadataJson, ReviewReqDTO.class);
+        Map<String, MultipartFile> files = new HashMap<>();
+
+        if(image0 != null){
+            files.put(image0.getName(), image0);
+        }
+        if(image1 != null){
+            files.put(image1.getName(), image1);
+        }
+        if(image2 != null){
+            files.put(image2.getName(), image2);
         }
 
         return new ReviewGroupReqDTO(metadata, files);

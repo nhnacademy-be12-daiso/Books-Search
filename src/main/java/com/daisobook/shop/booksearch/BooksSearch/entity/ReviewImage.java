@@ -8,7 +8,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "review_Images")
+@Table(name = "review_images")
 public class ReviewImage {
     @Id
     @Column(name = "review_image_id")
