@@ -3,6 +3,8 @@ server:
     encoding:
       charset: UTF-8
       force: true
+  tomcat:
+    connection-timeout: 120s
 
 spring:
   datasource:
@@ -22,6 +24,9 @@ spring:
       format_sql: true
       dialect: org.hibernate.dialect.MySQLDialect
     show-sql: true     # SQL \uB85C\uADF8 \uBCF4\uAE30
+  servlet:
+    multipart:
+      max-request-size: 20MB
 
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST}
@@ -57,10 +62,10 @@ management:
       show-details: always
 
 minio:
-  url: http://storage.java21.net  # MiniIO 서버의 엔드포인트 주소
-  accessKey: nhnacademy  # MiniIO 사용자 Access Key
-  secretKey: nhnacademy123!  # MiniIO 사용자 Secret Key
+  url: http://storage.java21.net:8000  # MiniIO 서버의 엔드포인트 주소
+  accessKey: tUQ5cvl8WJSqBDwtqWAW  # MiniIO 사용자 Access Key
+  secretKey: ufyZgbYaKPG2Syfv4C0CExifq7B4z8ZzzCndGX2c  # MiniIO 사용자 Secret Key
   bucketName:
-    book: book-image
-    review: review-image
-    test: book-cover
+    book: daiso-book-image
+    review: daiso-review-image
+    test: daiso-book-cover
