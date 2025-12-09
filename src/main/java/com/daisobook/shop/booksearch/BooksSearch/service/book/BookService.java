@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
@@ -43,4 +44,6 @@ public interface BookService {
     void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap);
     //다른 서비스에서 사용하는 메서드
     Book getBookById(long bookId);
+
+    BookCategoryResponse bookcategory(long bookId);
 }
