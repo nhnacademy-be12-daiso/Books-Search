@@ -27,6 +27,13 @@ spring:
   servlet:
     multipart:
       max-request-size: 20MB
+  elasticsearch:
+    uris: http://s4.java21.net:9200
+    username: elastic
+    password: nhnacademy123!
+    socket-timeout: 60s
+    connection-timeout: 5s
+
 
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST}
@@ -37,6 +44,11 @@ spring:
 app:
   batch:
     size: 1000
+  ai:
+    embedding-url: http://ollama.java21.net/api/embeddings
+    reranker-url: http://reranker.java21.net/rerank
+    gemini-api-key: AIzaSyAPjRTWLiLXhJBCiCKoCNi3aPVMNGkU4go
+    gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
 
 eureka:
   instance:
