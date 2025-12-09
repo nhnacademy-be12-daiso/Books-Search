@@ -1,0 +1,8 @@
+### isbn
+GET localhost:8088/api/books/search?query=9788966262084
+
+### 기본 도서 검색
+GET localhost:8088/api/books/search?query=자바 기초 공부
+
+### AI 도서 검색
+GET localhost:8088/api/books/ai-search?query=스프링 부트로 백엔드 개발하고 싶은데, 어떤 책이 좋을까?
