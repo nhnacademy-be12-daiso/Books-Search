@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
@@ -892,5 +893,62 @@ public class BookServiceImpl implements BookService {
         }
 
         return price < 0 ? 0: price;
+    }
+
+    @Override
+    public BookCategoryResponse bookcategory(long bookId) {
+        // 1. 책에 연결된 카테고리 정보 조회
+        List<BookCategory> allByBookId = bookCategoryRepository.findAllByBook_Id(bookId);
+
+        if (allByBookId.isEmpty()) {
+            return new BookCategoryResponse(bookId, null, null);
+        }
+
+        // 변수 초기화
+        Long firstCategoryId = null;  // 1단계 (10% 쿠폰용)
+        Long secondCategoryId = null; // 2단계 (15% 쿠폰용)
+
+        // 2. 조회된 리스트를 순회
+        for (BookCategory bc : allByBookId) {
+            Category category = bc.getCategory();
+            if (category == null) continue;
+
+            int deep = category.getDeep(); // 단계 확인
+
+            if (deep == 1) {
+                // 1단계인 경우
+                firstCategoryId = category.getId();
+
+            } else if (deep == 2) {
+                // 2단계인 경우 -> 본인은 2단계, 부모는 1단계
+                secondCategoryId = category.getId();
+                if (firstCategoryId == null && category.getPreCategory() != null) {
+                    firstCategoryId = category.getPreCategory().getId();
+                }
+
+            } else if (deep == 3) {
+                // 3단계인 경우 -> 부모가 2단계, 조부모가 1단계
+                // 3단계 카테고리 자체는 쿠폰 정책이 없으므로 ID 저장 안 함(혹은 필요하면 저장)
+
+                // 1. 부모(2단계) 찾기
+                Category parent = category.getPreCategory();
+                if (parent != null) {
+                    secondCategoryId = parent.getId(); // 2단계 ID 확보
+
+                    // 2. 조부모(1단계) 찾기
+                    Category grandParent = parent.getPreCategory();
+                    if (firstCategoryId == null && grandParent != null) {
+                        firstCategoryId = grandParent.getId(); // 1단계 ID 확보
+                    }
+                }
+            }
+        }
+
+        // 로그 확인 (개발 중 디버깅용)
+        if (firstCategoryId == null && secondCategoryId == null) {
+            log.warn("책 ID {}에 대해 적용 가능한 1, 2단계 카테고리를 찾지 못했습니다.", bookId);
+        }
+
+        return new BookCategoryResponse(bookId, firstCategoryId, secondCategoryId);
     }
 }

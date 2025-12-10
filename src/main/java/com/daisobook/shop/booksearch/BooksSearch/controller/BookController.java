@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
@@ -8,6 +9,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.HomeBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
@@ -107,5 +109,11 @@ public class BookController {
     public ResponseEntity deleteBook(@RequestBody DeleteBookReqDTO deleteBookReqDTO){
         bookService.deleteBook(deleteBookReqDTO);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("{bookId}/category")
+    public BookCategoryResponse getBookCategory(@PathVariable Long bookId){
+        return bookService.bookcategory(bookId);
+
     }
 }
