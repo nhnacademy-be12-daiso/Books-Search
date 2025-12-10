@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
 @NoArgsConstructor
@@ -28,7 +27,7 @@ public class DiscountPolicy {
 
     @Setter
     @Column(name = "discount_value")
-    private long discountValue;
+    private double discountValue;
 
     @Setter
     @Column(name = "target_type")

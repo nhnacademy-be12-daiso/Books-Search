@@ -56,6 +56,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -326,7 +328,7 @@ public class BookServiceImpl implements BookService {
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
 
-        return createdBookRespDTO(book, userId, bookDiscount(book));
+        return createdBookRespDTO(book, userId, bookDiscountPrice(book));
     }
 
     @Override
@@ -340,10 +342,10 @@ public class BookServiceImpl implements BookService {
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
 
-        return createdBookRespDTO(book, userId, bookDiscount(book));
+        return createdBookRespDTO(book, userId, bookDiscountPrice(book));
     }
 
-    private BookRespDTO createdBookRespDTO(Book book, Long userId, Integer discount){
+    private BookRespDTO createdBookRespDTO(Book book, Long userId, Long discountPrice){
 //        List<CategoryRespDTO> categoryRespDTOS = categoryService.getCategoryDTOsByIds(book.getBookCategories().stream()
 //                .map(bc -> bc.getCategory().getId())
 //                .toList());
@@ -373,7 +375,7 @@ public class BookServiceImpl implements BookService {
 
         List<ReviewRespDTO> reviews = reviewService.getReviewsByBookId(book.getId());
 
-        Integer i = discount != null && book.getPrice() != null ? (int) ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
+        BigDecimal i = discountPrice != null && book.getPrice() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / book.getPrice()) * 100.0): null;
 
         return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(),
                 book.getBookAuthors().stream()
@@ -383,8 +385,8 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i,
-                discount, book.isPackaging(), book.getStock(), book.getStatus(), imageRespDTOS, book.getVolumeNo(), categoryRespDTOS,
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN),
+                discountPrice, book.isPackaging(), book.getStock(), book.getStatus(), imageRespDTOS, book.getVolumeNo(), categoryRespDTOS,
                 tagRespDTOS, count, check, reviews);
     }
 
@@ -429,12 +431,12 @@ public class BookServiceImpl implements BookService {
         if(bookList == null || bookList.isEmpty()){
             return List.of();
         }
-        return createdBookListRespDTOs(bookList);
+        return createdBookListRespDTOs(bookList, null);
     }
 
     @Override
     @Transactional
-    public HomeBookListRespDTO getHomeBookLists() {
+    public HomeBookListRespDTO getHomeBookLists(Long userId) {
         Map<String, List<BookListRespDTO>> bookLists = new HashMap<>();
 
         String newReleases = "newReleases"; //신간도서
@@ -448,7 +450,7 @@ public class BookServiceImpl implements BookService {
         if(bookList == null || bookList.isEmpty()){
             bookLists.put(newReleases, List.of());
         } else {
-            bookLists.put(newReleases, createdBookListRespDTOs(bookList));
+            bookLists.put(newReleases, createdBookListRespDTOs(bookList, userId));
         }
 
         //금주 추천 도서
@@ -469,7 +471,7 @@ public class BookServiceImpl implements BookService {
                     .filter(Objects::nonNull)
                     .toList();
 
-            bookLists.put(bookOfTheWeek, createdBookListRespDTOs(bookList1));
+            bookLists.put(bookOfTheWeek, createdBookListRespDTOs(bookList1, userId));
         }
 
         return new HomeBookListRespDTO(bookLists);
@@ -478,12 +480,12 @@ public class BookServiceImpl implements BookService {
     private List<BookRespDTO> createdBookRespDTOs(List<Book> books){
         List<BookRespDTO> bookRespDTOS = new ArrayList<>();
         for(Book book:books) {
-            bookRespDTOS.add(createdBookRespDTO(book, null, bookDiscount(book)));
+            bookRespDTOS.add(createdBookRespDTO(book, null, bookDiscountPrice(book)));
         }
         return bookRespDTOS;
     }
 
-    private BookListRespDTO createdBooksRespDTO(Book book, Integer discount){
+    private BookListRespDTO createdBooksRespDTO(Book book, Long discount, Boolean isLike){
         List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream()
                 .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
                 .toList();
@@ -495,7 +497,7 @@ public class BookServiceImpl implements BookService {
                         c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
 
-        Integer i = discount != null && book.getPrice() != null ? (int) ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
+        BigDecimal i = discount != null && book.getPrice() != null ? BigDecimal.valueOf ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
 
         return new BookListRespDTO(book.getId(), book.getTitle(),
                 book.getBookAuthors().stream()
@@ -505,14 +507,19 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i,
-                discount, book.getStatus(), imageRespDTOS, categoryRespDTOS, book.getVolumeNo(), book.isPackaging());
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN),
+                discount, book.getStatus(), imageRespDTOS, categoryRespDTOS, book.getVolumeNo(), book.isPackaging(), isLike);
     }
 
-    private List<BookListRespDTO> createdBookListRespDTOs(List<Book> books){
+    private List<BookListRespDTO> createdBookListRespDTOs(List<Book> books, Long userId){
         List<BookListRespDTO> bookListRespDTOs = new ArrayList<>();
+        Set<Long> isLikes = likeService.getBookIsLike(userId, books).stream()
+                .map(l -> l.getBook().getId())
+                .collect(Collectors.toSet());
+
         for(Book book:books) {
-            bookListRespDTOs.add(createdBooksRespDTO(book, bookDiscount(book)));
+            Boolean isLike = isLikes.contains(book.getId());
+            bookListRespDTOs.add(createdBooksRespDTO(book, bookDiscountPrice(book), isLike));
         }
         return bookListRespDTOs;
     }
@@ -862,7 +869,7 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findBookById(bookId);
     }
 
-    private Integer bookDiscount(Book book){
+    private Long bookDiscountPrice(Book book){
         List<Long> categoryIdlist = book.getBookCategories().stream().map(BookCategory::getCategory).map(Category::getId).toList();
         List<DiscountPolicy> discountPolicyList = discountPolicyService.getDiscountPolicyByBookIdOrCategoryIdsOrPublisherId(categoryIdlist, book.getPublisher().getId(), book.getId());
 
@@ -880,16 +887,16 @@ public class BookServiceImpl implements BookService {
             }
         }
 
-        Integer price = book.getPrice();
+        Long price = book.getPrice();
         if(price == null){
             log.warn("해당 도서의 가격이 존재하지 않습니다 - bookId:{}", book.getId());
             return null;
         }
         if(discountPercentage > 0){
-            price = (int) (price * (1 - discountPercentage / 100.0));
+            price = (long) (price * (1 - discountPercentage / 100.0));
         }
         if(discountFixedAmount > 0){
-            price = (int) (price - discountFixedAmount);
+            price = price - discountFixedAmount;
         }
 
         return price < 0 ? 0: price;
