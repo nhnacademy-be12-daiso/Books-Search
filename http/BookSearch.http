@@ -6,3 +6,14 @@ GET localhost:8088/api/books/search?query=자바 기초 공부
 
 ### AI 도서 검색
 GET localhost:8088/api/books/ai-search?query=스프링 부트로 백엔드 개발하고 싶은데, 어떤 책이 좋을까?
+
+### 도서 수정
+PUT localhost:8088/api/books/search/update
+Content-Type: application/json
+
+{
+    "isbn": "9791191277289",
+    "category1": "문학",
+    "category2": "한국문학",
+    "category3": "시"
+}
