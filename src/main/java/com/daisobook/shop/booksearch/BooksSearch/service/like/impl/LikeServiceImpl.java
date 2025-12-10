@@ -64,6 +64,15 @@ public class LikeServiceImpl implements LikeService {
         return likeRepository.existsLikeByBook_IdAndUserId(bookId, userId);
     }
 
+    @Override
+    public List<Like> getBookIsLike(Long userId, List<Book> books) {
+        if(userId == null){
+            return List.of();
+        }
+
+        return likeRepository.findAllByUserIdAndBookIn(userId, books);
+    }
+
     //없어도 될것같다
 //    @Override
 //    @Transactional

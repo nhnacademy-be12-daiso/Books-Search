@@ -4,6 +4,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
@@ -20,4 +21,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     void deleteLikeById(long id);
 
     void deleteLikeByBookAndUserId(Book book, long userId);
+
+    List<Like> findAllByUserIdAndBookIn(long userId, Collection<Book> books);
 }

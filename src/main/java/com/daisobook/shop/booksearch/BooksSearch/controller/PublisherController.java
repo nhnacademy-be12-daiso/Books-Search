@@ -11,7 +11,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("api/books/publishers")
+@RequestMapping("/api/books/publishers")
 public class PublisherController {
     private final PublisherService publisherService;
 
