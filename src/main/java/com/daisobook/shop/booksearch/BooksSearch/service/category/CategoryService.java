@@ -2,8 +2,8 @@ package com.daisobook.shop.booksearch.BooksSearch.service.category;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.BookCategory;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Category;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
 
 import java.util.List;
 

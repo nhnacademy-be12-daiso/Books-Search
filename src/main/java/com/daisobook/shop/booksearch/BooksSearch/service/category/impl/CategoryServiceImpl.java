@@ -2,11 +2,11 @@ package com.daisobook.shop.booksearch.BooksSearch.service.category.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.BookCategory;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Category;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookCategoryRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.CategoryRepository;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.*;
+import com.daisobook.shop.booksearch.BooksSearch.repository.category.BookCategoryRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.category.CategoryRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -4,8 +4,8 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImageDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.ImageType;
-import com.daisobook.shop.booksearch.BooksSearch.entity.ReviewImage;
-import com.daisobook.shop.booksearch.BooksSearch.repository.ReviewImageRepository;
+import com.daisobook.shop.booksearch.BooksSearch.entity.review.ReviewImage;
+import com.daisobook.shop.booksearch.BooksSearch.repository.review.ReviewImageRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.ImageTemplateServiceImpl;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;

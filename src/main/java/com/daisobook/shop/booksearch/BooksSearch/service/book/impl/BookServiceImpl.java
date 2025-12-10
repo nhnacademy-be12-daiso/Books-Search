@@ -11,13 +11,35 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookResponse
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.BookAuthor;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Role;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
+import com.daisobook.shop.booksearch.BooksSearch.entity.policy.DiscountPolicy;
+import com.daisobook.shop.booksearch.BooksSearch.entity.policy.DiscountType;
+import com.daisobook.shop.booksearch.BooksSearch.entity.publisher.Publisher;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
+import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
+import com.daisobook.shop.booksearch.BooksSearch.entity.tag.BookTag;
+import com.daisobook.shop.booksearch.BooksSearch.entity.tag.Tag;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryName;
 import com.daisobook.shop.booksearch.BooksSearch.repository.*;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.BookAuthorRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.book.BookRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.category.BookCategoryRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.tag.BookTagRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
+import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;
 import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherService;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagService;
@@ -59,6 +81,7 @@ public class BookServiceImpl implements BookService {
     private final AuthorService authorService;
     private final BookImageServiceImpl imageService;
     private final BookOfTheWeekRepository bookOfTheWeekRepository;
+    private final DiscountPolicyService discountPolicyService;
 
     private final ObjectMapper objectMapper;
 
@@ -302,7 +325,7 @@ public class BookServiceImpl implements BookService {
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
 
-        return createdBookRespDTO(book, userId);
+        return createdBookRespDTO(book, userId, bookDiscount(book));
     }
 
     @Override
@@ -316,10 +339,10 @@ public class BookServiceImpl implements BookService {
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
 
-        return createdBookRespDTO(book, userId);
+        return createdBookRespDTO(book, userId, bookDiscount(book));
     }
 
-    private BookRespDTO createdBookRespDTO(Book book, Long userId){
+    private BookRespDTO createdBookRespDTO(Book book, Long userId, Integer discount){
 //        List<CategoryRespDTO> categoryRespDTOS = categoryService.getCategoryDTOsByIds(book.getBookCategories().stream()
 //                .map(bc -> bc.getCategory().getId())
 //                .toList());
@@ -349,6 +372,8 @@ public class BookServiceImpl implements BookService {
 
         List<ReviewRespDTO> reviews = reviewService.getReviewsByBookId(book.getId());
 
+        Integer i = discount != null && book.getPrice() != null ? (int) ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
+
         return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(),
                 book.getBookAuthors().stream()
                         .map(ba ->
@@ -357,8 +382,9 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.isPackaging(), book.getStock(), book.getStatus(),
-                imageRespDTOS, book.getVolumeNo(), categoryRespDTOS, tagRespDTOS, count, check, reviews);
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i,
+                discount, book.isPackaging(), book.getStock(), book.getStatus(), imageRespDTOS, book.getVolumeNo(), categoryRespDTOS,
+                tagRespDTOS, count, check, reviews);
     }
 
     @Override
@@ -451,12 +477,12 @@ public class BookServiceImpl implements BookService {
     private List<BookRespDTO> createdBookRespDTOs(List<Book> books){
         List<BookRespDTO> bookRespDTOS = new ArrayList<>();
         for(Book book:books) {
-            bookRespDTOS.add(createdBookRespDTO(book, null));
+            bookRespDTOS.add(createdBookRespDTO(book, null, bookDiscount(book)));
         }
         return bookRespDTOS;
     }
 
-    private BookListRespDTO createdBooksRespDTO(Book book){
+    private BookListRespDTO createdBooksRespDTO(Book book, Integer discount){
         List<ImageRespDTO> imageRespDTOS = book.getBookImages().stream()
                 .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
                 .toList();
@@ -468,6 +494,8 @@ public class BookServiceImpl implements BookService {
                         c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
 
+        Integer i = discount != null && book.getPrice() != null ? (int) ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
+
         return new BookListRespDTO(book.getId(), book.getTitle(),
                 book.getBookAuthors().stream()
                         .map(ba ->
@@ -476,14 +504,14 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), book.getStatus(),
-                imageRespDTOS, categoryRespDTOS, book.getVolumeNo());
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i,
+                discount, book.getStatus(), imageRespDTOS, categoryRespDTOS, book.getVolumeNo(), book.isPackaging());
     }
 
     private List<BookListRespDTO> createdBookListRespDTOs(List<Book> books){
         List<BookListRespDTO> bookListRespDTOs = new ArrayList<>();
         for(Book book:books) {
-            bookListRespDTOs.add(createdBooksRespDTO(book));
+            bookListRespDTOs.add(createdBooksRespDTO(book, bookDiscount(book)));
         }
         return bookListRespDTOs;
     }
@@ -831,5 +859,38 @@ public class BookServiceImpl implements BookService {
     @Override
     public Book getBookById(long bookId) {
         return bookRepository.findBookById(bookId);
+    }
+
+    private Integer bookDiscount(Book book){
+        List<Long> categoryIdlist = book.getBookCategories().stream().map(BookCategory::getCategory).map(Category::getId).toList();
+        List<DiscountPolicy> discountPolicyList = discountPolicyService.getDiscountPolicyByBookIdOrCategoryIdsOrPublisherId(categoryIdlist, book.getPublisher().getId(), book.getId());
+
+        if(discountPolicyList == null || discountPolicyList.isEmpty()){
+            return null;
+        }
+
+        long discountPercentage = 0;
+        long discountFixedAmount = 0;
+        for(DiscountPolicy dp: discountPolicyList){
+            if(DiscountType.PERCENTAGE.equals(dp.getDiscountType())){
+                discountPercentage += dp.getDiscountValue();
+            } else if(DiscountType.FIXED_AMOUNT.equals(dp.getDiscountType())){
+                discountFixedAmount += dp.getDiscountValue();
+            }
+        }
+
+        Integer price = book.getPrice();
+        if(price == null){
+            log.warn("해당 도서의 가격이 존재하지 않습니다 - bookId:{}", book.getId());
+            return null;
+        }
+        if(discountPercentage > 0){
+            price = (int) (price * (1 - discountPercentage / 100.0));
+        }
+        if(discountFixedAmount > 0){
+            price = (int) (price - discountFixedAmount);
+        }
+
+        return price < 0 ? 0: price;
     }
 }

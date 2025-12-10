@@ -1,8 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.LikeReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 
 import java.util.List;
 

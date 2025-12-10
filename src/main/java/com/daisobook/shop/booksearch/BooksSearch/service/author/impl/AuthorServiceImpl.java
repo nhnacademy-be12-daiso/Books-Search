@@ -2,13 +2,13 @@ package com.daisobook.shop.booksearch.BooksSearch.service.author.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Author;
-import com.daisobook.shop.booksearch.BooksSearch.entity.BookAuthor;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Role;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.*;
-import com.daisobook.shop.booksearch.BooksSearch.repository.AuthorRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookAuthorRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.RoleRepository;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.BookAuthor;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Role;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.author.*;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.AuthorRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.BookAuthorRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.RoleRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 

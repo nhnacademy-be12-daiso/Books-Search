@@ -10,7 +10,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.HomeBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.multipart.MultipartFile;
 

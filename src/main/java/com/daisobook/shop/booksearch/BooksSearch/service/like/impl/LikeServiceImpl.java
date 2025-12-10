@@ -1,12 +1,10 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.LikeReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Book;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Like;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.NotFoundBook;
-import com.daisobook.shop.booksearch.BooksSearch.repository.LikeRepository;
-import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
+import com.daisobook.shop.booksearch.BooksSearch.repository.like.LikeRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.service.publisher;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.PublisherReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.PublisherRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Publisher;
+import com.daisobook.shop.booksearch.BooksSearch.entity.publisher.Publisher;
 
 import java.util.List;
 
