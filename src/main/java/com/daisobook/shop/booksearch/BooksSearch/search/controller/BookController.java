@@ -40,15 +40,13 @@ public class BookController {
 
     // 기본 도서 검색
     @GetMapping("/search")
-    public ResponseEntity<SearchResponseDto> search(@RequestParam String query) {
-        SearchResponseDto result = searchService.basicSearch(query);
-        return ResponseEntity.ok(result);
+    public SearchResponseDto search(@RequestParam String query) {
+        return searchService.basicSearch(query);
     }
 
     // AI 도서 검색
     @GetMapping("/ai-search")
-    public ResponseEntity<SearchResponseDto> aiSearch(@RequestParam String query) {
-        SearchResponseDto result = searchService.aiSearch(query);
-        return ResponseEntity.ok(result);
+    public SearchResponseDto aiSearch(@RequestParam String query) {
+        return searchService.aiSearch(query);
     }
 }

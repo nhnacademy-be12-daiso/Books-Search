@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookResponseDto {
+    private String id;
     private String isbn;
     private String title;
     private String author;
