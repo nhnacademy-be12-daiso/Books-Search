@@ -2,8 +2,8 @@ package com.daisobook.shop.booksearch.BooksSearch.service.author;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Author;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Role;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Role;
 
 import java.util.List;
 

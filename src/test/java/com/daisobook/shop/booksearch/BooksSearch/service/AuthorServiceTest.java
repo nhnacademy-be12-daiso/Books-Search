@@ -1,11 +1,11 @@
 package com.daisobook.shop.booksearch.BooksSearch.service;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Author;
-import com.daisobook.shop.booksearch.BooksSearch.entity.Role;
-import com.daisobook.shop.booksearch.BooksSearch.repository.AuthorRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.BookAuthorRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.RoleRepository;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
+import com.daisobook.shop.booksearch.BooksSearch.entity.author.Role;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.AuthorRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.BookAuthorRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.author.RoleRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.impl.AuthorServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

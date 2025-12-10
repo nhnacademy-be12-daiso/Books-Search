@@ -1,6 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.response;
 
-import com.daisobook.shop.booksearch.BooksSearch.entity.Status;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,7 +14,9 @@ public record BookRespDTO(
         List<AuthorRespDTO> authorList,
         String publisher,
         LocalDate publicationDate,
-        int price,
+        Integer price,
+        Integer discountPercentage,
+        Integer discountPrice,
         boolean isPackaging,
         Integer stock,
         Status status,
