@@ -16,6 +16,7 @@ public class BookMapper {
     // 단일 변환
     public BookResponseDto toDto(Book book, int matchRate) {
         return BookResponseDto.builder()
+                .id(book.getId())
                 .isbn(book.getIsbn())
                 .title(book.getTitle())
                 .author(book.getAuthor())
