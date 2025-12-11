@@ -15,6 +15,7 @@ public interface CategoryService {
     void registerCategories(List<CategoryReqDTO> categoryReqDTOList);
     CategoryRespDTO getCategoryById(long categoryId);
     CategoryRespDTO getCategoryByName(String categoryName);
+    List<CategoryRespDTO> getCategoryList();
     List<CategoryRespDTO> getTopCategories();
     List<CategoryRespDTO> getCategoriesByDeep(int deep);
     //해당 카테고리 아이디의 하위 카테고리 가져오기

@@ -8,8 +8,12 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookOrderDetailRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.*;
 import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
@@ -30,6 +34,7 @@ import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundB
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryName;
+import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
 import com.daisobook.shop.booksearch.BooksSearch.repository.*;
 import com.daisobook.shop.booksearch.BooksSearch.repository.author.BookAuthorRepository;
 import com.daisobook.shop.booksearch.BooksSearch.repository.book.BookRepository;
@@ -87,6 +92,7 @@ public class BookServiceImpl implements BookService {
     private final DiscountPolicyService discountPolicyService;
 
     private final ObjectMapper objectMapper;
+    private final BookMapper bookMapper;
 
     @Override
     public BookGroupReqDTO parsing(BookMetadataReqDTO dto) throws JsonProcessingException {
@@ -337,7 +343,7 @@ public class BookServiceImpl implements BookService {
         validateExistsByIsbn(isbn);
 
         Book book = bookRepository.findBookByIsbn(isbn);
-        log.debug("도로ISBN으로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
+        log.debug("도서ISBN으로 조회 성공 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
                 book.getBookAuthors().stream()
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
@@ -432,6 +438,23 @@ public class BookServiceImpl implements BookService {
             return List.of();
         }
         return createdBookListRespDTOs(bookList, null);
+    }
+
+    @Override
+    @Transactional
+    public OrderBooksInfoRespDTO findBooksByIdIn(List<Long> bookIds) {
+        List<Book> bookList = bookRepository.findAllByIdIn(bookIds);
+        if(bookList == null || bookList.isEmpty()){
+            return null;
+        }
+
+        Map<Long, Long> discountPriceMap = new HashMap<>();
+        for(Book book: bookList){
+            Long discountPrice = bookDiscountPrice(book);
+            discountPriceMap.put(book.getId(), discountPrice);
+        }
+
+        return bookMapper.toOrderBooksInfoRespDTOList(bookList, discountPriceMap);
     }
 
     @Override

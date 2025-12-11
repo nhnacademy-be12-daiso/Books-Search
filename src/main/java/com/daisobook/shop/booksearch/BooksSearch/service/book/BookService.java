@@ -7,10 +7,11 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataRe
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookOrderDetailRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.HomeBookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +34,7 @@ public interface BookService {
     BookRespDTO findBookByIsbn(String isbn, Long userId);
     List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName);
     List<BookListRespDTO> getBooksByIdIn(List<Long> bookIds);
+    OrderBooksInfoRespDTO findBooksByIdIn(List<Long> bookIds);
     HomeBookListRespDTO getHomeBookLists(Long userId);
     List<BookReviewResponse> getBooksByIdIn_ReviewId(long userId, List<BookOrderDetailRequest> bookOrderDetailRequests);
     void updateBook(long bookId, BookReqDTO BookReqDTO,Map<String, MultipartFile> fileMap);

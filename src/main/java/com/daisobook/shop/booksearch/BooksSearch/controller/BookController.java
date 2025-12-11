@@ -7,11 +7,11 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookListRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.BookRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.HomeBookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -115,5 +115,10 @@ public class BookController {
     public BookCategoryResponse getBookCategory(@PathVariable Long bookId){
         return bookService.bookcategory(bookId);
 
+    }
+
+    @PostMapping("/order-service/books")
+    public OrderBooksInfoRespDTO getOrderBookInfoList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
+        return bookService.findBooksByIdIn(bookIdListReqDTO.bookIdList());
     }
 }

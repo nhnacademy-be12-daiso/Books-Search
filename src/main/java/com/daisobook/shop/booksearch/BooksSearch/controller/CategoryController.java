@@ -27,6 +27,11 @@ public class CategoryController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping
+    public List<CategoryRespDTO> getCategoryList(){
+        return categoryService.getCategoryList();
+    }
+
     @GetMapping("/{categoryId}")
     public CategoryRespDTO getCategoryById(@PathVariable("categoryId") long categoryId){
         return categoryService.getCategoryById(categoryId);
