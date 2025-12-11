@@ -1,15 +1,17 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.search;
+package com.daisobook.shop.booksearch.BooksSearch.search.service.search.component;
 
 
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.AiResultDto;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookResponseDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class BookMapper {
 
@@ -49,9 +51,9 @@ public class BookMapper {
                 // 멘트 설정
                 dto.setAiAnswer(res.reason());
             }
-            // 🔥 AI 호출 실패 혹은 결과 없음 (AiClient가 "{}"를 반환한 경우)
             else {
-                dto.setAiAnswer("AI 상세 분석 정보를 불러오지 못했습니다. (기본 추천)");
+                log.warn("AI 평가 결과에 도서 정보가 없습니다. ISBN: {}", dto.getIsbn());
+                dto.setAiAnswer(null);
                 // matchRate는 리랭킹 점수(또는 0점)를 유지
             }
         }
