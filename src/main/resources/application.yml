@@ -33,6 +33,12 @@ spring:
     password: nhnacademy123!
     socket-timeout: 60s
     connection-timeout: 5s
+  data:
+    redis:
+      host: s4.java21.net
+      port: 6379
+      password: '*N2vya7H@muDTwdNMR!'
+      database: 379
 
 
   rabbitmq:

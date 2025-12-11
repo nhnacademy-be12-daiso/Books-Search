@@ -69,11 +69,9 @@ public class BookRepository {
                     .index(INDEX_NAME)
                     .id(book.getIsbn())
                     .document(book)
-                    // 🔥 [핵심] 저장 즉시 검색 결과에 반영되도록 설정 (테스트 시 필수)
                     .refresh(co.elastic.clients.elasticsearch._types.Refresh.True)
             );
         } catch (IOException e) {
-            // 🔥 [핵심] 에러를 삼키지 않고 던져서 Service -> Controller -> GlobalExceptionHandler로 전달
             throw new RuntimeException("Elasticsearch 저장 실패: " + e.getMessage(), e);
         }
     }
