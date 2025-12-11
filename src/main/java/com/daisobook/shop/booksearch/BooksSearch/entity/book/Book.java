@@ -55,7 +55,7 @@ public class Book {
 
     @Setter
     @Column(name="price", nullable = false)
-    private Integer price;
+    private Long price;
 
     @Setter
     @Column(name="is_packaging")
@@ -79,7 +79,7 @@ public class Book {
     private Integer volumeNo;
 
     public Book(String isbn, String title, String index, String description/*, String author*//*, String publisher*/,
-                LocalDate publicationDate, Integer price, boolean isPackaging, Integer stock, Status status,
+                LocalDate publicationDate, Long price, boolean isPackaging, Integer stock, Status status,
                 /*String imageUrl,*/ Integer volumeNo){
         this.isbn = isbn;
         this.title = title;

@@ -33,7 +33,7 @@ public interface BookService {
     BookRespDTO findBookByIsbn(String isbn, Long userId);
     List<BookRespDTO> findBooks(String categoryName, String tagName, String authorName, String publisherName);
     List<BookListRespDTO> getBooksByIdIn(List<Long> bookIds);
-    HomeBookListRespDTO getHomeBookLists();
+    HomeBookListRespDTO getHomeBookLists(Long userId);
     List<BookReviewResponse> getBooksByIdIn_ReviewId(long userId, List<BookOrderDetailRequest> bookOrderDetailRequests);
     void updateBook(long bookId, BookReqDTO BookReqDTO,Map<String, MultipartFile> fileMap);
     void deleteBook(DeleteBookReqDTO deleteBookReqDTO);

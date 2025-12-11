@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/books")
+@RequestMapping("/api/books")
 public class BookController {
 
     private final BookService bookService;
@@ -48,8 +48,8 @@ public class BookController {
     }
 
     @GetMapping("/home")
-    public HomeBookListRespDTO getHome(){
-        return bookService.getHomeBookLists();
+    public HomeBookListRespDTO getHome(@RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return bookService.getHomeBookLists(userId);
     }
 
     @GetMapping("{bookId}")
@@ -65,8 +65,8 @@ public class BookController {
     }
 
     @GetMapping("/lists")
-    public HomeBookListRespDTO getHomeBookLists(){
-        HomeBookListRespDTO homeBookLists = bookService.getHomeBookLists();
+    public HomeBookListRespDTO getHomeBookLists(@RequestHeader(value = "X-User-Id", required = false)Long userId){
+        HomeBookListRespDTO homeBookLists = bookService.getHomeBookLists(null);
         return homeBookLists;
     }
 

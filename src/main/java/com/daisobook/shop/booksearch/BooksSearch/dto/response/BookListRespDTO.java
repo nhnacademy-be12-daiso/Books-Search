@@ -2,6 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.dto.response;
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -11,12 +12,13 @@ public record BookListRespDTO(
         List<AuthorRespDTO> authorList,
         String publisher,
         LocalDate publicationDate,
-        Integer price,
-        Integer discountPercentage,
-        Integer discountPrice,
+        Long price,
+        BigDecimal discountPercentage,
+        Long discountPrice,
         Status status,
         List<ImageRespDTO> imageList,
         List<CategoryRespDTO> categories,
         Integer volumeNo,
-        boolean isPackaging){
+        boolean isPackaging,
+        Boolean isLike){
 }

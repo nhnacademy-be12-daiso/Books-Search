@@ -18,7 +18,7 @@ public record BookReqDTO(
         List<AuthorReqDTO> authorReqDTOList,
         String publisher,
         LocalDate publicationDate,
-        Integer price,
+        Long price,
         boolean isPackaging,
         Integer stock,
         Status status,
