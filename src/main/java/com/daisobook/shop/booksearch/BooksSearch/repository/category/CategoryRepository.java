@@ -31,4 +31,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByPreCategory_Name(String preCategoryName);
 
     List<Category> findAllByDeep(int deep);
+
+    List<Category> findByIdIn(List<Long> ids);
+
 }
