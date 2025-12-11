@@ -1,0 +1,27 @@
+package com.daisobook.shop.booksearch.BooksSearch.saga;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * 분산된 로컬 트랜잭션을 수행하기 위해 필요한 '확정된 최동 데이터'
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class OrderConfirmedEvent implements Serializable {
+
+    private Long orderId;
+    private Long userId;
+
+    // 여기 있는건 이미 다 검증이 됐음을 전제로 한다
+    private Long totalAmount;
+    private Long usedPoint; // 사용 포인트
+    private Long savedPoint; // 적립 포인트
+    private List<Long> usedCouponIds;
+}

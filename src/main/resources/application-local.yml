@@ -27,11 +27,11 @@ spring:
       dialect: org.hibernate.dialect.MySQLDialect
     show-sql: true     # SQL \uB85C\uADF8 \uBCF4\uAE30
 
-#  rabbitmq:
-#    host: ${SPRING_RABBITMQ_HOST}
-#    port: ${SPRING_RABBITMQ_PORT}
-#    username: ${SPRING_RABBITMQ_USERNAME}
-#    password: ${SPRING_RABBITMQ_PASSWORD}
+  rabbitmq:
+    host: s4.java21.net
+    port: 5672
+    username: admin
+    password: "nhnacademy123!"
 
 eureka:
   instance:
