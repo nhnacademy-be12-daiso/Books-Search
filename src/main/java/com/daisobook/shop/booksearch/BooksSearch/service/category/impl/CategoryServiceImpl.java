@@ -117,6 +117,11 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<CategoryRespDTO> getCategoryList() {
+        return createCategoryRespDTOs(categoryRepository.findAll());
+    }
+
+    @Override
     public List<CategoryRespDTO> getTopCategories() {
         return getCategoriesByDeep(1);
     }

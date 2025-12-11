@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.dto.response;
+package com.daisobook.shop.booksearch.BooksSearch.dto.response.book;
 
 import java.util.List;
 import java.util.Map;
