@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.saga;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,12 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BookEventListener {
 
-    private static final String BOOK_QUEUE = "team3.order.confirmed.book.queue";
+//    @Value("${rabbitmq.queue.book}")
+//    private String BOOK_QUEUE;
 
     private final BookEventPublisher bookEventPublisher; // 다음 이벤트 발행할 Publisher
 
 
-    @RabbitListener(queues = BOOK_QUEUE)
+    @RabbitListener(queues = "${rabbitmq.queue.book}")
     @Transactional
     public void handleOrderConfirmedEvent(OrderConfirmedEvent event) {
         log.info("[Book API] ===== 주문 확정 이벤트 수신됨 =====");
@@ -25,8 +27,9 @@ public class BookEventListener {
         try {
             // TODO 실제 재고 차감 로직
 
-            // 로컬 트랜잭션 성공
-            // TODO saga의 다음 단계를 위한 이벤트 발행
+            // ===== 로컬 트랜잭션 성공 =====
+            // saga의 다음 단계를 위한 이벤트 발행
+            bookEventPublisher.publishBookDeductedEvent(event);
 
             log.info("[Book API] 재고 차감 성공");
             log.info("[Book API] 다음 이벤트 발행 완료 : Book API -> User API");

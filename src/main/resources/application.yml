@@ -47,6 +47,9 @@ spring:
     username: ${SPRING_RABBITMQ_USERNAME}
     password: ${SPRING_RABBITMQ_PASSWORD}
 
+    queue:
+      book: "team3.order.confirmed.book.queue"
+
 app:
   batch:
     size: 1000

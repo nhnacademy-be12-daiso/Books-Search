@@ -1,14 +1,14 @@
 package com.daisobook.shop.booksearch.BooksSearch.config;
 
-import ch.qos.logback.classic.pattern.MessageConverter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.hibernate.sql.model.ast.builder.ColumnValueBindingBuilder;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,7 +16,8 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMqConfig {
 
     private static final String ORDER_EXCHANGE = "team3.order.exchange";
-    private static final String BOOK_QUEUE = "team3.order.confirmed.book.queue";
+    @Value("${rabbitmq.queue.book}")
+    private String BOOK_QUEUE;
     private static final String ROUTING_KEY_CONFIRMED = "order.confirmed";
 
     private static final String BOOK_EXCHANGE = "team3.book.exchange";
@@ -36,8 +37,8 @@ public class RabbitMqConfig {
 
     // exchange랑 queue를 연결함
     @Bean
-    public Binding bindingOrderConfirmed(Queue bookInventroyQueue, TopicExchange orderExchange) {
-        return BindingBuilder.bind(bookInventroyQueue)
+    public Binding bindingOrderConfirmed(Queue bookInventoryQueue, TopicExchange orderExchange) {
+        return BindingBuilder.bind(bookInventoryQueue)
                 .to(orderExchange)
                 .with(ROUTING_KEY_CONFIRMED);
     }
@@ -49,15 +50,20 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Jackson2JsonMessageConverter jsonMessageConverter() {
-        // ObjectMapper 인스턴스를 직접 생성
-        ObjectMapper objectMapper = new ObjectMapper();
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
 
-        // 🌟 핵심: Java Time 모듈을 등록하여 Instant, ZonedDateTime 등을 올바르게 처리하도록 설정
-        objectMapper.registerModule(new JavaTimeModule());
+    /**
+     * 3. RabbitTemplate 설정
+     * 위에서 만든 JSON 변환기를 템플릿에 끼워줍니다.
+     */
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
 
-        // RabbitMQ 컨버터에 설정된 ObjectMapper를 주입
-        return new Jackson2JsonMessageConverter(objectMapper);
+        return rabbitTemplate;
     }
 
 }

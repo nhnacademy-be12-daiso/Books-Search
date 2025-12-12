@@ -33,6 +33,10 @@ spring:
     username: admin
     password: "nhnacademy123!"
 
+rabbitmq:
+  queue:
+    book: "team3.order.confirmed.book.queue.dev"
+
 eureka:
   instance:
     prefer-ip-address: true
@@ -60,3 +64,9 @@ minio:
     book: daiso-book-image
     review: daiso-review-image
     test: daiso-book-cover
+
+
+# Book API의 application.yml
+logging:
+  level:
+    org.springframework.amqp: DEBUG
