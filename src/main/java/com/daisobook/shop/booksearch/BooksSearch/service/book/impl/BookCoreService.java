@@ -208,25 +208,25 @@ public class BookCoreService {
                         .toList());
     }
 
-    @Transactional
-    public void registerBook(Book book) {
-        validateNotExistsByIsbn(bookReqDTO.isbn());
-
-        Book newBook = Book.create(bookReqDTO, publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
-
-        assignCategoriesToBook(newBook, bookReqDTO.categories());
-        if(bookReqDTO.tags() != null) {
-            assignTagsToBook(newBook, bookReqDTO.tags().stream()
-                    .map(TagReqDTO::tagName)
-                    .toList());
-        }
-
-        bookRepository.save(newBook);
-        assignImages(newBook, bookReqDTO.imageMetadataReqDTOList(), fileMap);
-        assignAuthorToBook(newBook, bookReqDTO.authorReqDTOList());
-        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
-                newBook.getBookAuthors().stream()
-                        .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
-                        .toList());
-    }
+//    @Transactional
+//    public void registerBook(Book book) {
+//        validateNotExistsByIsbn(bookReqDTO.isbn());
+//
+//        Book newBook = Book.create(bookReqDTO, publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
+//
+//        assignCategoriesToBook(newBook, bookReqDTO.categories());
+//        if(bookReqDTO.tags() != null) {
+//            assignTagsToBook(newBook, bookReqDTO.tags().stream()
+//                    .map(TagReqDTO::tagName)
+//                    .toList());
+//        }
+//
+//        bookRepository.save(newBook);
+//        assignImages(newBook, bookReqDTO.imageMetadataReqDTOList(), fileMap);
+//        assignAuthorToBook(newBook, bookReqDTO.authorReqDTOList());
+//        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
+//                newBook.getBookAuthors().stream()
+//                        .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
+//                        .toList());
+//    }
 }
