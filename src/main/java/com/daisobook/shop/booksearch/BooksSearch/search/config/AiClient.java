@@ -35,10 +35,6 @@ public class AiClient {
     // 1. 임베딩: 필수 -> 타임아웃 X (서버 응답 기다림)
     // 2. 리랭킹: 필수 -> 타임아웃 X (서버 응답 기다림)
 
-    // 3. Gemini: 무료 버전 고려하여 25초로 설정
-    //    (보통 5~15초 내에 오지만, 가끔 20초 튈 때를 대비한 안전값)
-    private static final Duration GEMINI_TIMEOUT = Duration.ofSeconds(25);
-
     public List<Double> generateEmbedding(String text) {
         try {
             Map response = webClient.post().uri(embeddingUrl)
@@ -78,7 +74,6 @@ public class AiClient {
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono(GeminiResponse.class)
-                    .timeout(GEMINI_TIMEOUT) // 25초 적용
                     .block();
 
             if (response != null && !response.candidates().isEmpty()) {
