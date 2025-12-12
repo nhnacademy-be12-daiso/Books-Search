@@ -33,12 +33,12 @@ public class BookRepository {
                     .query(q -> q.term(t -> t.field("isbn").value(isbn))), Book.class);
             return extractHits(response);
         } catch (IOException e) {
-            log.error("ISBN 조회 중 오류 발생: {}", isbn, e);
+            log.error("[Repository] ISBN 조회 실패: isbn={}", isbn, e);
             return Collections.emptyList();
         }
     }
 
-    // 2. 하이브리드 검색 (Vector + Keyword)
+    // 2. 하이브리드 검색
     public List<Book> searchHybrid(String query, List<Float> vector, int size) {
         try {
             SearchResponse<Book> response = esClient.search(s -> s
@@ -55,28 +55,24 @@ public class BookRepository {
                             .analyzer("korean_analyzer")
                             .minimumShouldMatch("2<75%")))))
                     .source(src -> src.filter(f -> f.excludes("embedding"))), Book.class);
+
             return extractHits(response);
         } catch (IOException e) {
-            log.error("하이브리드 검색 오류", e);
+            log.error("[Repository] 하이브리드 검색 실패: query={}, vectorSize={}", query, (vector != null ? vector.size() : "null"), e);
             return Collections.emptyList();
         }
     }
 
-    // 3. 단건 저장
+    // 저장 및 기타 메서드는 에러 발생 시 로그만 추가하고 기존 유지
     public void save(Book book) {
         try {
-            esClient.index(i -> i
-                    .index(INDEX_NAME)
-                    .id(book.getIsbn())
-                    .document(book)
-                    .refresh(co.elastic.clients.elasticsearch._types.Refresh.True)
-            );
+            esClient.index(i -> i.index(INDEX_NAME).id(book.getIsbn()).document(book));
         } catch (IOException e) {
-            throw new RuntimeException("Elasticsearch 저장 실패: " + e.getMessage(), e);
+            log.error("[Repository] 도서 저장 실패: isbn={}", book.getIsbn(), e);
+            throw new RuntimeException(e);
         }
     }
 
-    // 4. Bulk 저장
     public void saveAll(List<Book> books) {
         if (books.isEmpty()) return;
         try {
@@ -86,12 +82,10 @@ public class BookRepository {
             }
             esClient.bulk(br.build());
         } catch (IOException e) {
-            log.error("Bulk Insert 실패", e);
-            // 대량 등록은 보통 로그만 찍고 넘어가거나, 필요 시 예외를 던질 수 있음
+            log.error("[Repository] Bulk 저장 실패 ({}건)", books.size(), e);
         }
     }
 
-    // 5. 전체 ISBN 가져오기 (Scroll API)
     public Set<String> findAllIsbns() {
         Set<String> isbns = new HashSet<>();
         String scrollId = null;
@@ -113,7 +107,7 @@ public class BookRepository {
                 scrollId = scrollResponse.scrollId();
             }
         } catch (Exception e) {
-            log.warn("기존 ISBN 조회 실패 (첫 실행 시 무시): {}", e.getMessage());
+            log.warn("[Repository] 전체 ISBN 조회 실패: {}", e.getMessage());
         } finally {
             if (scrollId != null) {
                 String sid = scrollId;

@@ -3,7 +3,8 @@ package com.daisobook.shop.booksearch.BooksSearch.search.controller;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookJsonDto;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.SearchResponseDto;
 import com.daisobook.shop.booksearch.BooksSearch.search.service.management.BookManagementService;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.search.SearchService;
+import com.daisobook.shop.booksearch.BooksSearch.search.service.search.SearchCoreService;
+import com.daisobook.shop.booksearch.BooksSearch.search.service.search.SearchFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
 public class BookController {
-    private final SearchService searchService;
+    private final SearchFacade searchFacade;
     private final BookManagementService bookManagementService;
 
     // 데이터 임포트 실행 (관리자용)
@@ -41,12 +42,12 @@ public class BookController {
     // 기본 도서 검색
     @GetMapping("/search")
     public SearchResponseDto search(@RequestParam String query) {
-        return searchService.basicSearch(query);
+        return searchFacade.basicSearch(query);
     }
 
     // AI 도서 검색
     @GetMapping("/ai-search")
     public SearchResponseDto aiSearch(@RequestParam String query) {
-        return searchService.aiSearch(query);
+        return searchFacade.aiSearch(query);
     }
 }
