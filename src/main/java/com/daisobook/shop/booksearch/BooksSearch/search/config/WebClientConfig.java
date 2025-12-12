@@ -18,28 +18,29 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient() {
-        // 1. 커넥션 풀 축소 (학교 서버 보호용)
         ConnectionProvider provider = ConnectionProvider.builder("custom-provider")
-                .maxConnections(20)
-                .pendingAcquireMaxCount(50)
-                .pendingAcquireTimeout(Duration.ofSeconds(45)) // 대기 시간
-                .maxIdleTime(Duration.ofSeconds(20)) // 유휴 커넥션 빨리 정리
-                .lifo() // 후입선출 (최근에 쓴 커넥션 재사용이 성능에 유리)
+                .maxConnections(20) // 학교 서버 보호를 위해 '동시 진입'은 제한 (이건 유지해야 함!)
+                .pendingAcquireMaxCount(1000) // 대기열을 아주 넉넉하게 (많이 줄 서도 됨)
+                .pendingAcquireTimeout(Duration.ofMinutes(3)) // 대기 시간 3분 (줄 서다 포기하지 않게)
+                .maxIdleTime(Duration.ofSeconds(30)) // 유휴 커넥션 정리
+                .lifo()
                 .build();
 
-        // 2. 타임아웃 현실화 (30초)
         HttpClient httpClient = HttpClient.create(provider)
-                // 연결 타임아웃 (서버가 꺼져있을 때 빨리 알기 위함)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-                .responseTimeout(Duration.ofSeconds(30))
+                // 연결 시도 타임아웃 (서버가 꺼진 경우엔 10초면 충분)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+
+                // [핵심 변경] 응답 타임아웃: 5분 (300초)
+                // 리랭킹이 1~2분 걸려도 절대 끊지 않고 기다려줍니다.
+                .responseTimeout(Duration.ofMinutes(5))
                 .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(30, TimeUnit.SECONDS))
-                                .addHandlerLast(new WriteTimeoutHandler(30, TimeUnit.SECONDS))
+                        conn.addHandlerLast(new ReadTimeoutHandler(300, TimeUnit.SECONDS)) // 읽기 5분
+                                .addHandlerLast(new WriteTimeoutHandler(300, TimeUnit.SECONDS)) // 쓰기 5분
                 );
 
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 메모리도 넉넉히 (20MB)
                 .build();
     }
 }
