@@ -454,7 +454,7 @@ public class BookServiceImpl implements BookService {
             discountPriceMap.put(book.getId(), discountPrice);
         }
 
-        return bookMapper.toOrderBooksInfoRespDTOList(bookList, discountPriceMap);
+        return bookMapper.toOrderBookInfoRespDTOList(bookList, discountPriceMap);
     }
 
     @Override

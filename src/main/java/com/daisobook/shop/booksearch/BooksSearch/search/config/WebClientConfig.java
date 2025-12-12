@@ -18,19 +18,23 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient() {
-        // 🔥 핵심: 커넥션 풀(Connection Pool) 대폭 확장
+        // 1. 커넥션 풀 축소 (학교 서버 보호용)
         ConnectionProvider provider = ConnectionProvider.builder("custom-provider")
-                .maxConnections(500) // 동시에 최대 500개 연결 허용 (기존 대비 대폭 상향)
-                .pendingAcquireMaxCount(1000) // 대기열 1000개까지 허용
-                .pendingAcquireTimeout(Duration.ofSeconds(60)) // 대기 시간 60초
+                .maxConnections(20)
+                .pendingAcquireMaxCount(50)
+                .pendingAcquireTimeout(Duration.ofSeconds(45)) // 대기 시간
+                .maxIdleTime(Duration.ofSeconds(20)) // 유휴 커넥션 빨리 정리
+                .lifo() // 후입선출 (최근에 쓴 커넥션 재사용이 성능에 유리)
                 .build();
 
+        // 2. 타임아웃 현실화 (30초)
         HttpClient httpClient = HttpClient.create(provider)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000)
-                .responseTimeout(Duration.ofMinutes(5)) // 타임아웃 5분으로 넉넉하게
+                // 연결 타임아웃 (서버가 꺼져있을 때 빨리 알기 위함)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .responseTimeout(Duration.ofSeconds(30))
                 .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(300, TimeUnit.SECONDS))
-                                .addHandlerLast(new WriteTimeoutHandler(300, TimeUnit.SECONDS))
+                        conn.addHandlerLast(new ReadTimeoutHandler(30, TimeUnit.SECONDS))
+                                .addHandlerLast(new WriteTimeoutHandler(30, TimeUnit.SECONDS))
                 );
 
         return WebClient.builder()

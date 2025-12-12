@@ -35,7 +35,7 @@ public class SearchService {
     private final CacheKeyGenerator keyGenerator;
 
     private static final int FINAL_RESULT_SIZE = 30; // 사용자에게 보여줄 최종 개수 (3페이지 분량)
-    private static final int AI_EVAL_SIZE = 5;       // LLM 평가 맡길 개수
+    private static final int AI_EVAL_SIZE = 3;       // LLM 평가 맡길 개수
 
     // 1. 일반 검색 (Basic)
     public SearchResponseDto basicSearch(String userQuery) {
@@ -52,9 +52,9 @@ public class SearchService {
         SearchResponseDto cachedResult = redisCacheService.get(cacheKey, SearchResponseDto.class);
         if (cachedResult != null) return cachedResult;
 
-        // [Logic] 2. 검색 수행 (Rerank Top 20 적용됨)
+        // [Logic] 2. 검색 수행 (Reranking 제거)
         String refinedQuery = SearchUtils.extractKeywords(userQuery);
-        List<BookWithScore> scoredBooks = searchEngine.searchAndRerank(refinedQuery);
+        List<BookWithScore> scoredBooks = searchEngine.searchWithoutRerank(refinedQuery);
 
         // 상위 30개 자르기
         List<BookWithScore> finalBooks = scoredBooks.stream().limit(FINAL_RESULT_SIZE).toList();
@@ -74,36 +74,28 @@ public class SearchService {
 
     // 2. AI 검색 (AI)
     public SearchResponseDto aiSearch(String userQuery) {
-        // [Redis] 1. 캐시 확인
         String cacheKey = keyGenerator.generateKey("ai", userQuery);
         SearchResponseDto cachedResult = redisCacheService.get(cacheKey, SearchResponseDto.class);
         if (cachedResult != null) return cachedResult;
 
-        // [Logic] 2. 검색 수행
         String refinedQuery = SearchUtils.extractKeywords(userQuery);
-        List<BookWithScore> scoredBooks = searchEngine.searchAndRerank(refinedQuery); // 이미 정렬되어 나옴
 
+        // 1. 리랭킹 수행 (Top 10만 하므로 빠름)
+        List<BookWithScore> scoredBooks = searchEngine.searchAndRerank(refinedQuery);
         if (scoredBooks.isEmpty()) return SearchResponseDto.empty();
 
-        // 3. AI 평가 전략: 상위 5개만 평가, 나머지는 일반 결과로 채움 (총 30개)
-        List<Book> top5Books = scoredBooks.stream().limit(AI_EVAL_SIZE).map(BookWithScore::book).toList();
+        // 2. AI 평가 (Top 3만 평가하므로 빠름)
+        List<Book> topBooks = scoredBooks.stream().limit(AI_EVAL_SIZE).map(BookWithScore::book).toList();
+        Map<String, AiResultDto> aiResults = aiProvider.evaluateBooks(userQuery, topBooks);
 
-        // 상위 5개에 대해서만 LLM 호출 (느림)
-        Map<String, AiResultDto> aiResults = aiProvider.evaluateBooks(userQuery, top5Books);
-
-        // 4. 결과 합치기 (Top 30)
+        // 3. 결과 합치기
         List<BookWithScore> finalTarget = scoredBooks.stream().limit(FINAL_RESULT_SIZE).toList();
         List<BookResponseDto> dtos = bookMapper.toDtoList(finalTarget.stream().map(BookWithScore::book).toList(), 0);
 
-        // AI 결과 매핑 (상위 5개는 matchRate와 멘트가 들어가고, 나머지는 null/0점)
         bookMapper.applyAiEvaluation(dtos, aiResults);
-
-        // (선택) AI 점수가 높은 순으로 다시 정렬 (LLM이 점수를 낮게 줬을 수도 있으므로)
         dtos.sort(Comparator.comparingInt(BookResponseDto::getMatchRate).reversed());
 
         SearchResponseDto result = SearchResponseDto.builder().bookList(dtos).build();
-
-        // [Redis] 5. 캐시 저장
         redisCacheService.save(cacheKey, result, Duration.ofHours(12));
 
         return result;
