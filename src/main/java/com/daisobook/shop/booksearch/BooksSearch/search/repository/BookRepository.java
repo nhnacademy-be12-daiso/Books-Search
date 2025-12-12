@@ -38,27 +38,47 @@ public class BookRepository {
         }
     }
 
-    // 2. 하이브리드 검색
+    // 2. 하이브리드 검색 (Vector + Keyword)
     public List<Book> searchHybrid(String query, List<Float> vector, int size) {
         try {
             SearchResponse<Book> response = esClient.search(s -> s
                     .index(INDEX_NAME)
+                    // [전략 3] 벡터 검색 부스트 하향 (10.0 -> 3.0)
+                    // 정확한 단어가 있는 책을 우선하고, 벡터는 보조 수단으로 사용
                     .knn(k -> k
                             .field("embedding")
                             .queryVector(vector)
                             .k(size)
                             .numCandidates(100)
-                            .boost(10.0f))
-                    .query(q -> q.bool(b -> b.should(m -> m.multiMatch(mm -> mm
-                            .query(query)
-                            .fields("title^3", "categories^3", "author^1", "description^1")
-                            .analyzer("korean_analyzer")
-                            .minimumShouldMatch("2<75%")))))
+                            .boost(3.0f))
+                    .query(q -> q.bool(b -> b
+                            .should(m -> m.multiMatch(mm -> mm
+                                    .query(query)
+                                    .fields(
+                                            "isbn^10.0",    // 1. ISBN: 식별자이므로 압도적으로 높게 설정 (맞으면 무조건 1등)
+                                            "title^5.0",    // 2. 제목: 텍스트 검색의 핵심 (기준점 5.0)
+                                            "author^4.0",       // 3. 저자: 제목 다음으로 중요 (4.0)
+                                            "categories^3.0",   // 4. 태그/카테고리: 검색 보조 (3.0)
+                                            "publisher^2.0",    // 5. 출판사: 브랜드 검색 (2.0)
+                                            "description^1.0",  // 6. 설명: 내용이 길어 노이즈가 많음 -> 점수 대폭 축소 (1.0)
+                                            "reviews^0.5"       // 7. 리뷰: 구어체가 많고 부정확함 -> 가장 낮게 설정 (0.5)
+
+                                    )
+                                    .analyzer("korean_analyzer")
+                                    .minimumShouldMatch("2<75%")
+                            ))
+                            // 분석기에 의해 ISBN이 쪼개지는 것을 방지
+                            .should(t -> t.term(tm -> tm
+                                    .field("isbn.keyword")
+                                    .value(query)
+                                    .boost(15.0f) // 여기에도 높은 가중치
+                            ))
+                    ))
                     .source(src -> src.filter(f -> f.excludes("embedding"))), Book.class);
 
             return extractHits(response);
         } catch (IOException e) {
-            log.error("[Repository] 하이브리드 검색 실패: query={}, vectorSize={}", query, (vector != null ? vector.size() : "null"), e);
+            log.error("[Repository] 하이브리드 검색 실패: query={}", query, e);
             return Collections.emptyList();
         }
     }
