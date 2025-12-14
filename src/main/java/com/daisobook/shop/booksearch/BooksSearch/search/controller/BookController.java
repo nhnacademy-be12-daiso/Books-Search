@@ -1,9 +1,9 @@
 package com.daisobook.shop.booksearch.BooksSearch.search.controller;
 
-import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookJsonDto;
+import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.SearchResponseDto;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.management.BookManagementService;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.search.SearchService;
+import com.daisobook.shop.booksearch.BooksSearch.search.service.BookManagementService;
+import com.daisobook.shop.booksearch.BooksSearch.search.service.SearchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,27 +15,15 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
 public class BookController {
-    private final SearchService searchService;
     private final BookManagementService bookManagementService;
-
-    // 데이터 임포트 실행 (관리자용)
-    @PostMapping("/search/file-import")
-    public ResponseEntity<String> importBooks(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("파일이 비어있습니다.");
-        }
-
-        // 파일 객체를 서비스로 넘김
-        String result = bookManagementService.importBooks(String.valueOf(file));
-        return ResponseEntity.ok(result);
-    }
+    private final SearchService searchService;
 
     // 책 한 권 정보를 받아서 수정/등록하는 API
     @PutMapping("/search/update")
-    public ResponseEntity<String> updateBook(@Valid @RequestBody BookJsonDto bookDto) {
+    public ResponseEntity<String> updateBook(@Valid @RequestBody Book bookDto) {
         // 서비스가 "수정되었습니다" 또는 "생성되었습니다" 메시지를 줌
-        String resultMessage = bookManagementService.upsertBook(bookDto);
-        return ResponseEntity.ok(resultMessage);
+        bookManagementService.upsertBook(bookDto);
+        return ResponseEntity.ok("도서 정보가 성공적으로 저장되었습니다.");
     }
 
     // 기본 도서 검색

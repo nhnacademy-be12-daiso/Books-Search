@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.search.component;
+package com.daisobook.shop.booksearch.BooksSearch.search.service.component;
 
 import kr.co.shineware.nlp.komoran.constant.DEFAULT_MODEL;
 import kr.co.shineware.nlp.komoran.core.Komoran;
