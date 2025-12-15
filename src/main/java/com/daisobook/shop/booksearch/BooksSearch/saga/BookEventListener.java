@@ -1,7 +1,9 @@
 package com.daisobook.shop.booksearch.BooksSearch.saga;
 
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.BookOutOfStockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,18 +36,19 @@ public class BookEventListener {
             log.info("[Book API] 재고 차감 성공");
             log.info("[Book API] 다음 이벤트 발행 완료 : Book API -> User API");
 
-        } catch(Exception e) { // 커스텀 예외 만들기!
+        } catch(BookOutOfStockException e) { // <<<<<<<<<<<< 예외 처리 제대로 하기
             // TODO 재고 부족 혹은 실패 시 보상 트랜잭션 이벤트 발행
             log.error("[Book API] ===== 재고 부족으로 인한 보상 트랜잭션 시작 =====");
             log.error("[Book API] Order ID : {}", event.getOrderId());
 
             throw e;  // 트랜잭션 걸려있으므로 예외 던지면 DB 트랜잭션 롤백됨
         }
-//        catch(Exception e) {
-//            log.error("[Book API] 이벤트 처리 중 예상치 못한 오류 발생 : {}", e.getMessage());
-//             TODO Dead Letter Queue 처리
-//             ---> 근데 여기서도 보상 트랜잭션 날려야하는거 아님?
-//        }
+        catch(Exception e) {
+            log.error("[Book API] 이벤트 처리 중 예상치 못한 오류 발생 : {}", e.getMessage());
+            // DLQ 처리
+            throw new AmqpRejectAndDontRequeueException(e.getMessage(), e);
+            // ----> 이 예외를 날리면 Retry와 DLQ 플로우 시작함
+        }
 
     }
 

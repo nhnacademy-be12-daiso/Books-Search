@@ -1,9 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -32,7 +29,10 @@ public class RabbitMqConfig {
     // book이 받아보는 큐
     @Bean
     Queue bookInventoryQueue() {
-        return new Queue(BOOK_QUEUE, true); // durable:true ---> 서버 재시작해도 유지
+        return QueueBuilder.durable(BOOK_QUEUE)
+                .withArgument("x-dead-letter-exchange", "team3.book.dlx") // 큐에서 문제가 생기면 해당 DLX로 보냄
+                .withArgument("x-dead-letter-routing-key", "fail.book")
+                .build();
     }
 
     // exchange랑 queue를 연결함
@@ -65,5 +65,6 @@ public class RabbitMqConfig {
 
         return rabbitTemplate;
     }
+
 
 }
