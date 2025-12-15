@@ -1,8 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.search.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.ScrollResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
@@ -12,9 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -103,77 +99,31 @@ public class BookRepository {
     /**
      * 3. 도서 저장 (Insert & Update)
      */
-    public void save(Book book) {
+    public boolean save(Book book) {
         try {
+            // Elasticsearch는 id가 같으면 덮어쓰기(Update)가 됨
             esClient.index(i -> i.index(INDEX_NAME).id(book.getIsbn()).document(book));
+            return true;
         } catch (IOException e) {
+            // ❗배포 환경에서 서비스 전체가 멈추지 않도록 여기서 throw 하지 않음
             log.error("❌ [Repository] 도서 저장 실패: isbn={}", book.getIsbn(), e);
-            throw new RuntimeException("도서 저장 실패", e);
+            return false;
         }
     }
 
     /**
      * 4. 도서 삭제
      */
-    public void deleteById(String isbn) {
+    public boolean deleteById(String isbn) {
         try {
             esClient.delete(d -> d.index(INDEX_NAME).id(isbn));
             log.info("🗑️ [Repository] 도서 삭제 완료: isbn={}", isbn);
+            return true;
         } catch (IOException e) {
+            // ❗배포 환경에서 서비스 전체가 멈추지 않도록 여기서 throw 하지 않음
             log.error("❌ [Repository] 도서 삭제 실패: isbn={}", isbn, e);
-            throw new RuntimeException("도서 삭제 실패", e);
+            return false;
         }
-    }
-
-    /**
-     * 5. 대량 저장 (Bulk)
-     */
-    public void saveAll(List<Book> books) {
-        if (books.isEmpty()) return;
-        try {
-            BulkRequest.Builder br = new BulkRequest.Builder();
-            for (Book book : books) {
-                br.operations(op -> op.index(idx -> idx.index(INDEX_NAME).id(book.getIsbn()).document(book)));
-            }
-            esClient.bulk(br.build());
-        } catch (IOException e) {
-            log.error("❌ [Repository] Bulk 저장 실패 ({}건)", books.size(), e);
-        }
-    }
-
-    /**
-     * 6. 전체 ISBN 조회 (Scroll API 사용)
-     * - 데이터 정합성 체크 등을 위해 사용
-     */
-    public Set<String> findAllIsbns() {
-        Set<String> isbns = new HashSet<>();
-        String scrollId = null;
-        try {
-            SearchResponse<Void> response = esClient.search(s -> s
-                    .index(INDEX_NAME)
-                    .size(5000)
-                    .scroll(t -> t.time("1m"))
-                    .source(src -> src.fetch(false)), Void.class);
-
-            scrollId = response.scrollId();
-            if (response.hits() != null) response.hits().hits().forEach(hit -> isbns.add(hit.id()));
-
-            while (scrollId != null) {
-                String finalScrollId = scrollId;
-                ScrollResponse<Void> scrollResponse = esClient.scroll(s -> s.scrollId(finalScrollId).scroll(t -> t.time("1m")), Void.class);
-                if (scrollResponse.hits() == null || scrollResponse.hits().hits().isEmpty()) break;
-                scrollResponse.hits().hits().forEach(hit -> isbns.add(hit.id()));
-                scrollId = scrollResponse.scrollId();
-            }
-        } catch (Exception e) {
-            log.warn("⚠️ [Repository] 전체 ISBN 조회 중 오류 발생: {}", e.getMessage());
-        } finally {
-            if (scrollId != null) {
-                String sid = scrollId;
-                try { esClient.clearScroll(c -> c.scrollId(sid)); } catch (Exception ignored) {}
-            }
-        }
-        return isbns;
     }
 
     // Helper: SearchResponse -> List<Book> 변환

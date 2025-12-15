@@ -1,11 +1,9 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.component;
+package com.daisobook.shop.booksearch.BooksSearch.search.component;
 
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 public class QueryPreprocessor {

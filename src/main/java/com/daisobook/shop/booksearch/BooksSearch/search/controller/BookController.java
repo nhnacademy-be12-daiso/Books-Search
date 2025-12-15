@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 
 @RestController("BookSearchController")
@@ -21,9 +20,21 @@ public class BookController {
     // 책 한 권 정보를 받아서 수정/등록하는 API
     @PutMapping("/search/update")
     public ResponseEntity<String> updateBook(@Valid @RequestBody Book bookDto) {
-        // 서비스가 "수정되었습니다" 또는 "생성되었습니다" 메시지를 줌
-        bookManagementService.upsertBook(bookDto);
-        return ResponseEntity.ok("도서 정보가 성공적으로 저장되었습니다.");
+        BookManagementService.OperationResult result = bookManagementService.upsertBook(bookDto);
+        if (result.success()) {
+            return ResponseEntity.ok(result.message());
+        }
+        // ❗배포 환경에서 예외로 끊지 않고, 실패는 502(Bad Gateway)로 내려서 호출자가 판단하게 한다.
+        return ResponseEntity.status(502).body(result.message());
+    }
+
+    @DeleteMapping("/search/delete/{isbn}")
+    public ResponseEntity<String> deleteBook(@PathVariable String isbn) {
+        BookManagementService.OperationResult result = bookManagementService.deleteBook(isbn);
+        if (result.success()) {
+            return ResponseEntity.ok(result.message());
+        }
+        return ResponseEntity.status(502).body(result.message());
     }
 
     // 기본 도서 검색

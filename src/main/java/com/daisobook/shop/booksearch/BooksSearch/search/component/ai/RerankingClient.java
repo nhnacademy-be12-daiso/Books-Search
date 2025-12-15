@@ -1,6 +1,6 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.component.ai;
+package com.daisobook.shop.booksearch.BooksSearch.search.component.ai;
 
-import com.daisobook.shop.booksearch.BooksSearch.search.config.AiClient;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.AiClient;
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
 import com.daisobook.shop.booksearch.BooksSearch.search.exception.RerankingException;
 import lombok.RequiredArgsConstructor;

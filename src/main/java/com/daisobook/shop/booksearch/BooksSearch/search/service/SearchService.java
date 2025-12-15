@@ -4,17 +4,16 @@ import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.AiResultDto;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookWithScore;
 import com.daisobook.shop.booksearch.BooksSearch.search.dto.SearchResponseDto;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.CacheKeyGenerator;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.QueryPreprocessor;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.ai.EmbeddingClient;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.ai.LlmAnalysisClient;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.ai.RerankingClient;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.assembler.SearchResultAssembler;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.engine.ElasticsearchEngine;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.CacheKeyGenerator;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.QueryPreprocessor;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.ai.EmbeddingClient;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.ai.LlmAnalysisClient;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.ai.RerankingClient;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.assembler.SearchResultAssembler;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.engine.ElasticsearchEngine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -49,9 +48,7 @@ public class SearchService {
 
         String refinedQuery = queryPreprocessor.extractKeywords(userQuery);
 
-        // =================================================================================
         // 1단계: 임베딩 생성 (실패 시 -> 빈 리스트 반환 -> 키워드 검색만 수행)
-        // =================================================================================
         List<Float> embedding;
         try {
             embedding = embeddingClient.createEmbedding(refinedQuery);
@@ -60,15 +57,11 @@ public class SearchService {
             embedding = Collections.emptyList(); // 빈 리스트면 Repository가 알아서 벡터 검색을 뺌
         }
 
-        // =================================================================================
         // 2단계: Elasticsearch 검색 (여기가 실패하면 답이 없으므로 Exception 전파)
-        // =================================================================================
         List<Book> candidates = elasticsearchEngine.search(refinedQuery, embedding);
         if (candidates.isEmpty()) return SearchResponseDto.empty();
 
-        // =================================================================================
-        // 3단계: 리랭킹 (실패 시 -> ES 원본 순서 유지) - 여기가 아까 문제였던 부분!
-        // =================================================================================
+        // 3단계: 리랭킹 (실패 시 -> ES 원본 순서 유지)
         List<BookWithScore> rankedBooks;
         try {
             // 상위 N개만 리랭킹 시도
@@ -87,9 +80,7 @@ public class SearchService {
                     .toList();
         }
 
-        // =================================================================================
         // 4단계: Gemini AI 분석 (실패 시 -> 분석 멘트 없이 결과 반환)
-        // =================================================================================
         Map<String, AiResultDto> aiAnalysis;
         try {
             // 상위 3권만 분석

@@ -1,6 +1,6 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.component.ai;
+package com.daisobook.shop.booksearch.BooksSearch.search.component.ai;
 
-import com.daisobook.shop.booksearch.BooksSearch.search.config.AiClient;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.AiClient;
 import com.daisobook.shop.booksearch.BooksSearch.search.exception.EmbeddingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

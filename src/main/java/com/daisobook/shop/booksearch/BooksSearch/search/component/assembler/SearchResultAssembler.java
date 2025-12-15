@@ -1,12 +1,18 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.component.assembler;
+package com.daisobook.shop.booksearch.BooksSearch.search.component.assembler;
 
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
-import com.daisobook.shop.booksearch.BooksSearch.search.dto.*;
-import com.daisobook.shop.booksearch.BooksSearch.search.service.component.BookMapper;
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.AiResultDto;
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookResponseDto;
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookWithScore;
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.SearchResponseDto;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.BookMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor

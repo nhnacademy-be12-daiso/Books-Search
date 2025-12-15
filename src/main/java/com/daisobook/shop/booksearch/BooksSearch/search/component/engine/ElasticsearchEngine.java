@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.component.engine;
+package com.daisobook.shop.booksearch.BooksSearch.search.component.engine;
 
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
 import com.daisobook.shop.booksearch.BooksSearch.search.repository.BookRepository;

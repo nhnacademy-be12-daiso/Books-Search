@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.config;
+package com.daisobook.shop.booksearch.BooksSearch.search.component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
