@@ -64,7 +64,7 @@ app:
   ai:
     embedding-url: http://ollama.java21.net/api/embeddings
     reranker-url: http://reranker.java21.net/rerank
-    gemini-api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
+    gemini-api-key: AIzaSyAPjRTWLiLXhJBCiCKoCNi3aPVMNGkU4go
     gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
 
 eureka:
