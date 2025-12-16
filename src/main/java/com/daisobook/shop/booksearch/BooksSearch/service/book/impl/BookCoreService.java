@@ -176,8 +176,8 @@ public class BookCoreService {
         //book엔티티와 관련된 엔티티 체크
         authorService.updateAuthor(book, updateCheckDTO.author());
         categoryService.updateCategory(book, updateCheckDTO.category());
-        tagService.updateTag(book, updateCheckDTO.tag());
-        publisherService.updatePublisher(book, updateCheckDTO.publisher());
+//        tagService.updateTag(book, updateCheckDTO.tag());
+//        publisherService.updatePublisher(book, updateCheckDTO.publisher());
 
         return book;
     }
