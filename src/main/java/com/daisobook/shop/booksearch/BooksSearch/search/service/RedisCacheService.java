@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.search.service.search;
+package com.daisobook.shop.booksearch.BooksSearch.search.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

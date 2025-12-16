@@ -5,16 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
- * 분산된 로컬 트랜잭션을 수행하기 위해 필요한 '확정된 최동 데이터'
+ * 분산된 로컬 트랜잭션을 수행하기 위해 필요한 '확정된 최종 데이터'
  */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderConfirmedEvent implements Serializable {
+public class OrderConfirmedEvent {
 
     private Long orderId;
     private Long userId;

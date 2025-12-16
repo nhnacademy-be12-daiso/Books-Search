@@ -18,24 +18,29 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient() {
-        // 🔥 핵심: 커넥션 풀(Connection Pool) 대폭 확장
         ConnectionProvider provider = ConnectionProvider.builder("custom-provider")
-                .maxConnections(500) // 동시에 최대 500개 연결 허용 (기존 대비 대폭 상향)
-                .pendingAcquireMaxCount(1000) // 대기열 1000개까지 허용
-                .pendingAcquireTimeout(Duration.ofSeconds(60)) // 대기 시간 60초
+                .maxConnections(20) // 학교 서버 보호를 위해 '동시 진입'은 제한 (이건 유지해야 함!)
+                .pendingAcquireMaxCount(1000) // 대기열을 아주 넉넉하게 (많이 줄 서도 됨)
+                .pendingAcquireTimeout(Duration.ofMinutes(3)) // 대기 시간 3분 (줄 서다 포기하지 않게)
+                .maxIdleTime(Duration.ofSeconds(30)) // 유휴 커넥션 정리
+                .lifo()
                 .build();
 
         HttpClient httpClient = HttpClient.create(provider)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000)
-                .responseTimeout(Duration.ofMinutes(5)) // 타임아웃 5분으로 넉넉하게
+                // 연결 시도 타임아웃 (서버가 꺼진 경우엔 10초면 충분)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+
+                // [핵심 변경] 응답 타임아웃: 5분 (300초)
+                // 리랭킹이 1~2분 걸려도 절대 끊지 않고 기다려줍니다.
+                .responseTimeout(Duration.ofMinutes(5))
                 .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(300, TimeUnit.SECONDS))
-                                .addHandlerLast(new WriteTimeoutHandler(300, TimeUnit.SECONDS))
+                        conn.addHandlerLast(new ReadTimeoutHandler(300, TimeUnit.SECONDS)) // 읽기 5분
+                                .addHandlerLast(new WriteTimeoutHandler(300, TimeUnit.SECONDS)) // 쓰기 5분
                 );
 
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 메모리도 넉넉히 (20MB)
                 .build();
     }
 }
