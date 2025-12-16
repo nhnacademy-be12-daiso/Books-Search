@@ -2,10 +2,12 @@ package com.daisobook.shop.booksearch.BooksSearch.service.tag;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TagRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.BookTag;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.Tag;
 
 import java.util.List;
+import java.util.Map;
 
 public interface TagService {
     void validateNotExistsByName(String tagName);

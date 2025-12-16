@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,9 +61,11 @@ public class Category {
     }
 
     @OneToMany(mappedBy = "preCategory")
+    @BatchSize(size = 100)
     private List<Category> afterCategories;
 
     @OneToMany(mappedBy = "category")
+    @BatchSize(size = 100)
     private List<BookCategory> bookCategories;
 
     public static Category create(CategoryReqDTO dto){
