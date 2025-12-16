@@ -56,7 +56,7 @@ spring:
 
 rabbitmq:
   queue:
-    book: "team3.order.confirmed.book.queue.dev"
+    book: "team3.saga.book.queue.dev"
 
 eureka:
   instance:

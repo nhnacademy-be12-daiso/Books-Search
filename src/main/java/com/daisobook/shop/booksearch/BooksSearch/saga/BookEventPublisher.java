@@ -14,7 +14,7 @@ public class BookEventPublisher {
 
     private final AmqpTemplate rabbitTemplate;
 
-    private final String BOOK_EXCHANGE = "team3.book.exchange";
+    private final String BOOK_EXCHANGE = "team3.saga.book.exchange";
     private final String ROUTING_KEY_DEDUCTED = "inventory.deducted";
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
