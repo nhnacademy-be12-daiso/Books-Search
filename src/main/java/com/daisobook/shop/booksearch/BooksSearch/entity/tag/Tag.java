@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,5 +35,6 @@ public class Tag {
     }
 
     @OneToMany(mappedBy = "tag")
+    @BatchSize(size = 100)
     private List<BookTag> bookTags;
 }

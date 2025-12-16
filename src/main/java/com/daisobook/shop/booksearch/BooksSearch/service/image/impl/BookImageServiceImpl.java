@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.service.image.impl;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImageDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
 import com.daisobook.shop.booksearch.BooksSearch.entity.ImageType;
 import com.daisobook.shop.booksearch.BooksSearch.repository.book.BookImageRepository;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,25 +52,36 @@ public class BookImageServiceImpl extends ImageTemplateServiceImpl {
         return imageDTOList;
     }
 
-    public List<BookImage> addBookImage(ImagesReqDTO imagesReqDTO, Map<String, MultipartFile> fileMap){
+    public List<BookImage> addBookImage(Book book, ImagesReqDTO imagesReqDTO, Map<String, MultipartFile> fileMap){
         List<BookImage> bookImages = executeAdd(imagesReqDTO, fileMap);
 
+        book.setBookImages(bookImages);
+        bookImages.forEach(bi -> bi.setBook(book));
         bookImageRepository.saveAll(bookImages);
         return bookImages;
     }
 
-    public List<List<BookImage>> addBookImages(List<ImagesReqDTO> imagesReqDTOs){
-        List<List<BookImage>> bookImagesList = new ArrayList<>();
+    public Map<Long,List<BookImage>> addBookImages(Map<String, Book> bookMap, List<ImagesReqDTO> imagesReqDTOs){
+        Map<Long, List<BookImage>> bookImagesListMap = new HashMap<>();
         for(ImagesReqDTO i: imagesReqDTOs){
             List<BookImage> bookImages = executeAdd(i, null);
-            bookImagesList.add(bookImages);
+            bookImagesListMap.put(i.connectedId(),bookImages);
         }
-        List<BookImage> allBookImages = bookImagesList.stream()
+
+        if(bookMap != null){
+            for(Book book: bookMap.values()) {
+                List<BookImage> bookImages = bookImagesListMap.get(book.getId());
+                bookImages.forEach(bi -> bi.setBook(book));
+                book.setBookImages(bookImages);
+            }
+        }
+
+        List<BookImage> allBookImages = bookImagesListMap.values().stream()
                 .flatMap(List::stream) // List<BookImage>의 Stream을 하나의 Stream<BookImage>으로 합침
                 .collect(Collectors.toList());
 
         bookImageRepository.saveAll(allBookImages);
-        return bookImagesList;
+        return bookImagesListMap;
     }
 
     private List<BookImage> executeAdd(ImagesReqDTO imagesReqDTO, Map<String, MultipartFile> fileMap){
@@ -98,7 +111,7 @@ public class BookImageServiceImpl extends ImageTemplateServiceImpl {
                 .orElseThrow(() -> new RuntimeException("이미지(Sequence: " + sequence + ")의 타입을를 찾을 수 없습니다."));
     }
 
-    public List<BookImage> updateBookImage(ImagesReqDTO imagesReqDTO, Map<String, MultipartFile> fileMap){
+    public List<BookImage> updateBookImage(Book book, ImagesReqDTO imagesReqDTO, Map<String, MultipartFile> fileMap){
         checkImagesCount(imagesReqDTO);
 
         List<BookImage> existingImages = bookImageRepository.findBookImagesByBook_Id(imagesReqDTO.connectedId());
@@ -139,6 +152,11 @@ public class BookImageServiceImpl extends ImageTemplateServiceImpl {
             }
 
         }
+        if(book != null){
+            book.setBookImages(resultImages);
+            resultImages.forEach(ri -> ri.setBook(book));
+        }
+
         bookImageRepository.deleteAll(deleteImages);
         bookImageRepository.saveAll(resultImages);
 

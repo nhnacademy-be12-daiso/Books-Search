@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,5 +36,6 @@ public class Publisher {
 
     @Setter
     @OneToMany(mappedBy = "publisher")
+    @BatchSize(size = 100)
     private List<Book> bookList;
 }

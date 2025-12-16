@@ -242,7 +242,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public void assignImages(Book book, List<ImageMetadataReqDTO> dto, Map<String, MultipartFile> fileMap) {
         ImagesReqDTO reqDTO = new ImagesReqDTO(book.getId(), dto);
-        List<BookImage> bookImages = imageService.addBookImage(reqDTO, fileMap);
+        List<BookImage> bookImages = imageService.addBookImage(book, reqDTO, fileMap);
         bookImages.forEach(bi -> bi.setBook(book));
         book.setBookImages(bookImages);
     }
@@ -311,11 +311,10 @@ public class BookServiceImpl implements BookService {
                     imagesReqDTOsForProcess.add(new ImagesReqDTO(books.get(i).getId(), imageMetadataReqDTOs.get(i)));
                 }
 
-                List<List<BookImage>> newImagesList = imageService.addBookImages(imagesReqDTOsForProcess);
+                Map<Long, List<BookImage>> newImagesListMap = imageService.addBookImages(null, imagesReqDTOsForProcess);
 
-                for (int i = 0; i < books.size(); i++) {
-                    Book book = books.get(i);
-                    newImagesList.get(i).forEach(bookImage -> bookImage.setBook(book));
+                for (Book book: books) {
+                    newImagesListMap.get(book.getId()).forEach(bookImage -> bookImage.setBook(book));
                 }
 
                 count = 0;
@@ -714,7 +713,7 @@ public class BookServiceImpl implements BookService {
         }
         if(imageChangeDetected){
             ImagesReqDTO reqDTO = new ImagesReqDTO(book.getId(), imageMetadataReqDTOs);
-            List<BookImage> bookImageList = imageService.updateBookImage(reqDTO, fileMap);
+            List<BookImage> bookImageList = imageService.updateBookImage(null, reqDTO, fileMap);
             book.setBookImages(bookImageList);
             if(bookImageList != null) {
                 bookImageList.forEach(bi -> bi.setBook(book));

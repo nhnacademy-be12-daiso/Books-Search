@@ -1,47 +1,31 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
-import com.daisobook.shop.booksearch.BooksSearch.entity.author.BookAuthor;
-import com.daisobook.shop.booksearch.BooksSearch.entity.author.Role;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
-import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
-import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
-import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
-import com.daisobook.shop.booksearch.BooksSearch.entity.tag.BookTag;
-import com.daisobook.shop.booksearch.BooksSearch.entity.tag.Tag;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryName;
 import com.daisobook.shop.booksearch.BooksSearch.repository.BookOfTheWeekRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.author.BookAuthorRepository;
 import com.daisobook.shop.booksearch.BooksSearch.repository.book.BookRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.category.BookCategoryRepository;
-import com.daisobook.shop.booksearch.BooksSearch.repository.tag.BookTagRepository;
-import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorService;
-import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
+import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorV2Service;
+import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
-import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;
-import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherService;
+import com.daisobook.shop.booksearch.BooksSearch.service.publisher.PublisherV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
-import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagService;
+import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagV2Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -56,23 +40,17 @@ public class BookCoreService {
     private final int MAX_SIZE = 1000;
 
     private final BookRepository bookRepository;
-    private final BookCategoryRepository bookCategoryRepository;
-    private final CategoryService categoryService;
 
-    private final BookTagRepository bookTagRepository;
-    private final TagService tagService;
-
-    private final PublisherService publisherService;
-
-    private final BookAuthorRepository bookAuthorRepository;
-    private final AuthorService authorService;
+    private final CategoryV2Service categoryService;
+    private final TagV2Service tagService;
+    private final AuthorV2Service authorService;
+    private final PublisherV2Service publisherService;
 
     private final BookImageServiceImpl imageService;
 
     private final BookOfTheWeekRepository bookOfTheWeekRepository;
-    private final DiscountPolicyService discountPolicyService;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public void validateExistsById(long bookId) {
         if(!bookRepository.existsBookById(bookId)) {
             log.error("존재하지 않은 도서ID: {}", bookId);
@@ -80,7 +58,7 @@ public class BookCoreService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public void validateExistsByIsbn(String isbn) {
         if(!bookRepository.existsBookByIsbn(isbn)) {
             log.error("존재하지 않은 ISBN: {}", isbn);
@@ -88,7 +66,7 @@ public class BookCoreService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public void validateNotExistsByIsbn(String isbn) {
         if(bookRepository.existsBookByIsbn(isbn)) {
             log.error("이미 존재하는 ISBN: {}", isbn);
@@ -97,136 +75,110 @@ public class BookCoreService {
     }
 
     @Transactional
-    public void assignCategoriesToBook(Book book, List<CategoryReqDTO> categories) {
-        if(categories == null || categories.isEmpty()){
-            return;
-        }
+    public Book registerBook(Book book, Long categoryId, List<String> tagNameList, List<AuthorReqDTO> authorReqDTOList,
+                             String publisherName) {
 
-        Map<String, Category> categoryMap = categoryService.findCategoriesByNamesAndDeeps(categories.stream()
-                                .map(CategoryReqDTO::categoryName)
-                                .toList(),
-                        categories.stream()
-                                .map(CategoryReqDTO::deep).
-                                toList()).stream()
-                .collect(Collectors.toMap(Category::getName, category -> category));
+        categoryService.assignCategoriesToBook(book, categoryId);
+        tagService.assignTagsToBook(book, tagNameList);
+        authorService.assignAuthorsToBook(book, authorReqDTOList);
+        publisherService.assignPublisherToBook(book, publisherName);
 
-        for(CategoryReqDTO c: categories) {
-//            Category category = categoryService.findValidCategoryByNameAndDeep(c.categoryName(), c.deep());
-            Category category = categoryMap.get(c.categoryName());
-            if(category == null){
-                log.error("존재하지 않는 카테고리입니다 - 요청한 카테고리:{}", c.categoryName());
-                throw new NotFoundCategoryName("존재하지 않는 카테고리입니다");
-            }
-
-            BookCategory bookCategory = new BookCategory(book, category);
-
-            category.getBookCategories().add(bookCategory);
-            book.getBookCategories().add(bookCategory);
-
-//            bookCategoryRepository.save(bookCategory);
-        }
-    }
-
-    @Transactional
-    public void assignTagsToBook(Book book, List<String> tagNames) {
-
-        Map<String, Tag> tagMap = tagService.findAllByNameIn(tagNames).stream()
-                .collect(Collectors.toMap(Tag::getName, tag -> tag));
-
-        for(String t: tagNames){
-//            Tag tag = tagService.findTagByName(t);
-            Tag tag = tagMap.get(t);
-            if(tag == null){
-                tag = new Tag(t);
-            }
-
-            BookTag bookTag = new BookTag(book, tag);
-
-            tag.getBookTags().add(bookTag);
-            book.getBookTags().add(bookTag);
-
-//            bookTagRepository.save(bookTag);
-        }
-    }
-
-    public void assignAuthorToBook(Book book, List<AuthorReqDTO> authorReqDTOs) {
-        Map<String, Author> authorMap = authorService.findAuthorsByNameIn(authorReqDTOs.stream()
-                        .map(AuthorReqDTO::authorName)
-                        .toList()).stream()
-                .collect(Collectors.toMap(Author::getName, author -> author));
-
-        Map<String, Role> roleMap = authorService.findRolesByNameIn(authorReqDTOs.stream()
-                        .map(AuthorReqDTO::roleName)
-                        .toList()).stream()
-                .collect(Collectors.toMap(Role::getName, role -> role));
-
-        for(AuthorReqDTO a: authorReqDTOs){
-            Author author = authorMap.get(a.authorName());
-            if(author == null){
-                author = new Author(a.authorName());
-            }
-
-            Role role = roleMap.get(a.roleName());
-
-            BookAuthor newBookAuthor = new BookAuthor(book, author);
-            book.getBookAuthors().add(newBookAuthor);
-            author.getBookAuthors().add(newBookAuthor);
-
-            if(role != null){
-                newBookAuthor.setRole(role);
-                role.getBookAuthors().add(newBookAuthor);
-            }
-        }
-    }
-
-    public void assignImages(Book book, List<ImageMetadataReqDTO> dto, Map<String, MultipartFile> fileMap) {
-        ImagesReqDTO reqDTO = new ImagesReqDTO(book.getId(), dto);
-        List<BookImage> bookImages = imageService.addBookImage(reqDTO, fileMap);
-        bookImages.forEach(bi -> bi.setBook(book));
-        book.setBookImages(bookImages);
-    }
-
-    @Transactional
-    public void registerBook(BookReqDTO bookReqDTO, Map<String, MultipartFile> fileMap) {
-        validateNotExistsByIsbn(bookReqDTO.isbn());
-
-        Book newBook = Book.create(bookReqDTO, publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
-
-        assignCategoriesToBook(newBook, bookReqDTO.categories());
-        if(bookReqDTO.tags() != null) {
-            assignTagsToBook(newBook, bookReqDTO.tags().stream()
-                    .map(TagReqDTO::tagName)
-                    .toList());
-        }
-
-        bookRepository.save(newBook);
-        assignImages(newBook, bookReqDTO.imageMetadataReqDTOList(), fileMap);
-        assignAuthorToBook(newBook, bookReqDTO.authorReqDTOList());
-        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
-                newBook.getBookAuthors().stream()
+        bookRepository.save(book);
+        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
+                book.getBookAuthors().stream()
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
                         .toList());
+
+        return book;
     }
 
-//    @Transactional
-//    public void registerBook(Book book) {
-//        validateNotExistsByIsbn(bookReqDTO.isbn());
-//
-//        Book newBook = Book.create(bookReqDTO, publisherService.getPublisherRegisterBook(bookReqDTO.publisher()));
-//
-//        assignCategoriesToBook(newBook, bookReqDTO.categories());
-//        if(bookReqDTO.tags() != null) {
-//            assignTagsToBook(newBook, bookReqDTO.tags().stream()
-//                    .map(TagReqDTO::tagName)
-//                    .toList());
-//        }
-//
-//        bookRepository.save(newBook);
-//        assignImages(newBook, bookReqDTO.imageMetadataReqDTOList(), fileMap);
-//        assignAuthorToBook(newBook, bookReqDTO.authorReqDTOList());
-//        log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", newBook.getIsbn(), newBook.getTitle(),
-//                newBook.getBookAuthors().stream()
-//                        .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())
-//                        .toList());
-//    }
+    @Transactional(readOnly = true)
+    public Set<BookIsbnProjection> getExistsByIsbn(List<String> isbns){
+        List<BookIsbnProjection> isIsbns = bookRepository.findBooksByIsbnIn(isbns);
+        if(isIsbns == null || isIsbns.isEmpty()){
+            return null;
+        }
+
+        return new HashSet<>(isIsbns);
+    }
+
+    @Transactional
+    public Map<String, Book> registerBooks(Map<String, Book> bookMap, Map<String, Long> categoryIdMap, Map<String, List<String>> tagNameListMap,
+                                           Map<String, List<AuthorReqDTO>> authorListMap, Map<String, String> publisherNameMap){
+        categoryService.assignCategoriesToBooks(bookMap, categoryIdMap);
+        tagService.assignTagsToBooks(bookMap, tagNameListMap);
+        authorService.assignAuthorsToBooks(bookMap, authorListMap);
+        publisherService.assignPublisherToBooks(bookMap, publisherNameMap);
+
+        bookRepository.saveAll(bookMap.values());
+
+        log.debug("도서 저장 수 - {}권", bookMap.size());
+
+        return bookMap;
+    }
+
+    @Transactional
+    public Book getBook_Id(long id){
+        Book book = bookRepository.getBookById(id);
+        if(book == null){
+            log.error("해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", id);
+            return null;
+        }
+
+        return book;
+    }
+
+    @Transactional
+    public Book updateBook(Book book, BookUpdateData updateCheckDTO){
+
+        //book 엔티티 필드 값 체크
+        if(updateCheckDTO.title() != null && updateCheckDTO.title().isEmpty() &&
+                !book.getTitle().equals(updateCheckDTO.title())){
+            book.setTitle(updateCheckDTO.title());
+        }
+        if(updateCheckDTO.index() != null && updateCheckDTO.index().isEmpty() &&
+                !book.getIndex().equals(updateCheckDTO.index())){
+            book.setIndex(updateCheckDTO.index());
+        }
+        if(updateCheckDTO.description() != null && updateCheckDTO.description().isEmpty() &&
+                !book.getDescription().equals(updateCheckDTO.description())){
+            book.setDescription(updateCheckDTO.description());
+        }
+        if(updateCheckDTO.publicationDate() != null &&
+                !book.getPublicationDate().equals(updateCheckDTO.publicationDate())){
+            book.setIndex(updateCheckDTO.index());
+        }
+        if(updateCheckDTO.price() != null &&
+                !book.getPrice().equals(updateCheckDTO.price())){
+            book.setPrice(updateCheckDTO.price());
+        }
+        if(updateCheckDTO.isPackaging() != null &&
+                book.isPackaging() != updateCheckDTO.isPackaging()){
+            book.setPackaging(updateCheckDTO.isPackaging());
+        }
+        if(updateCheckDTO.stock() != null &&
+                !book.getStock().equals(updateCheckDTO.stock())){
+            book.setStock(updateCheckDTO.stock());
+        }
+        if(updateCheckDTO.status() != null &&
+                !book.getStatus().equals(updateCheckDTO.status())){
+            book.setStatus(updateCheckDTO.status());
+        }
+        if(updateCheckDTO.volumeNo() != null &&
+                !book.getVolumeNo().equals(updateCheckDTO.volumeNo())){
+            book.setVolumeNo(updateCheckDTO.volumeNo());
+        }
+        if(updateCheckDTO.isDeleted() != null &&
+                book.isDeleted() != updateCheckDTO.isDeleted()){
+            book.setDeleted(updateCheckDTO.isDeleted());
+        }
+
+        //book엔티티와 관련된 엔티티 체크
+        authorService.updateAuthor(book, updateCheckDTO.author());
+        categoryService.updateCategory(book, updateCheckDTO.category());
+        tagService.updateTag(book, updateCheckDTO.tag());
+        publisherService.updatePublisher(book, updateCheckDTO.publisher());
+
+        return book;
+    }
 }
