@@ -58,7 +58,7 @@ spring:
 
 rabbitmq:
   queue:
-    book: "team3.order.confirmed.book.queue"
+    book: team3.saga.book.queue
 
 app:
   batch:

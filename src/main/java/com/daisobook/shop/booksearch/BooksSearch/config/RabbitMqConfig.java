@@ -12,18 +12,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMqConfig {
 
-    private static final String ORDER_EXCHANGE = "team3.order.exchange";
+    private static final String ORDER_EXCHANGE = "team3.saga.order.exchange";
     @Value("${rabbitmq.queue.book}")
     private String BOOK_QUEUE;
     private static final String ROUTING_KEY_CONFIRMED = "order.confirmed";
 
-    private static final String BOOK_EXCHANGE = "team3.book.exchange";
+    private static final String BOOK_EXCHANGE = "team3.saga.book.exchange";
 
 
     // 발신되는 쪽 Exchange
     @Bean
-    public TopicExchange orderExchange() {
-        return new TopicExchange(ORDER_EXCHANGE);
+    public DirectExchange orderExchange() {
+        return new DirectExchange(ORDER_EXCHANGE);
     }
 
     // book이 받아보는 큐
@@ -37,7 +37,7 @@ public class RabbitMqConfig {
 
     // exchange랑 queue를 연결함
     @Bean
-    public Binding bindingOrderConfirmed(Queue bookInventoryQueue, TopicExchange orderExchange) {
+    public Binding bindingOrderConfirmed(Queue bookInventoryQueue, DirectExchange orderExchange) {
         return BindingBuilder.bind(bookInventoryQueue)
                 .to(orderExchange)
                 .with(ROUTING_KEY_CONFIRMED);
@@ -45,8 +45,8 @@ public class RabbitMqConfig {
 
     // Book이 사용할 Exchange
     @Bean
-    public TopicExchange bookExchange() {
-        return new TopicExchange(BOOK_EXCHANGE);
+    public DirectExchange bookExchange() {
+        return new DirectExchange(BOOK_EXCHANGE);
     }
 
     @Bean
