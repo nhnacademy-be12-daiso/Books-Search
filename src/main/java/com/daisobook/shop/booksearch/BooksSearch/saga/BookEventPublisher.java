@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.saga;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -15,7 +16,8 @@ public class BookEventPublisher {
     private final AmqpTemplate rabbitTemplate;
 
     private final String BOOK_EXCHANGE = "team3.saga.book.exchange";
-    private final String ROUTING_KEY_DEDUCTED = "inventory.deducted";
+    @Value("${rabbitmq.routing.deducted}")
+    private String ROUTING_KEY_DEDUCTED;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishBookDeductedEvent(OrderConfirmedEvent event) {

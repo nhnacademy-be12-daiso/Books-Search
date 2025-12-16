@@ -58,7 +58,11 @@ spring:
 
 rabbitmq:
   queue:
-    book: team3.saga.book.queue
+    book: team3.saga.book.queue.v2
+  routing:
+    confirmed: order.confirmed.v2
+    deducted: inventory.deducted
+
 
 app:
   batch:

@@ -56,7 +56,10 @@ spring:
 
 rabbitmq:
   queue:
-    book: "team3.saga.book.queue.dev"
+    book: team3.saga.book.queue.v2.dev
+  routing:
+    confirmed: order.confirmed.v2.dev
+    deducted: inventory.deducted.dev
 
 eureka:
   instance:

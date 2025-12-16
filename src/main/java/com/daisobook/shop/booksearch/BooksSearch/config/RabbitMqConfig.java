@@ -15,7 +15,9 @@ public class RabbitMqConfig {
     private static final String ORDER_EXCHANGE = "team3.saga.order.exchange";
     @Value("${rabbitmq.queue.book}")
     private String BOOK_QUEUE;
-    private static final String ROUTING_KEY_CONFIRMED = "order.confirmed";
+
+    @Value("${rabbitmq.routing.confirmed}")
+    private String ROUTING_KEY_CONFIRMED;
 
     private static final String BOOK_EXCHANGE = "team3.saga.book.exchange";
 
