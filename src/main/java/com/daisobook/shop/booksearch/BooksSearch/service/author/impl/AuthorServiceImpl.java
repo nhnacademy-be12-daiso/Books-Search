@@ -22,8 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class
-AuthorServiceImpl implements AuthorService {
+public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
     private final RoleRepository roleRepository;
     private final BookAuthorRepository bookAuthorRepository;

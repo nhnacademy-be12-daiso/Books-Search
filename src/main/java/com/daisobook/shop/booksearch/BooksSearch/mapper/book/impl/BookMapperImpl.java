@@ -1,8 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.book.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -25,36 +24,48 @@ public class BookMapperImpl implements BookMapper {
     private final ObjectMapper objectMapper;
 
     @Override
-    public BookGroupReqDTO parsing(BookMetadataReqDTO dto) throws JsonProcessingException {
-        final int MAX_FILE_COUNT = 5;
+    public BookGroupReqV2DTO parsing(String metadataJson, MultipartFile image0, MultipartFile image1,
+                                     MultipartFile image2, MultipartFile image3, MultipartFile image4) throws JsonProcessingException {
 
-        BookReqDTO metadata = objectMapper.readValue(dto.metadata(), BookReqDTO.class);
+        BookReqV2DTO metadata = objectMapper.readValue(metadataJson, BookReqV2DTO.class);
         Map<String, MultipartFile> files = new HashMap<>();
-        Class<?> clazz = dto.getClass();
 
-        for(int i = 0; i < MAX_FILE_COUNT; i++) {
-            String key = "image%d".formatted(i);
-            try {
-                // DTO에서 필드를 찾아 접근 권한 설정
-                Field field = clazz.getDeclaredField(key);
-                field.setAccessible(true);
-
-                // DTO 인스턴스에서 해당 필드의 값(MultipartFile) 추출
-                MultipartFile file = (MultipartFile) field.get(dto);
-
-                // 파일이 비어있지 않은 경우에만 Map에 추가 (Key는 "image0", "image1"...)
-                if (file != null && !file.isEmpty()) {
-                    files.put(key, file);
-                }
-            } catch (NoSuchFieldException e) {
-                // 필드가 없으면 종료
-                break;
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+        if(image0 != null){
+            files.put(image0.getName(), image0);
+        }
+        if(image1 != null){
+            files.put(image1.getName(), image1);
+        }
+        if(image2 != null){
+            files.put(image2.getName(), image2);
+        }
+        if(image3 != null){
+            files.put(image3.getName(), image1);
+        }
+        if(image4 != null){
+            files.put(image4.getName(), image2);
         }
 
-        return new BookGroupReqDTO(metadata, files);
+        return new BookGroupReqV2DTO(metadata, files);
+    }
+
+    @Override
+    public Book create(BookReqV2DTO req) {
+        Book book = new Book(req.isbn(), req.title(), req.index(), req.description(), req.publicationDate(),
+                req.price(), req.isPackaging(), req.stock(), req.status(), req.volumeNo());
+
+        if(req.isDeleted()){
+            book.setDeleted(true);
+        }
+
+        return book;
+    }
+
+    @Override
+    public BookUpdateData toBookUpdateData(BookReqV2DTO req){
+        return new BookUpdateData(req.title(), req.index(), req.description(), req.authorReqDTOList(), req.publisher(),
+                req.publicationDate(), req.price(), req.isPackaging(), req.stock(), req.status(), req.volumeNo(), req.categoryId(),
+                req.tagNameList(),req.isDeleted());
     }
 
     @Override
@@ -64,7 +75,7 @@ public class BookMapperImpl implements BookMapper {
                 .map(b ->
                         new OrderBookInfoRespDTO(b.getId(), b.getTitle(), b.getPrice(), b.getStock(),
                                 discountPriceMap.containsKey(b.getId()) ? BigDecimal.valueOf((double) discountPriceMap.get(b.getId()) / b.getPrice() * 100.0) : null,
-                                discountPriceMap.getOrDefault(b.getId(), null), b.getBookImages() != null ? b.getBookImages().getFirst().getPath() : null))
+                                discountPriceMap.getOrDefault(b.getId(), null), b.getBookImages() != null ? b.getBookImages().getFirst() != null ? b.getBookImages().getFirst().getPath() : null : null))
                 .toList());
     }
 }

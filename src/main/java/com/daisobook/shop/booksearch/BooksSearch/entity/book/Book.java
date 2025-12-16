@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -78,6 +79,14 @@ public class Book {
     @Column(name = "volume_no")
     private Integer volumeNo;
 
+    @Setter
+    @Column(name = "is_deleted")
+    private boolean isDeleted = false;
+
+    @Setter
+    @Column(name = "review_summary")
+    private String reviewSummary;
+
     public Book(String isbn, String title, String index, String description/*, String author*//*, String publisher*/,
                 LocalDate publicationDate, Long price, boolean isPackaging, Integer stock, Status status,
                 /*String imageUrl,*/ Integer volumeNo){
@@ -111,10 +120,12 @@ public class Book {
 
     @Setter
     @OneToMany(mappedBy = "book")
+    @BatchSize(size = 100)
     private List<BookCategory> bookCategories;
 
     @Setter
     @OneToMany(mappedBy = "book")
+    @BatchSize(size = 100)
     private List<BookTag> bookTags;
 
     @Setter
@@ -124,13 +135,16 @@ public class Book {
 
     @Setter
     @OneToMany(mappedBy = "book")
+    @BatchSize(size = 100)
     private List<BookAuthor> bookAuthors;
 
     @Setter
     @OneToMany(mappedBy = "book")
+    @BatchSize(size = 100)
     private List<BookImage> bookImages;
 
     @Setter
     @OneToMany(mappedBy = "book")
+    @BatchSize(size = 100)
     private List<Review> reviews;
 }

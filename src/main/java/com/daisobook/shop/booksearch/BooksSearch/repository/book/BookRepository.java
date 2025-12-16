@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.repository.book;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Sort;
@@ -45,4 +46,23 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query("SELECT b FROM Book b JOIN FETCH b.reviews WHERE b.id IN :bookIds")
     List<Book> findAllByIdWithReviews(List<Long> bookIds);
+
+    @Query("SELECT b.isbn FROM Book b WHERE b.isbn IN :isbns")
+    List<BookIsbnProjection> findBooksByIsbnIn(List<String> isbns);
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM Book b
+    LEFT JOIN FETCH b.bookAuthors ba
+    LEFT JOIN FETCH ba.author
+    LEFT JOIN FETCH ba.role
+    LEFT JOIN FETCH b.bookCategories bc
+    LEFT JOIN FETCH bc.category
+    LEFT JOIN FETCH b.bookTags bt
+    LEFT JOIN FETCH bt.tag
+    LEFT JOIN FETCH b.bookImages bi
+    LEFT JOIN FETCH b.publisher p
+    WHERE b.id = ?1
+""")
+    Book getBookById(long id);
 }
