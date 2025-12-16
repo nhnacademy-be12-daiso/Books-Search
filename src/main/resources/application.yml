@@ -55,8 +55,10 @@ spring:
           max-attempts: 3
           initial-interval: 1000ms
           multiplier: 2.0
-    queue:
-      book: team3.order.confirmed.book.queue
+
+rabbitmq:
+  queue:
+    book: "team3.order.confirmed.book.queue"
 
 app:
   batch:
