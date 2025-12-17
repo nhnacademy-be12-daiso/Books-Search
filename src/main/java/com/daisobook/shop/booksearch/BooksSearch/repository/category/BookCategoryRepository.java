@@ -11,4 +11,6 @@ public interface BookCategoryRepository extends JpaRepository<BookCategory, Long
     void deleteBookCategoriesByIdIn(List<Long> ids);
 
     boolean existsBookCategoriesByCategory_Id(long categoryId);
+
+    void removeAllByIdIn(List<Long> ids);
 }

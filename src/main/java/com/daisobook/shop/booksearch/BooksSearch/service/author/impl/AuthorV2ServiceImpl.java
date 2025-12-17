@@ -14,10 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -81,6 +78,7 @@ public class AuthorV2ServiceImpl implements AuthorV2Service {
     }
 
     @Override
+    @Transactional
     public void assignAuthorsToBooks(Map<String, Book> bookMap, Map<String, List<AuthorReqDTO>> authorListMap) {
         Map<String, Author> authorMap = authorRepository.findAllByNameIn(authorListMap.values().stream()
                         .flatMap(a -> a.stream().map(AuthorReqDTO::authorName))
@@ -133,7 +131,8 @@ public class AuthorV2ServiceImpl implements AuthorV2Service {
     }
 
     @Override
-    public void updateAuthor(Book book, List<AuthorReqDTO> authorReqDTOs) {
+    @Transactional
+    public void updateAuthorOfBook(Book book, List<AuthorReqDTO> authorReqDTOs) {
         //작가 체크
 //        Map<String, String> author = book.getBookAuthors().stream()
 //                .collect(Collectors.toMap(ba -> ba.getAuthor().getName(),
@@ -238,5 +237,28 @@ public class AuthorV2ServiceImpl implements AuthorV2Service {
         if(!bookAuthorList.isEmpty()){
             bookAuthorRepository.saveAll(bookAuthorList);
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteAuthorOfBook(Book book) {
+        List<BookAuthor> bookAuthors = book.getBookAuthors();
+        Set<Author> authors = bookAuthors.stream()
+                .map(BookAuthor::getAuthor)
+                .collect(Collectors.toSet());
+        Set<Role> roles = bookAuthors.stream()
+                .map(BookAuthor::getRole)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if(!authors.isEmpty()) {
+            authors.forEach(a -> a.getBookAuthors().removeAll(bookAuthors));
+        }
+        if(!roles.isEmpty()) {
+            roles.forEach(r -> r.getBookAuthors().removeAll(bookAuthors));
+        }
+        book.getBookAuthors().removeAll(bookAuthors);
+
+        bookAuthorRepository.deleteAll(bookAuthors);
     }
 }

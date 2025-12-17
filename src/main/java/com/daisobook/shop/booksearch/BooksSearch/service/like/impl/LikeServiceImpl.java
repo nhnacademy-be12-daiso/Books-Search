@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -62,6 +66,15 @@ public class LikeServiceImpl implements LikeService {
             return false;
         }
         return likeRepository.existsLikeByBook_IdAndUserId(bookId, userId);
+    }
+
+    @Override
+    public Set<Long> getLikeByUserIdAndBookIds(Long userId, List<Long> bookIds){
+        List<BookIdProjection> likeList = likeRepository.getLikeByUserIdAndBookIdIn(userId, bookIds);
+
+        return likeList.stream()
+                .map(BookIdProjection::getId)
+                .collect(Collectors.toSet());
     }
 
     @Override

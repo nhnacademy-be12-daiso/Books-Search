@@ -22,7 +22,7 @@ public class Tag {
     private long id;
 
     @Setter
-    @Column(name="tag_name")
+    @Column(name="tag_name", unique = true)
     private String name;
 
     public Tag(String name){
