@@ -1,11 +1,20 @@
 package com.daisobook.shop.booksearch.BooksSearch.saga;
 
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.saga.BookDeduplicationLog;
+import com.daisobook.shop.booksearch.BooksSearch.entity.saga.BookOutbox;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.BookOutOfStockException;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.FailedSerializationException;
+import com.daisobook.shop.booksearch.BooksSearch.repository.saga.BookDeduplicationRepository;
+import com.daisobook.shop.booksearch.BooksSearch.repository.saga.BookOutboxRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BookEventListener {
 
-//    @Value("${rabbitmq.queue.book}")
-//    private String BOOK_QUEUE;
+    private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher publisher;
+    private final BookDeduplicationRepository bookDeduplicationRepository;
+    private final BookOutboxRepository bookOutboxRepository;
 
-    private final BookEventPublisher bookEventPublisher; // 다음 이벤트 발행할 Publisher
-
+    @Value("${rabbitmq.routing.deducted}")
+    private String routingKey;
 
     @RabbitListener(queues = "${rabbitmq.queue.book}")
     @Transactional
@@ -26,15 +37,38 @@ public class BookEventListener {
         log.info("[Book API] ===== 주문 확정 이벤트 수신됨 =====");
         log.info("[Book API] Order ID : {}", event.getOrderId());
 
+        Long msgId = event.getOrderId();
+        if(bookDeduplicationRepository.existsById(msgId)) {
+            log.warn("[Book API] 중복 이벤트 수신 및 무시 : {}", msgId);
+            return;
+        }
+
         try {
             // TODO 실제 재고 차감 로직
 
-            // ===== 로컬 트랜잭션 성공 =====
-            // saga의 다음 단계를 위한 이벤트 발행
-            bookEventPublisher.publishBookDeductedEvent(event);
+            BookDeduplicationLog logEntry = new BookDeduplicationLog(msgId);
+            bookDeduplicationRepository.save(logEntry);
+            // 멱등성을 위한 로그 기록
+
+            try {
+                BookOutbox outbox = new BookOutbox(
+                        event.getOrderId(),
+                        "BOOK",
+                        "team3.saga.book.exchange",
+                        routingKey,
+                        objectMapper.writeValueAsString(event)
+                );
+                bookOutboxRepository.save(outbox);
+                publisher.publishEvent(new BookOutboxCommittedEvent(this, outbox.getId()));
+                // 커밋 이벤트 발행
+
+            } catch (JsonProcessingException e) {
+                log.warn("객체 직렬화 실패");
+                throw new FailedSerializationException("Failed to serialize event payload");
+            }
+
 
             log.info("[Book API] 재고 차감 성공");
-            log.info("[Book API] 다음 이벤트 발행 완료 : Book API -> User API");
 
         } catch(BookOutOfStockException e) { // <<<<<<<<<<<< 예외 처리 제대로 하기
             // TODO 재고 부족 혹은 실패 시 보상 트랜잭션 이벤트 발행

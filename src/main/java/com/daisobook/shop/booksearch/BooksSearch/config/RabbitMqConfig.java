@@ -1,10 +1,13 @@
 package com.daisobook.shop.booksearch.BooksSearch.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JavaTypeMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,18 +15,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMqConfig {
 
-    private static final String ORDER_EXCHANGE = "team3.order.exchange";
+    private static final String ORDER_EXCHANGE = "team3.saga.order.exchange";
     @Value("${rabbitmq.queue.book}")
     private String BOOK_QUEUE;
-    private static final String ROUTING_KEY_CONFIRMED = "order.confirmed";
 
-    private static final String BOOK_EXCHANGE = "team3.book.exchange";
+    @Value("${rabbitmq.routing.confirmed}")
+    private String ROUTING_KEY_CONFIRMED;
+
+    private static final String BOOK_EXCHANGE = "team3.saga.book.exchange";
 
 
     // 발신되는 쪽 Exchange
     @Bean
-    public TopicExchange orderExchange() {
-        return new TopicExchange(ORDER_EXCHANGE);
+    public DirectExchange orderExchange() {
+        return new DirectExchange(ORDER_EXCHANGE);
     }
 
     // book이 받아보는 큐
@@ -37,7 +42,7 @@ public class RabbitMqConfig {
 
     // exchange랑 queue를 연결함
     @Bean
-    public Binding bindingOrderConfirmed(Queue bookInventoryQueue, TopicExchange orderExchange) {
+    public Binding bindingOrderConfirmed(Queue bookInventoryQueue, DirectExchange orderExchange) {
         return BindingBuilder.bind(bookInventoryQueue)
                 .to(orderExchange)
                 .with(ROUTING_KEY_CONFIRMED);
@@ -45,26 +50,39 @@ public class RabbitMqConfig {
 
     // Book이 사용할 Exchange
     @Bean
-    public TopicExchange bookExchange() {
-        return new TopicExchange(BOOK_EXCHANGE);
+    public DirectExchange bookExchange() {
+        return new DirectExchange(BOOK_EXCHANGE);
     }
 
+    // 수신용 컨버터
     @Bean
     public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+        converter.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);
+        return converter;
     }
 
-    /**
-     * 3. RabbitTemplate 설정
-     * 위에서 만든 JSON 변환기를 템플릿에 끼워줍니다.
-     */
+    // 발신용 컨버터
+    @Bean
+    public MessageConverter simpleMessageConverter() {
+        // String, byte[], Serializable 객체를 처리하는 기본 컨버터
+        return new SimpleMessageConverter();
+    }
+
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(jsonMessageConverter());
+        rabbitTemplate.setMessageConverter(simpleMessageConverter());
 
         return rabbitTemplate;
     }
 
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(jsonMessageConverter()); // 수신은 JSON 컨버터로!
+        return factory;
+    }
 
 }

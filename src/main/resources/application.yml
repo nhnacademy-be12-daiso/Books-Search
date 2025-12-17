@@ -58,7 +58,11 @@ spring:
 
 rabbitmq:
   queue:
-    book: "team3.order.confirmed.book.queue"
+    book: team3.saga.book.queue.v2
+  routing:
+    confirmed: order.confirmed.v2
+    deducted: inventory.deducted
+
 
 app:
   batch:
@@ -84,12 +88,6 @@ logging:
     org.springframework.web: DEBUG
 
 management:
-  tracing:
-    sampling:
-      probability: 0.1
-  zipkin:
-    tracing:
-      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT}
   endpoints:
     web:
       exposure:
