@@ -391,7 +391,7 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN),
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i != null ? i.setScale(2, RoundingMode.DOWN) : null,
                 discountPrice, book.isPackaging(), book.getStock(), book.getStatus(), imageRespDTOS, book.getVolumeNo(), categoryRespDTOS,
                 tagRespDTOS, count, check, reviews);
     }
