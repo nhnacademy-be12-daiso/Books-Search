@@ -5,6 +5,8 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface LikeService {
     void createLike(long userId, Book book);
@@ -14,5 +16,6 @@ public interface LikeService {
     //book 서비스에서 사용하는 메서드
     int likeCount(long bookId);
     boolean likeCheck(long bookId, Long userId);
+    Set<Long> getLikeByUserIdAndBookIds(Long userId, List<Long> bookIds);
     List<Like> getBookIsLike(Long userId, List<Book> books);
 }

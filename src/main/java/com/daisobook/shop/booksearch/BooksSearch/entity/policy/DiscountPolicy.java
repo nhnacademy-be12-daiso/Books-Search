@@ -22,6 +22,7 @@ public class DiscountPolicy {
     private String policyName;
 
     @Setter
+    @Enumerated(EnumType.STRING)
     @Column(name = "discount_type")
     private DiscountType discountType;
 
@@ -30,6 +31,7 @@ public class DiscountPolicy {
     private double discountValue;
 
     @Setter
+    @Enumerated(EnumType.STRING)
     @Column(name = "target_type")
     private TargetType targetType;
 

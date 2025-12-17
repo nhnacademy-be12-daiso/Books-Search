@@ -162,4 +162,15 @@ public class BookImageServiceImpl extends ImageTemplateServiceImpl {
 
         return resultImages; // 혹은 저장된 엔티티 반환
     }
+
+    public void deleteBookImageOfBook(Book book){
+        List<BookImage> bookImageList = book.getBookImages();
+
+        deleteObjects(bookImageList.stream()
+                .map(BookImage::getPath)
+                .toList());
+
+        book.getBookImages().removeAll(bookImageList);
+        bookImageRepository.deleteAll(bookImageList);
+    }
 }

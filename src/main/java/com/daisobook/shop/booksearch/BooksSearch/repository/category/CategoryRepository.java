@@ -65,7 +65,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 -- 앵커 멤버 (재귀 시작: 최종 카테고리)
                 SELECT c.category_id, c.pre_category_id, c.deep
                 FROM categories c
-                WHERE c.category_id IN :?1 -- 리스트 형태로 IN (...) 들어가기 위해서는 :?1 #?1 둘중에 하나를 사용
+                WHERE c.category_id IN :?1 -- 리스트 형태로 IN (...) 들어가기 위해서는 :?1 #?1 둘중에 하나를 사용 - nativeQuery에서만 작동
                             
                 UNION ALL
                             

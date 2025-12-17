@@ -1,7 +1,9 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
@@ -18,10 +20,12 @@ import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagV2Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +37,6 @@ import java.util.Set;
 public class BookCoreService {
     private final LikeService likeService;
     private final ReviewService reviewService;
-
-    @Value("${app.batch.size}")
-    private int BATCH_SIZE;
-
-    private final int MAX_SIZE = 1000;
 
     private final BookRepository bookRepository;
 
@@ -118,10 +117,10 @@ public class BookCoreService {
     }
 
     @Transactional
-    public Book getBook_Id(long id){
-        Book book = bookRepository.getBookById(id);
+    public Book getBook_Id(long bookId){
+        Book book = bookRepository.getBookById(bookId);
         if(book == null){
-            log.error("해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", id);
+            log.error("해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
             return null;
         }
 
@@ -129,18 +128,18 @@ public class BookCoreService {
     }
 
     @Transactional
-    public Book updateBook(Book book, BookUpdateData updateCheckDTO){
+    public Book updateBookByData(Book book, BookUpdateData updateCheckDTO){
 
         //book 엔티티 필드 값 체크
-        if(updateCheckDTO.title() != null && updateCheckDTO.title().isEmpty() &&
+        if(updateCheckDTO.title() != null &&
                 !book.getTitle().equals(updateCheckDTO.title())){
             book.setTitle(updateCheckDTO.title());
         }
-        if(updateCheckDTO.index() != null && updateCheckDTO.index().isEmpty() &&
+        if(updateCheckDTO.index() != null &&
                 !book.getIndex().equals(updateCheckDTO.index())){
             book.setIndex(updateCheckDTO.index());
         }
-        if(updateCheckDTO.description() != null && updateCheckDTO.description().isEmpty() &&
+        if(updateCheckDTO.description() != null &&
                 !book.getDescription().equals(updateCheckDTO.description())){
             book.setDescription(updateCheckDTO.description());
         }
@@ -174,11 +173,90 @@ public class BookCoreService {
         }
 
         //book엔티티와 관련된 엔티티 체크
-        authorService.updateAuthor(book, updateCheckDTO.author());
-        categoryService.updateCategory(book, updateCheckDTO.category());
-//        tagService.updateTag(book, updateCheckDTO.tag());
-//        publisherService.updatePublisher(book, updateCheckDTO.publisher());
+        authorService.updateAuthorOfBook(book, updateCheckDTO.author());
+        categoryService.updateCategoryOfBook(book, updateCheckDTO.category());
+        tagService.updateTagOfBook(book, updateCheckDTO.tag());
+        publisherService.updatePublisherOfBook(book, updateCheckDTO.publisher());
 
         return book;
+    }
+
+    @Transactional
+    public Book deleteBookByData(Book book){
+
+        authorService.deleteAuthorOfBook(book);
+        categoryService.deleteCategoryOfBook(book);
+        tagService.deleteTagOfBook(book);
+        publisherService.deletePublisherOfBook(book);
+
+        return book;
+    }
+
+    @Transactional
+    public void deleteBook(Book book){
+        bookRepository.delete(book);
+    }
+
+    @Transactional(readOnly = true)
+    public long getBookIdByIsbn(String isbn){
+        if(isbn == null || isbn.isBlank()){
+            log.error("isbn에 비어있습니다.");
+            throw new NotFoundBookISBN("isbn에 비어있습니다");
+        }
+
+        BookIdProjection bookId = bookRepository.getBookId(isbn);
+        if(bookId == null){
+            log.error("[도서 삭제] 해당 isbn으로 해당 도서를 찾지 못했습니다 - ISBN:{}", isbn);
+            throw new NotFoundBookISBN("[도서 삭제] 해당 isbn으로 해당 도서를 찾지 못했습니다");
+        }
+
+        return bookId.getId();
+    }
+
+    @Transactional(readOnly = true)
+    public Book getBookDetail_Id(long bookId){
+        Book book = bookRepository.getBookDetailById(bookId);
+        if(book == null){
+            log.error("[도서 조회] 해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
+            return null;
+        }
+
+        return book;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getBookIdsFromBookOfTheWeek(Integer limit){
+        if(limit == null) {
+            limit = 10;
+        }
+
+        Pageable pageable = PageRequest.of(0, limit);
+        List<BookIdProjection> bookId = bookOfTheWeekRepository.getBookId(pageable);
+
+        return bookId.stream()
+                .map(BookIdProjection::getId)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getBookIdsOfNewReleases(LocalDate startDate, Integer limit){
+        if(startDate == null){
+            startDate = LocalDate.now().minusMonths(6);
+        }
+        if(limit == null){
+            limit = 10;
+        }
+
+        Pageable pageable = PageRequest.of(0, limit);
+        List<BookIdProjection> bookId = bookRepository.getBookIdByNewReleases(startDate, pageable);
+
+        return bookId.stream()
+                .map(BookIdProjection::getId)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookListProjection> getBookByIds(List<Long> bookIds, boolean includeDeleted){
+        return bookRepository.getBookListBy(bookIds, includeDeleted);
     }
 }

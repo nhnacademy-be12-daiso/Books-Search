@@ -281,6 +281,13 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
         }
     }
 
+    @Override
+    public void deleteObjects(List<String> fullImagePathList){
+        for(String fullImagePath: fullImagePathList) {
+            deleteObject(fullImagePath);
+        }
+    }
+
     private String determineContentType(String extension) {
         if (extension.contains("png")) return "image/png";
         if (extension.contains("gif")) return "image/gif";
