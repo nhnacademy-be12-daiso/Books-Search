@@ -562,6 +562,10 @@ public class BookServiceImpl implements BookService {
 
         List<BookReviewResponse> bookReviewResponses = new ArrayList<>();
         for(BookOrderDetailRequest bod: bookOrderDetailRequests){
+            if(!bookMap.containsKey(bod.bookId())){
+                log.warn("존재하지 않는 도서입니다");
+                continue;
+            }
             Book book = bookMap.get(bod.bookId());
             BookResponse bookResponse = new BookResponse(book.getId(), book.getTitle(),
                     book.getBookImages().stream()
