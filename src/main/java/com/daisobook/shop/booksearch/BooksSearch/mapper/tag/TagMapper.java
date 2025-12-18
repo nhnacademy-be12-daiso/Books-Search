@@ -9,5 +9,6 @@ import java.util.Map;
 
 public interface TagMapper {
     List<TagRespDTO> toTagRespDTOList(List<BookTag> bookTags);
+    List<TagRespDTO> toTagRespDTOList(String tagsData) throws JsonProcessingException;
     Map<Long, List<TagRespDTO>> toTagRespDTOMap(Map<Long, String> tagDataMap) throws JsonProcessingException;
 }

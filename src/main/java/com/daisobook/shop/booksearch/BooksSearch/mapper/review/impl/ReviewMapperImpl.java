@@ -1,10 +1,14 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.review.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.review.ReviewMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +20,7 @@ import java.util.Set;
 @Component
 public class ReviewMapperImpl implements ReviewMapper {
     private final ImageMapper imageMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public List<ReviewRespDTO> toReviewRespDTOList(List<Review> reviews) {
@@ -28,5 +33,14 @@ public class ReviewMapperImpl implements ReviewMapper {
                         r.getUserId(), r.getContent(), r.getRating(), r.getCreatedAt(), r.getModifiedAt(),
                         keySet.contains(r.getId()) ? imagesRespDTOList.get(r.getId()): null))
                 .toList();
+    }
+
+    @Override
+    public List<ReviewRespDTO> toReviewRespDTOList(String reviewsData) throws JsonProcessingException {
+        if(reviewsData == null || reviewsData.isBlank()){
+            return null;
+        }
+
+        return objectMapper.readValue(reviewsData, new TypeReference<List<ReviewRespDTO>>() {});
     }
 }

@@ -29,6 +29,15 @@ public class TagMapperImpl implements TagMapper {
     }
 
     @Override
+    public List<TagRespDTO> toTagRespDTOList(String tagsData) throws JsonProcessingException {
+        if(tagsData == null || tagsData.isBlank()){
+            return null;
+        }
+
+        return objectMapper.readValue(tagsData, new TypeReference<List<TagRespDTO>>() {});
+    }
+
+    @Override
     public Map<Long, List<TagRespDTO>> toTagRespDTOMap(Map<Long, String> tagDataMap) throws JsonProcessingException {
         Set<Long> keySet = tagDataMap.keySet();
 

@@ -9,5 +9,6 @@ import java.util.Map;
 
 public interface AuthorMapper {
     List<AuthorRespDTO> toAuthorRespDTOList(List<BookAuthor> bookAuthors);
+    List<AuthorRespDTO> toAuthorRespDTOList(String authorsData) throws JsonProcessingException;
     Map<Long, List<AuthorRespDTO>> toAuthorRespDTOMap(Map<Long, String> authorDataMap) throws JsonProcessingException;
 }

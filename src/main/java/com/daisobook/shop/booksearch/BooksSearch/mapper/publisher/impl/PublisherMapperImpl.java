@@ -1,13 +1,16 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.publisher.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.PublisherRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.publisher.PublisherMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,5 +33,14 @@ public class PublisherMapperImpl implements PublisherMapper {
             listMap.put(key, publisherRespDTO);
         }
         return listMap;
+    }
+
+    @Override
+    public PublisherRespDTO toPublisherRespDTO(String publisherData) throws JsonProcessingException {
+        if(publisherData == null || publisherData.isBlank()){
+            return null;
+        }
+
+        return objectMapper.readValue(publisherData, new TypeReference<PublisherRespDTO>() {});
     }
 }

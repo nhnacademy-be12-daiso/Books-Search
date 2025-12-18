@@ -9,5 +9,6 @@ import java.util.Map;
 
 public interface CategoryMapper {
     List<CategoryRespDTO> toCategoryRespDTOList(List<BookCategory> bookCategories);
+    List<CategoryRespDTO> toCategoryRespDTOList(String categoryData) throws JsonProcessingException;
     Map<Long, List<CategoryRespDTO>> toCategoryRespDTOMap(Map<Long, String> categoryDataMap) throws JsonProcessingException;
 }

@@ -2,9 +2,9 @@ package com.daisobook.shop.booksearch.BooksSearch.service.policy.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueProjection;
-import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.policy.DiscountType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.policy.TargetType;
 import com.daisobook.shop.booksearch.BooksSearch.repository.policy.DiscountPolicyRepository;
@@ -49,12 +49,23 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
     @Transactional
     @Override
-    public Long getDiscountPrice(Book book){
-        List<DiscountValueProjection> discountPolicyList = getDiscountValueByBookIdOrCategoryIdsOrPublisherId(
-                book.getBookCategories().stream()
-                        .map(bc -> bc.getCategory().getId()).toList(),
-                book.getPublisher().getId(),
-                book.getId());
+    public List<DiscountValueListData> getDiscountPolicyByData(Long bookId) throws JsonProcessingException {
+        List<DiscountValueListProjection> discountValueList = discountPolicyRepository.getDiscountValue(new ArrayList<>(Collections.singleton(bookId)));
+        List<DiscountValueListData> discountList = new ArrayList<>();
+        for(DiscountValueListProjection dv: discountValueList){
+            if(dv == null){
+                continue;
+            }
+            List<DiscountValueListData> discountValueListProjections = objectMapper.readValue(dv.getDiscountValueList(), new TypeReference<List<DiscountValueListData>>() {});
+            discountList.addAll(discountValueListProjections);
+        }
+        return discountList;
+    }
+
+    @Transactional
+    @Override
+    public Long getDiscountPrice(BookDetailProjection bookDetail) throws JsonProcessingException {
+        List<DiscountValueListData> discountPolicyList = getDiscountPolicyByData(bookDetail.getId());
 
         if(discountPolicyList == null || discountPolicyList.isEmpty()){
             return null;
@@ -62,17 +73,17 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
         long discountPercentage = 0;
         long discountFixedAmount = 0;
-        for(DiscountValueProjection dp: discountPolicyList){
-            if(DiscountType.PERCENTAGE.equals(dp.getDiscountType())){
-                discountPercentage += dp.getValue();
-            } else if(DiscountType.FIXED_AMOUNT.equals(dp.getDiscountType())){
-                discountFixedAmount += dp.getValue();
+        for(DiscountValueListData dl : discountPolicyList){
+            if(DiscountType.PERCENTAGE.equals(dl.getDiscountType())){
+                discountPercentage += dl.getValue();
+            } else if(DiscountType.FIXED_AMOUNT.equals(dl.getDiscountType())){
+                discountFixedAmount += dl.getValue();
             }
         }
 
-        Long price = book.getPrice();
+        Long price = bookDetail.getPrice();
         if(price == null){
-            log.warn("해당 도서의 가격이 존재하지 않습니다 - bookId:{}", book.getId());
+            log.warn("[상세 도서] 해당 도서의 가격이 존재하지 않습니다 - bookId:{}", bookDetail.getId());
             return null;
         }
         if(discountPercentage > 0){

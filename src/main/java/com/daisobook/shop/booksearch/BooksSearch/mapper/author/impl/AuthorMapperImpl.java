@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.author.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.author.BookAuthor;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.author.AuthorMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +29,15 @@ public class AuthorMapperImpl implements AuthorMapper {
                                 ba.getRole() != null ? ba.getRole().getId() : null,
                                 ba.getRole() != null ? ba.getRole().getName() : null))
                 .toList();
+    }
+
+    @Override
+    public List<AuthorRespDTO> toAuthorRespDTOList(String authorsData) throws JsonProcessingException {
+        if(authorsData == null || authorsData.isBlank()){
+            return null;
+        }
+
+        return objectMapper.readValue(authorsData, new TypeReference<List<AuthorRespDTO>>() {});
     }
 
     @Override

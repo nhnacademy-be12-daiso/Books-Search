@@ -30,6 +30,15 @@ public class CategoryMapperImpl implements CategoryMapper {
     }
 
     @Override
+    public List<CategoryRespDTO> toCategoryRespDTOList(String categoryData) throws JsonProcessingException {
+        if(categoryData == null || categoryData.isBlank()){
+            return null;
+        }
+
+        return objectMapper.readValue(categoryData, new TypeReference<List<CategoryRespDTO>>() {});
+    }
+
+    @Override
     public Map<Long, List<CategoryRespDTO>> toCategoryRespDTOMap(Map<Long, String> categoryDataMap) throws JsonProcessingException {
         Set<Long> keySet = categoryDataMap.keySet();
 
