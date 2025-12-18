@@ -70,7 +70,14 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     public Set<Long> getLikeByUserIdAndBookIds(Long userId, List<Long> bookIds){
+        if(userId == null){
+            return null;
+        }
+
         List<BookIdProjection> likeList = likeRepository.getLikeByUserIdAndBookIdIn(userId, bookIds);
+        if(likeList == null || likeList.isEmpty()){
+            return null;
+        }
 
         return likeList.stream()
                 .map(BookIdProjection::getId)

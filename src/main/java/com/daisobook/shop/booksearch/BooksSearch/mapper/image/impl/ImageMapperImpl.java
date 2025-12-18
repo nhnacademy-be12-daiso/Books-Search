@@ -66,6 +66,9 @@ public class ImageMapperImpl implements ImageMapper {
 
         Map<Long, List<ImageRespDTO>> listMap = new HashMap<>();
         for(Long key: keySet){
+            if(!imageDataMap.containsKey(key)){
+                continue;
+            }
             String s = imageDataMap.get(key);
             List<ImageRespDTO> imageRespDTOList = objectMapper.readValue(s, new TypeReference<List<ImageRespDTO>>() {});
             listMap.put(key, imageRespDTOList);

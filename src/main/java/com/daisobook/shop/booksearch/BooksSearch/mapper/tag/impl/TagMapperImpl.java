@@ -34,6 +34,9 @@ public class TagMapperImpl implements TagMapper {
 
         Map<Long, List<TagRespDTO>> listMap = new HashMap<>();
         for(Long key: keySet){
+            if(!tagDataMap.containsKey(key)){
+                continue;
+            }
             String s = tagDataMap.get(key);
             List<TagRespDTO> tagRespDTOList = objectMapper.readValue(s, new TypeReference<List<TagRespDTO>>() {});
             listMap.put(key, tagRespDTOList);

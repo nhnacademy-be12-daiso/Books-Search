@@ -15,9 +15,9 @@ public interface BookOfTheWeekRepository extends JpaRepository<BookOfTheWeek, Lo
     List<BookOfTheWeek> findAllByIsActiveOrderByAppliedDateDesc(boolean isActive, Sort sort, Limit limit);
 
     @Query(value = """
-        SELECT b.book_id
-        FROM book_of_week b
-        WHERE b.is_actice = true
+        SELECT b.book_id as id
+        FROM book_of_the_week b
+        WHERE b.is_active = true
         ORDER BY b.no DESC
     """,
     nativeQuery = true

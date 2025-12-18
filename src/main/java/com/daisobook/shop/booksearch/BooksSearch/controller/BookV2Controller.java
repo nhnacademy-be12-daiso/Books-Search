@@ -71,7 +71,7 @@ public class BookV2Controller {
 
     //GET: /api/v2/books?list-type="" 해당 도서 리스트 조회 (예: 베스트 셀러, 신간도서 등)
     @GetMapping
-    public SortBookListRespDTO getBookListBySort(@RequestParam("list-type") BookListType listType,
+    public SortBookListRespDTO getBookListBySort(@RequestParam("type") BookListType listType,
                                   @RequestHeader(value = "X-User-Id", required = false)Long userId){
         return bookFacade.getBookList(listType, userId);
     }

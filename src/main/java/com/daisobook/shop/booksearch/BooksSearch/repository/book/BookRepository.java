@@ -93,7 +93,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query(value = """
             SELECT DISTINCT
-                b.book_id,
+                b.book_id as id,
                 b.isbn,
                 b.title,
                 (
@@ -106,9 +106,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                   WHERE ba.book_id = b.book_id
                 ) AS authors,
                 (
-                  SELECT JSON_ARRAYAGG(
-                     JSON_OBJECT('id', p.publisher_id, 'name', p.publisher_name)
-                  )
+                  SELECT JSON_OBJECT('id', p.publisher_id, 'name', p.publisher_name)
                   FROM publishers p
                   WHERE b.publisher_id = p.publisher_id
                 ) AS publisher,
@@ -154,7 +152,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<BookListProjection> getBookListBy(@Param("bookIds") List<Long> bookIds, @Param("includeDeleted") boolean includeDeleted);
 
     @Query(value = """
-            SELECT b.book_id
+            SELECT b.book_id as id
             FROM books b
             WHERE b.publication_date > :startDate
             ORDER BY b.publication_date DESC

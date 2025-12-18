@@ -210,10 +210,10 @@ public class BookFacade {
 
         List<Long> bookIds = null;
         if(listType.equals(BookListType.NEW_RELEASES)){
-            bookIds = bookCoreService.getBookIdsFromBookOfTheWeek(10);
-        } else if(listType.equals(BookListType.BOOK_OF_THE_WEEK)){
-            LocalDate startDate = LocalDate.now().minusMonths(36);
+            LocalDate startDate = LocalDate.now().minusMonths(60);
             bookIds = bookCoreService.getBookIdsOfNewReleases(startDate, 10);
+        } else if(listType.equals(BookListType.BOOK_OF_THE_WEEK)){
+            bookIds = bookCoreService.getBookIdsFromBookOfTheWeek(10);
         }
 
         if(bookIds == null){

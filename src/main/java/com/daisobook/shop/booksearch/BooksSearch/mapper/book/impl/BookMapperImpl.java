@@ -120,33 +120,38 @@ public class BookMapperImpl implements BookMapper {
                         new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getAuthorList(), bl.getPublisher().name(),
                                 bl.getPublicationDate(), bl.getPrice(), bl.getDiscountPercentage(), bl.getDiscountPrice(), bl.getStatus(),
                                 bl.getImageList(), bl.getCategoryList(), bl.getTagList(), bl.getVolumeNo(), bl.getIsPackaging(),
-                                likeSetBookId.contains(bl.getId())))
+                                likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null))
                 .toList();
     }
 
     @Override
     public Map<Long, BookListData> toBookListDataMap(List<BookListProjection> bookListProjectionList) throws JsonProcessingException {
         Map<Long, List<AuthorRespDTO>> authorRespDTOMap = authorMapper.toAuthorRespDTOMap(bookListProjectionList.stream()
+                .filter(bl -> bl.getAuthors() != null)
                 .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getAuthors)));
 
         Set<Long> authorKeySet = authorRespDTOMap.keySet();
 
         Map<Long, PublisherRespDTO> publisherRespDTOMap = publisherMapper.toPublisherRespDTOMap(bookListProjectionList.stream()
+                .filter(bl -> bl.getPublisher() != null)
                 .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getPublisher)));
 
         Set<Long> publishserKeySet = publisherRespDTOMap.keySet();
 
         Map<Long, List<ImageRespDTO>> imageRespDTOMap = imageMapper.toIageRespDTOMap(bookListProjectionList.stream()
+                .filter(bl -> bl.getImages() != null)
                 .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getImages)));
 
         Set<Long> imageKeySet = imageRespDTOMap.keySet();
 
         Map<Long, List<CategoryRespDTO>> categoryRespDTOMap = categoryMapper.toCategoryRespDTOMap(bookListProjectionList.stream()
+                .filter(bl -> bl.getCategories() != null)
                 .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getCategories)));
 
         Set<Long> categoryKeySet = categoryRespDTOMap.keySet();
 
         Map<Long, List<TagRespDTO>> tagRespDTOMap = tagMapper.toTagRespDTOMap(bookListProjectionList.stream()
+                .filter(bl -> bl.getTags() != null)
                 .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getTags)));
 
         Set<Long> tagKeySet = tagRespDTOMap.keySet();

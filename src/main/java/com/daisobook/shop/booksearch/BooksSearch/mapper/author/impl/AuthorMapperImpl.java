@@ -36,6 +36,9 @@ public class AuthorMapperImpl implements AuthorMapper {
 
         Map<Long, List<AuthorRespDTO>> listMap = new HashMap<>();
         for(Long key: keySet){
+            if(!authorDataMap.containsKey(key)){
+                continue;
+            }
             String s = authorDataMap.get(key);
             List<AuthorRespDTO> authorRespDTOList = objectMapper.readValue(s, new TypeReference<List<AuthorRespDTO>>() {});
             listMap.put(key, authorRespDTOList);
