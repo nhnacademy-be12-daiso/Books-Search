@@ -27,6 +27,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     List<Like> findAllByUserIdAndBookIn(long userId, Collection<Book> books);
 
-    @Query(value = "SELECT l.book_id as id FROM likes l WHERE l.user_id = :userId AND l.book_id IN (:bookIds)", nativeQuery = true)
+    @Query(value = "SELECT l.book_id as id FROM likes l WHERE l.user_created_id = :userId AND l.book_id IN (:bookIds)", nativeQuery = true)
     List<BookIdProjection> getLikeByUserIdAndBookIdIn(@Param("userId") long userId, @Param("bookIds") List<Long> bookIds);
 }
