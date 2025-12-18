@@ -12,10 +12,10 @@ import java.util.Collection;
 import java.util.List;
 
 public interface DiscountPolicyRepository extends JpaRepository<DiscountPolicy, Long> {
-    @Query(value = "SELECT p.policy_id FROM discount_policies p WHERE p.target_type = :targetType AND p.target_id = :targetId AND p.is_active = :isActive AND p.start_date < now() AND (p.end_date IS NULL OR p.end_date < now())", nativeQuery = true )
+    @Query(value = "SELECT p.policy_id id, p.policy_name name, p.discount_type discountType, p.discount_value 'value' FROM discount_policies p WHERE p.target_type = :targetType AND (p.target_id IS NULL OR p.target_id = :targetId) AND p.is_active = :isActive AND p.start_date <= now() AND (p.end_date IS NULL OR p.end_date >= now())", nativeQuery = true )
     List<DiscountValueProjection> findAllByTargetTypeAndTargetIdAndIsActive(@Param("targetType") TargetType targetType, @Param("targetId") Long targetId, @Param("isActive") boolean isActive);
 
-    @Query(value = "SELECT p.policy_id FROM discount_policies p WHERE p.target_type = :targetType AND p.target_id IN (:targetIds) AND p.is_active = :isActive AND p.start_date < now() AND (p.end_date IS NULL OR p.end_date < now())", nativeQuery = true)
+    @Query(value = "SELECT p.policy_id id, p.policy_name name, p.discount_type discountType, p.discount_value 'value' FROM discount_policies p WHERE p.target_type = :targetType AND p.target_id IN (:targetIds) AND p.is_active = :isActive AND p.start_date <= now() AND (p.end_date IS NULL OR p.end_date >= now())", nativeQuery = true)
     List<DiscountValueProjection> findAllByTargetTypeAndTargetIdInAndIsActive(@Param("targetType") TargetType targetType, @Param("targetIds") Collection<Long> targetIds, @Param("isActive") boolean isActive);
 
     @Query(value = """
