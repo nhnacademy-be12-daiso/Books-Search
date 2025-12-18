@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -145,7 +146,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
             bookListData.setDiscountPrice(discountPrice);
 
             BigDecimal i = bookListData.getPrice() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / bookListData.getPrice()) * 100.0): null;
-            bookListData.setDiscountPercentage(i);
+            bookListData.setDiscountPercentage(i != null ? i.setScale(2, RoundingMode.DOWN) : null);
             
             discountPriceMap.put(bookId, price < 0 ? 0: price);
         }

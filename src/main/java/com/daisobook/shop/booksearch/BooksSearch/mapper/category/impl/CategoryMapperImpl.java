@@ -35,6 +35,9 @@ public class CategoryMapperImpl implements CategoryMapper {
 
         Map<Long, List<CategoryRespDTO>> listMap = new HashMap<>();
         for(Long key: keySet){
+            if(!categoryDataMap.containsKey(key)){
+                continue;
+            }
             String s = categoryDataMap.get(key);
             List<CategoryRespDTO> categoryRespDTOList = objectMapper.readValue(s, new TypeReference<List<CategoryRespDTO>>() {});
             listMap.put(key, categoryRespDTOList);

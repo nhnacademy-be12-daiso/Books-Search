@@ -22,6 +22,9 @@ public class PublisherMapperImpl implements PublisherMapper {
 
         Map<Long, PublisherRespDTO> listMap = new HashMap<>();
         for(Long key: keySet){
+            if(!publisherDataMap.containsKey(key)){
+                continue;
+            }
             String s = publisherDataMap.get(key);
             PublisherRespDTO publisherRespDTO = objectMapper.readValue(s, PublisherRespDTO.class);
             listMap.put(key, publisherRespDTO);
