@@ -7,4 +7,5 @@ import java.util.Map;
 
 public interface PublisherMapper {
     Map<Long, PublisherRespDTO> toPublisherRespDTOMap(Map<Long, String> publisherDataMap) throws JsonProcessingException;
+    PublisherRespDTO toPublisherRespDTO(String publisherData) throws JsonProcessingException;
 }

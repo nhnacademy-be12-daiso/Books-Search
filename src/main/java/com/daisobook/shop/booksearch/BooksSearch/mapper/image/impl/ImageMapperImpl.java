@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.image.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
@@ -46,6 +47,15 @@ public class ImageMapperImpl implements ImageMapper {
         return bookImages.stream()
                 .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
                 .toList();
+    }
+
+    @Override
+    public List<ImageRespDTO> toImageRespDTOList(String imagesData) throws JsonProcessingException {
+        if(imagesData == null || imagesData.isBlank()){
+            return null;
+        }
+
+        return objectMapper.readValue(imagesData, new TypeReference<List<ImageRespDTO>>() {});
     }
 
     @Override

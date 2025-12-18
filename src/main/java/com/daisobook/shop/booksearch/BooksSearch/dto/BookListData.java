@@ -19,6 +19,7 @@ public class BookListData {
     private long id;
     private String isbn;
     private String title;
+    private String description;
     private List<AuthorRespDTO> authorList;
     private PublisherRespDTO publisher;
     private LocalDate publicationDate;

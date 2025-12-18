@@ -2,6 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
@@ -192,13 +193,27 @@ public class BookFacade {
 
     @Transactional(readOnly = true)
     public BookRespDTO getBookDetail(long bookId, Long userId){
-        Book book = bookCoreService.getBookDetail_Id(bookId);
+        BookDetailProjection detail = bookCoreService.getBookDetail_Id(bookId);
 
-        Integer likeCount = likeService.likeCount(book.getId());
-        Boolean likeCheck = likeService.likeCheck(book.getId(), userId);
-        Long discountPrice = discountPolicyService.getDiscountPrice(book);
+        Integer likeCount = likeService.likeCount(detail.getId());
+        Boolean likeCheck = likeService.likeCheck(detail.getId(), userId);
+        Long discountPrice = null;
+        try {
+            discountPrice = discountPolicyService.getDiscountPrice(detail);
+        } catch (JsonProcessingException e) {
+            log.error("[도서 상세] 할인 정책 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
 
-        return bookMapper.toBookRespDTO(book, likeCount, likeCheck, discountPrice);
+        BookRespDTO bookRespDTO = null;
+        try {
+            bookRespDTO = bookMapper.toBookRespDTO(detail, likeCount, likeCheck, discountPrice);
+        } catch (JsonProcessingException e) {
+            log.error("[도서 상세] 도서 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
+
+        return bookRespDTO;
     }
 
     @Transactional(readOnly = true)
@@ -226,7 +241,7 @@ public class BookFacade {
         try {
             bookListDataMap = bookMapper.toBookListDataMap(bookListProjections);
         } catch (JsonProcessingException e) {
-            log.error("[도서 목록] 매핑을 실패했습니다");
+            log.error("[도서 목록] 도서 매핑을 실패했습니다");
             throw new FailObjectMapper(e.getMessage());
         }
         if(bookListDataMap == null){
@@ -242,7 +257,8 @@ public class BookFacade {
         try {
             discountPriceMap = discountPolicyService.getDiscountPriceMap(bookListDataMap);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            log.error("[도서 목록] 할인 정책 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
         }
         if(discountPriceMap == null){
             return null;

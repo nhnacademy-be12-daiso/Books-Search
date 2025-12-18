@@ -2,10 +2,9 @@ package com.daisobook.shop.booksearch.BooksSearch.mapper.book;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
@@ -24,7 +23,7 @@ public interface BookMapper {
     Book create(BookReqV2DTO req);
     BookUpdateData toBookUpdateData(BookReqV2DTO req);
     OrderBooksInfoRespDTO toOrderBookInfoRespDTOList(List<Book> bookList, Map<Long, Long> discountPriceMap);
-    BookRespDTO toBookRespDTO(Book book, Integer likeCount, Boolean likeCheck, Long discountPrice);
+    BookRespDTO toBookRespDTO(BookDetailProjection bookDetail, Integer likeCount, Boolean likeCheck, Long discountPrice) throws JsonProcessingException;
     List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Set<Long> likeSetBookId);
     Map<Long, BookListData> toBookListDataMap(List<BookListProjection> bookListProjectionList) throws JsonProcessingException;
 }

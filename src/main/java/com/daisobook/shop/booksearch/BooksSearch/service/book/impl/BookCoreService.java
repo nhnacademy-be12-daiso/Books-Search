@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
@@ -214,14 +215,14 @@ public class BookCoreService {
     }
 
     @Transactional(readOnly = true)
-    public Book getBookDetail_Id(long bookId){
-        Book book = bookRepository.getBookDetailById(bookId);
-        if(book == null){
+    public BookDetailProjection getBookDetail_Id(long bookId){
+        BookDetailProjection detail = bookRepository.getBookDetailById(bookId, false);
+        if(detail == null){
             log.error("[도서 조회] 해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
             return null;
         }
 
-        return book;
+        return detail;
     }
 
     @Transactional(readOnly = true)

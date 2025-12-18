@@ -14,6 +14,7 @@ public record BookListRespDTO(
         long bookId,
         String isbn,
         String title,
+        String description,
         List<AuthorRespDTO> authorList,
         String publisher,
         LocalDate publicationDate,

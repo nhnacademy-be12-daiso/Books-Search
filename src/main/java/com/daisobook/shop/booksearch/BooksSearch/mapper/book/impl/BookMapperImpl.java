@@ -2,6 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.mapper.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
@@ -97,19 +98,20 @@ public class BookMapperImpl implements BookMapper {
     }
 
     @Override
-    public BookRespDTO toBookRespDTO(Book book, Integer likeCount, Boolean likeCheck, Long discountPrice) {
-        List<CategoryRespDTO> categoryRespDTOS = categoryMapper.toCategoryRespDTOList(book.getBookCategories());
-        List<TagRespDTO> tagRespDTOS = tagMapper.toTagRespDTOList(book.getBookTags());
-        List<ImageRespDTO> imageRespDTOS = imageMapper.toImageRespDTOList(book.getBookImages());
-        List<ReviewRespDTO> reviews = reviewMapper.toReviewRespDTOList(book.getReviews());
-        List<AuthorRespDTO> authorRespDTOS = authorMapper.toAuthorRespDTOList(book.getBookAuthors());
+    public BookRespDTO toBookRespDTO(BookDetailProjection bookDetail, Integer likeCount, Boolean likeCheck, Long discountPrice) throws JsonProcessingException {
+        List<CategoryRespDTO> categoryRespDTOS = categoryMapper.toCategoryRespDTOList(bookDetail.getCategories());
+        List<TagRespDTO> tagRespDTOS = tagMapper.toTagRespDTOList(bookDetail.getTags());
+        List<ImageRespDTO> imageRespDTOS = imageMapper.toImageRespDTOList(bookDetail.getImages());
+        List<ReviewRespDTO> reviews = reviewMapper.toReviewRespDTOList(bookDetail.getReviews());
+        List<AuthorRespDTO> authorRespDTOS = authorMapper.toAuthorRespDTOList(bookDetail.getAuthors());
+        PublisherRespDTO publisherRespDTO = publisherMapper.toPublisherRespDTO(bookDetail.getPublisher());
 
-        BigDecimal i = discountPrice != null && book.getPrice() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / book.getPrice()) * 100.0): null;
+        BigDecimal i = discountPrice != null && bookDetail.getPrice() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / bookDetail.getPrice()) * 100.0): null;
 
-        return new BookRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getIndex(), book.getDescription(),
-                authorRespDTOS, book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(),
-                Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN), discountPrice, book.isPackaging(),
-                book.getStock(), book.getStatus(), imageRespDTOS, book.getVolumeNo(), categoryRespDTOS,
+        return new BookRespDTO(bookDetail.getId(), bookDetail.getIsbn(), bookDetail.getTitle(), bookDetail.getIndex(), bookDetail.getDescription(),
+                authorRespDTOS, publisherRespDTO.name(), bookDetail.getPublicationDate(), bookDetail.getPrice(),
+                Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN), discountPrice, bookDetail.getIsPackaging(),
+                bookDetail.getStock(), bookDetail.getStatus(), imageRespDTOS, bookDetail.getVolumeNo(), categoryRespDTOS,
                 tagRespDTOS, likeCount, likeCheck, reviews);
     }
 
@@ -117,7 +119,7 @@ public class BookMapperImpl implements BookMapper {
     public List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Set<Long> likeSetBookId) {
         return bookListDataMap.values().stream()
                 .map(bl ->
-                        new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getAuthorList(), bl.getPublisher().name(),
+                        new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getDescription(), bl.getAuthorList(), bl.getPublisher().name(),
                                 bl.getPublicationDate(), bl.getPrice(), bl.getDiscountPercentage(), bl.getDiscountPrice(), bl.getStatus(),
                                 bl.getImageList(), bl.getCategoryList(), bl.getTagList(), bl.getVolumeNo(), bl.getIsPackaging(),
                                 likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null))
@@ -158,7 +160,7 @@ public class BookMapperImpl implements BookMapper {
 
         return bookListProjectionList.stream()
                 .collect(Collectors.toMap(BookListProjection::getId, bl ->
-                        new BookListData(bl.getId(), bl.getIsbn(), bl.getTitle(),
+                        new BookListData(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getDescription(),
                                 authorKeySet.contains(bl.getId()) ? authorRespDTOMap.get(bl.getId()) : null,
                                 publishserKeySet.contains(bl.getId()) ? publisherRespDTOMap.get(bl.getId()) : null,
                                 bl.getPublicationDate(), bl.getPrice(), null,

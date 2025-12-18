@@ -527,7 +527,7 @@ public class BookServiceImpl implements BookService {
 
         BigDecimal i = discount != null && book.getPrice() != null ? BigDecimal.valueOf ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
 
-        return new BookListRespDTO(book.getId(), book.getIsbn(), book.getTitle(),
+        return new BookListRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getDescription(),
                 book.getBookAuthors().stream()
                         .map(ba ->
                                 new AuthorRespDTO(ba.getAuthor() != null ? ba.getAuthor().getId() : null,
