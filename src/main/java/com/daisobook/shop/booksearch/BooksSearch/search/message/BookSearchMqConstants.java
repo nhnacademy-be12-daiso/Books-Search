@@ -3,14 +3,13 @@ package com.daisobook.shop.booksearch.BooksSearch.search.message;
 import org.springframework.beans.factory.annotation.Value;
 
 public final class BookSearchMqConstants {
+    private BookSearchMqConstants() {}
 
-    @Value("${rabbitmq.exchange.main}")
-    public static String EXCHANGE;
+    public static final String EXCHANGE = "team3.booksearch.exchange";
 
-    @Value("${rabbitmq.routing-key.ai-analysis}")
-    public static String RK_AI_ANALYSIS;
-    @Value("${rabbitmq.routing-key.book-upsert}")
-    public static String RK_BOOK_UPSERT;
-    @Value("${rabbitmq.routing-key.book-delete}")
-    public static String RK_BOOK_DELETE;
+    public static final String RK_AI_ANALYSIS = "team3.booksearch.ai.analysis";
+    public static final String RK_BOOK_UPSERT = "team3.booksearch.book.upsert";
+    public static final String RK_BOOK_DELETE = "team3.booksearch.book.delete";
+
+
 }
