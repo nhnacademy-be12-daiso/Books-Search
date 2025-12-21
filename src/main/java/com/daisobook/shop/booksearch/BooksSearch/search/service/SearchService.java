@@ -1,24 +1,24 @@
 package com.daisobook.shop.booksearch.BooksSearch.search.service;
 
-import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
-import com.daisobook.shop.booksearch.BooksSearch.search.dto.AiResultDto;
-import com.daisobook.shop.booksearch.BooksSearch.search.dto.BookWithScore;
-import com.daisobook.shop.booksearch.BooksSearch.search.dto.SearchResponseDto;
 import com.daisobook.shop.booksearch.BooksSearch.search.component.CacheKeyGenerator;
 import com.daisobook.shop.booksearch.BooksSearch.search.component.QueryPreprocessor;
 import com.daisobook.shop.booksearch.BooksSearch.search.component.ai.EmbeddingClient;
-import com.daisobook.shop.booksearch.BooksSearch.search.component.ai.LlmAnalysisClient;
-import com.daisobook.shop.booksearch.BooksSearch.search.component.ai.RerankingClient;
 import com.daisobook.shop.booksearch.BooksSearch.search.component.assembler.SearchResultAssembler;
 import com.daisobook.shop.booksearch.BooksSearch.search.component.engine.ElasticsearchEngine;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.mq.BookSearchTaskPublisher;
+import com.daisobook.shop.booksearch.BooksSearch.search.domain.Book;
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.AiAnalysisDto;
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.SearchResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -27,106 +27,120 @@ public class SearchService {
 
     private final ElasticsearchEngine elasticsearchEngine;
     private final EmbeddingClient embeddingClient;
-    private final RerankingClient rerankingClient;
-    private final LlmAnalysisClient llmClient;
 
     private final SearchResultAssembler assembler;
     private final QueryPreprocessor queryPreprocessor;
     private final CacheKeyGenerator keyGenerator;
     private final RedisCacheService redisCacheService;
 
-    private static final int RERANK_LIMIT = 10;
-    private static final int AI_EVAL_SIZE = 3;
+    private final PendingWorkService pendingWorkService;
+    private final BookSearchTaskPublisher taskPublisher;
+
+    private static final int BATCH_SIZE = 3;
 
     /**
-     * AI 검색 (모든 단계에 Fallback 적용)
+     * 통합 검색:
+     * - (1) 임베딩 생성 (실패 시 키워드만)
+     * - (2) ES 하이브리드 검색
+     * - (3) 결과 중 aiResult 없는 책:
+     *       - Redis Set(임베딩 후보) 적재
+     *       - MQ로 AI 분석 요청(쿨다운 적용)
      */
-    public SearchResponseDto aiSearch(String userQuery) {
-        String cacheKey = keyGenerator.generateKey("ai", userQuery);
-        SearchResponseDto cached = redisCacheService.get(cacheKey, SearchResponseDto.class);
-        if (cached != null) return cached;
-
-        String refinedQuery = queryPreprocessor.extractKeywords(userQuery);
-
-        // 1단계: 임베딩 생성 (실패 시 -> 빈 리스트 반환 -> 키워드 검색만 수행)
-        List<Float> embedding;
-        try {
-            embedding = embeddingClient.createEmbedding(refinedQuery);
-        } catch (Exception e) {
-            log.warn("⚠️ [Fallback] 임베딩 실패 (키워드 검색으로 전환): {}", e.getMessage());
-            embedding = Collections.emptyList(); // 빈 리스트면 Repository가 알아서 벡터 검색을 뺌
+    public SearchResponseDto search(String userQuery) {
+        if (userQuery == null || userQuery.isBlank()) {
+            return SearchResponseDto.empty();
         }
 
-        // 2단계: Elasticsearch 검색 (여기가 실패하면 답이 없으므로 Exception 전파)
-        List<Book> candidates = elasticsearchEngine.search(refinedQuery, embedding);
-        if (candidates.isEmpty()) return SearchResponseDto.empty();
-
-        // 3단계: 리랭킹 (실패 시 -> ES 원본 순서 유지)
-        List<BookWithScore> rankedBooks;
-        try {
-            // 상위 N개만 리랭킹 시도
-            int targetSize = Math.min(candidates.size(), RERANK_LIMIT);
-            List<Map<String, Object>> scores = rerankingClient.rerank(refinedQuery, candidates.subList(0, targetSize));
-
-            // 점수 반영
-            rankedBooks = assembler.applyRerankScores(candidates, scores, RERANK_LIMIT);
-
-        } catch (Exception e) {
-            log.warn("⚠️ [Fallback] 리랭커 서버 오류 (ES 순서 유지): {}", e.getMessage());
-
-            // 🔥 [핵심 수정] 리랭커가 죽어도 기존 찾은 책(candidates)은 버리면 안 됨!
-            rankedBooks = candidates.stream()
-                    .map(b -> new BookWithScore(b, 0.5)) // 기본 점수 부여
-                    .toList();
-        }
-
-        // 4단계: Gemini AI 분석 (실패 시 -> 분석 멘트 없이 결과 반환)
-        Map<String, AiResultDto> aiAnalysis;
-        try {
-            // 상위 3권만 분석
-            List<Book> topBooks = rankedBooks.stream()
-                    .limit(AI_EVAL_SIZE)
-                    .map(BookWithScore::book)
-                    .toList();
-
-            aiAnalysis = llmClient.analyzeBooks(userQuery, topBooks);
-
-        } catch (Exception e) {
-            log.warn("⚠️ [Fallback] Gemini API 오류 (일반 리스트만 반환): {}", e.getMessage());
-            aiAnalysis = Collections.emptyMap(); // 빈 맵 반환 -> 조립기가 알아서 멘트 생략함
-        }
-
-        // 5단계: 최종 조립 및 캐싱
-        SearchResponseDto result = assembler.assembleAiResult(rankedBooks, aiAnalysis);
-        redisCacheService.save(cacheKey, result, Duration.ofHours(12));
-
-        return result;
-    }
-
-    // 기본 검색도 동일한 Fallback 패턴 적용
-    public SearchResponseDto basicSearch(String userQuery) {
+        // ISBN 패턴이면 단건 조회로 빠르게
         if (userQuery.matches("^[0-9-]+$")) {
-            return assembler.assembleBasicResult(elasticsearchEngine.searchByIsbn(userQuery));
+            List<Book> books = elasticsearchEngine.searchByIsbn(userQuery);
+            return assembler.assembleBasicResult(books);
         }
 
-        String cacheKey = keyGenerator.generateKey("basic", userQuery);
+        // 캐시 조회
+        String cacheKey = keyGenerator.generateKey("search", userQuery);
         SearchResponseDto cached = redisCacheService.get(cacheKey, SearchResponseDto.class);
         if (cached != null) return cached;
 
-        String refinedQuery = queryPreprocessor.extractKeywords(userQuery);
+        // 전처리: 키워드 추출
+        log.info("[SEARCH] cache miss. userQuery='{}'", userQuery);
 
+        String refinedQuery = queryPreprocessor.extractKeywords(userQuery);
+        log.info("[SEARCH] refinedQuery='{}' (len={})", refinedQuery, refinedQuery == null ? -1 : refinedQuery.length());
+
+
+        // (1) 임베딩 생성
         List<Float> embedding;
         try {
             embedding = embeddingClient.createEmbedding(refinedQuery);
         } catch (Exception e) {
-            log.warn("⚠️ [Fallback-Basic] 임베딩 실패: {}", e.getMessage());
+            log.warn("⚠️ [Fallback] 임베딩 실패(키워드만): {}", e.getMessage());
             embedding = Collections.emptyList();
         }
 
+        // (2) ES 하이브리드 검색
         List<Book> books = elasticsearchEngine.search(refinedQuery, embedding);
+
+        List<String> missingAiIsbns = new ArrayList<>();
+
+        for (Book b : books) {
+            String isbn = b.getIsbn();
+            if (!StringUtils.hasText(isbn)) continue; // ISBN 없으면 스킵
+
+            AiAnalysisDto aiResult = b.getAiResult();
+
+            boolean needAnalysis = aiResult == null ||
+                    ObjectUtils.isEmpty(aiResult.pros()) ||
+                    ObjectUtils.isEmpty(aiResult.cons()) ||
+                    ObjectUtils.isEmpty(aiResult.recommendedFor());
+
+            // (2-1) AI 분석 결과 누락된 도서들 선별
+            if (needAnalysis) {
+                // 너무 자주 발행되지 않도록 쿨다운 체크
+                if (pendingWorkService.canPublishAi(isbn)) {
+                    // aiResult 누락 도서 List에 추가
+                    missingAiIsbns.add(isbn);
+                    log.info("🎯 [Target] AI Analysis Scheduled: ISBN={}", isbn);
+                } else {
+                    // 쿨다운 중이라면 스킵
+                    log.debug("⏳ [Cooldown] AI Analysis skipped (Already queued/processed): ISBN={}", isbn);
+                }
+            }
+        }
+
+        // (2-2) MQ로 AI 분석 작업 발행 (배치 처리)
+        if (!missingAiIsbns.isEmpty()) {
+            log.info("🚀 [Publish] Sending {} books to RabbitMQ", missingAiIsbns.size());
+            // 배치 발행
+            publishBatches(missingAiIsbns);
+        } else {
+            // 아무것도 안 잡혔다면 이유를 알기 위해 로그
+            log.info("💤 [Skip] No books require AI analysis this time.");
+        }
+
+
+        // (3) 결과 조립
         SearchResponseDto result = assembler.assembleBasicResult(books);
 
-        redisCacheService.save(cacheKey, result, Duration.ofHours(1));
+        // 캐시: 너무 길게 잡지 말고 5~15분 권장(검색 로그/변동 반영)
+        redisCacheService.save(cacheKey, result, Duration.ofMinutes(10));
         return result;
+    }
+
+    // 리스트 분할 발행 로직
+    private void publishBatches(List<String> isbns) {
+        if (isbns == null || isbns.isEmpty()) return;
+
+        for (int i = 0; i < isbns.size(); i += BATCH_SIZE) {
+            int end = Math.min(isbns.size(), i + BATCH_SIZE);
+            List<String> batch = new ArrayList<>(isbns.subList(i, end)); // 안전한 복사
+
+            try {
+                taskPublisher.publishAiAnalysisBatch(batch);
+                log.info("[Search] Published AI Batch size={}", batch.size());
+            } catch (Exception ex) {
+                log.warn("[Search] Failed to publish AI batch", ex);
+            }
+        }
     }
 }

@@ -3,7 +3,6 @@ package com.daisobook.shop.booksearch.BooksSearch.search.component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.util.retry.Retry;
@@ -13,28 +12,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+// AI 서비스 연동 클라이언트
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AiClient {
 
-    private final WebClient webClient;
+    private final WebClient webClient = WebClient.builder().build();
 
     @Value("${app.ai.embedding-url}")
     private String embeddingUrl;
 
-    @Value("${app.ai.reranker-url}")
-    private String rerankerUrl;
-
-    @Value("${app.ai.gemini-url}")
-    private String geminiUrl;
-
-    @Value("${app.ai.gemini-api-key}")
-    private String geminiApiKey;
-
-    // 1. 임베딩: 필수 -> 타임아웃 X (서버 응답 기다림)
-    // 2. 리랭킹: 필수 -> 타임아웃 X (서버 응답 기다림)
-
+    /**
+     * 텍스트 임베딩 생성
+     * @param text 입력 텍스트
+     * @return 임베딩 벡터 리스트
+     */
     public List<Double> generateEmbedding(String text) {
         try {
             Map response = webClient.post().uri(embeddingUrl)
@@ -51,46 +44,4 @@ public class AiClient {
         }
     }
 
-    public List<Map<String, Object>> rerank(String query, List<String> texts) {
-        try {
-            return webClient.post().uri(rerankerUrl)
-                    .bodyValue(Map.of("query", query, "texts", texts))
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
-                    // .timeout(...) <-- 제거됨
-                    .block();
-        } catch (Exception e) {
-            log.error("[AiClient] 리랭킹 실패: {}", e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    public String generateAnswer(String prompt) {
-        try {
-            GeminiRequest request = new GeminiRequest(List.of(new Content(List.of(new Part(prompt)))));
-
-            GeminiResponse response = webClient.post()
-                    .uri(geminiUrl + "?key=" + geminiApiKey)
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(GeminiResponse.class)
-                    .block();
-
-            if (response != null && !response.candidates().isEmpty()) {
-                return response.candidates().get(0).content().parts().get(0).text();
-            }
-            return "{}";
-        } catch (Exception e) {
-            // 25초가 지나면 여기서 끊고 기본 결과를 반환하도록 유도
-            log.warn("[AiClient] Gemini 응답 지연(25초) 또는 오류. AI 추천 없이 진행.");
-            return "{}";
-        }
-    }
-
-    // DTO Records
-    record GeminiRequest(List<Content> contents) {}
-    record Content(List<Part> parts) {}
-    record Part(String text) {}
-    record GeminiResponse(List<Candidate> candidates) {}
-    record Candidate(Content content) {}
 }

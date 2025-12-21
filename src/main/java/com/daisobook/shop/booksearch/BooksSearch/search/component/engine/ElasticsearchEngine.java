@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 
+// Elasticsearch 검색 엔진 컴포넌트
 @Component
 @RequiredArgsConstructor
 public class ElasticsearchEngine {
@@ -15,8 +16,8 @@ public class ElasticsearchEngine {
     private final BookRepository bookRepository;
     private static final int DEFAULT_FETCH_SIZE = 50;
 
+    // 하이브리드 검색
     public List<Book> search(String query, List<Float> embedding) {
-        // embedding이 null이면 Repository에서 키워드 검색만 수행하도록 구현되어 있다고 가정
         List<Book> candidates = bookRepository.searchHybrid(query, embedding, DEFAULT_FETCH_SIZE);
         return candidates == null ? Collections.emptyList() : candidates;
     }
