@@ -22,16 +22,16 @@ public class QueryPreprocessor {
     public String extractKeywords(String sentence) {
         if (sentence == null || sentence.isBlank()) return "";
 
-        // 🔥 [1단계] 중요 키워드 대소문자 교정 (Dictionary Correction)
+        // 중요 키워드 대소문자 교정 (Dictionary Correction)
         // 사용자가 "c언어", "sql" 이라고 쳐도 -> "C언어", "SQL"로 바꿔줌
         String fixedQuery = fixCapitalization(sentence);
 
-        // [2단계] 불용어 제거 (기존 로직)
+        // 불용어 제거
         for (String pattern : STOP_PATTERNS) {
             fixedQuery = fixedQuery.replace(pattern, " ");
         }
 
-        // [3단계] 특수문자 제거 (C++, C# 등은 살려야 하므로 로직 보완)
+        // 특수문자 제거
         // 알파벳, 숫자, 한글, 공백, 그리고 (+, #) 기호는 살림
         fixedQuery = fixedQuery.replaceAll("[^a-zA-Z0-9가-힣\\s+#]", " ");
 

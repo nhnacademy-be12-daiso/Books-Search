@@ -26,12 +26,15 @@ public class BookRepository {
      */
     public List<Book> findByIsbn(String isbn) {
         try {
+            // ISBN은 고유값이므로 최대 1건 반환
             SearchResponse<Book> response = esClient.search(s -> s
+                    // 인덱스 지정
                     .index(INDEX_NAME)
+                    // 쿼리 작성
                     .query(q -> q.term(t -> t.field("isbn").value(isbn))), Book.class);
             return extractHits(response);
         } catch (IOException e) {
-            log.error("❌ [Repository] ISBN 조회 실패: isbn={}", isbn, e);
+            log.error("[Repository] ISBN 조회 실패: isbn={}", isbn, e);
             return Collections.emptyList();
         }
     }
@@ -42,20 +45,21 @@ public class BookRepository {
      */
     public List<Book> searchHybrid(String query, List<Float> vector, int size) {
         try {
-            // 벡터 유효성 검사
+            // 벡터 유효성 검사 -> Ollama 서버가 살았는지 체크하는 용도
+            // 서버가 죽어있다면 키워드 검색만 수행
             boolean useVector = (vector != null && !vector.isEmpty());
 
             SearchResponse<Book> response = esClient.search(s -> {
                 s.index(INDEX_NAME);
 
-                // [Smart Logic] 벡터가 있을 때만 KNN 절을 추가함
+                // 벡터 검색 (임베딩이 유효할 때만 수행)
                 if (useVector) {
                     s.knn(k -> k
-                            .field("embedding")
-                            .queryVector(vector)
-                            .k(size)
-                            .numCandidates(100)
-                            .boost(3.0f)
+                            .field("embedding") // 벡터 필드명
+                            .queryVector(vector)      // 검색에 사용할 벡터
+                            .k(size)                  // 검색할 최근접 이웃 개수
+                            .numCandidates(100) // 후보군 개수
+                            .boost(3.0f)        // 벡터 검색 가중치
                     );
                 }
 
@@ -72,9 +76,10 @@ public class BookRepository {
                                         "description^1.0",  // 6. 설명
                                         "reviews^0.5"       // 7. 리뷰
                                 )
-                                .analyzer("korean_analyzer")
-                                .minimumShouldMatch("2<75%")
+                                .analyzer("korean_analyzer")    // 한국어 분석기 사용
+                                .minimumShouldMatch("2<75%")    // 노이즈 감소
                         ))
+                        // 추가 부스트: ISBN 완전 일치 시 대폭 상승
                         .should(t -> t.term(tm -> tm
                                 .field("isbn.keyword")
                                 .value(query)
@@ -91,38 +96,8 @@ public class BookRepository {
             return extractHits(response);
 
         } catch (IOException e) {
-            log.error("❌ [Repository] 하이브리드 검색 실패: query={}", query, e);
+            log.error("[Repository] 하이브리드 검색 실패: query={}", query, e);
             return Collections.emptyList();
-        }
-    }
-
-    /**
-     * 3. 도서 저장 (Insert & Update)
-     */
-    public boolean save(Book book) {
-        try {
-            // Elasticsearch는 id가 같으면 덮어쓰기(Update)가 됨
-            esClient.index(i -> i.index(INDEX_NAME).id(book.getIsbn()).document(book));
-            return true;
-        } catch (IOException e) {
-            // ❗배포 환경에서 서비스 전체가 멈추지 않도록 여기서 throw 하지 않음
-            log.error("❌ [Repository] 도서 저장 실패: isbn={}", book.getIsbn(), e);
-            return false;
-        }
-    }
-
-    /**
-     * 4. 도서 삭제
-     */
-    public boolean deleteById(String isbn) {
-        try {
-            esClient.delete(d -> d.index(INDEX_NAME).id(isbn));
-            log.info("🗑️ [Repository] 도서 삭제 완료: isbn={}", isbn);
-            return true;
-        } catch (IOException e) {
-            // ❗배포 환경에서 서비스 전체가 멈추지 않도록 여기서 throw 하지 않음
-            log.error("❌ [Repository] 도서 삭제 실패: isbn={}", isbn, e);
-            return false;
         }
     }
 

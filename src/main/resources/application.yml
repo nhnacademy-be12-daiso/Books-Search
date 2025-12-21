@@ -57,12 +57,30 @@ spring:
           initial-interval: 1000ms
           multiplier: 2.0
 
+
 rabbitmq:
+  exchange:
+    main: team3.booksearch.exchange
+    retry: team3.booksearch.retry.dlx
+    dlx: team3.booksearch.dlx
   queue:
-    book: team3.saga.book.queue.v2
-  routing:
-    confirmed: order.confirmed.v2
-    deducted: inventory.deducted
+    ai-analysis: team3.booksearch.ai.analysis.queue
+    book-upsert: team3.booksearch.book.upsert.queue
+    book-delete: team3.booksearch.book.delete.queue
+
+  routing-key:
+    ai-analysis: team3.booksearch.ai.analysis
+    ai-analysis-retry: team3.booksearch.ai.analysis.retry
+    ai-analysis-fail: team3.booksearch.ai.analysis.fail
+
+    book-upsert: team3.booksearch.book.upsert
+    book-upsert-retry: team3.booksearch.book.upsert.retry
+    book-upsert-fail: team3.booksearch.book.upsert.fail
+
+    book-delete: team3.booksearch.book.delete
+    book-delete-retry: team3.booksearch.book.delete.retry
+    book-delete-fail: team3.booksearch.book.delete.fail
+
 
 
 app:
