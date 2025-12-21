@@ -67,8 +67,9 @@ rabbitmq:
     ai-analysis: team3.booksearch.ai.analysis.queue
     book-upsert: team3.booksearch.book.upsert.queue
     book-delete: team3.booksearch.book.delete.queue
+    book: team3.saga.book.queue.v2
 
-  routing-key:
+  routing:
     ai-analysis: team3.booksearch.ai.analysis
     ai-analysis-retry: team3.booksearch.ai.analysis.retry
     ai-analysis-fail: team3.booksearch.ai.analysis.fail
@@ -80,6 +81,9 @@ rabbitmq:
     book-delete: team3.booksearch.book.delete
     book-delete-retry: team3.booksearch.book.delete.retry
     book-delete-fail: team3.booksearch.book.delete.fail
+
+    confirmed: order.confirmed.v2
+    deducted: inventory.deducted
 
 
 

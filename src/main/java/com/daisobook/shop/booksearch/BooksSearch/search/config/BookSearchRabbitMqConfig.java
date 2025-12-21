@@ -15,13 +15,13 @@ public class BookSearchRabbitMqConfig {
     @Value("${rabbitmq.exchange.main}")
     public String BOOKSEARCH_EXCHANGE;
 
-    @Value("${rabbitmq.routing-key.ai-analysis}")
+    @Value("${rabbitmq.routing.ai-analysis}")
     public String RK_AI_ANALYSIS;
 
-    @Value("${rabbitmq.routing-key.book-upsert}")
+    @Value("${rabbitmq.routing.book-upsert}")
     public String RK_BOOK_UPSERT;
 
-    @Value("${rabbitmq.routing-key.book-delete}")
+    @Value("${rabbitmq.routing.book-delete}")
     public String RK_BOOK_DELETE;
 
     @Bean
