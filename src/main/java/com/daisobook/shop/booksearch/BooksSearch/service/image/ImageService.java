@@ -18,4 +18,5 @@ public interface ImageService {
     String updateImageFromUrl(String newImageUrl, String fullImagePath);
     String updateImageFromFile(MultipartFile newFile, String fullImagePath);
     void deleteObject(String fullImagePath);
+    void deleteObjects(List<String> fullImagePathList);
 }

@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body("요청 데이터 오류: " + errorMessage);
     }
 
-    // 2. 비즈니스 로직 예외 (카테고리 누락 등 우리가 throw new IllegalArgumentException 한 것)
+    // 2. 비즈니스 로직 예외
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleBadRequest(IllegalArgumentException e) {
         log.warn("잘못된 요청: {}", e.getMessage());

@@ -6,6 +6,7 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.List;
 
+// 도서 검색 응답 DTO
 @Getter
 @Builder
 public class SearchResponseDto {

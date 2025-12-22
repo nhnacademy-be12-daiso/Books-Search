@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.category.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryPathProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
@@ -98,7 +97,8 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
     }
 
     @Override
-    public void updateCategory(Book book, Long categoryId) {
+    @Transactional
+    public void updateCategoryOfBook(Book book, Long categoryId) {
         List<BookCategory> preBookCategories = book.getBookCategories();
 
         Set<Long> categoryIdSet = preBookCategories.stream()
@@ -110,32 +110,83 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
             return;
         }
 
-//        List<Category> updateCategories = categoryService.findCategoriesByNamesAndDeeps(bookReqDTO.categories().stream().map(CategoryReqDTO::categoryName).toList(),
-//                bookReqDTO.categories().stream().map(CategoryReqDTO::deep).toList());
-//
-//        List<Category> preCategories = preBookCategories.stream().map(BookCategory::getCategory).toList();
-//
-//        for(Category updateC: updateCategories){
-//            for(Category preC: preCategories){
-//                if(updateC.getDeep() == preC.getDeep()){
-//                    if(updateC.getId() == preC.getId()){
-//                        continue;
-//                    }
-//
-//                    log.debug("변경사항 - 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", preC.getId(), preC.getName(), preC.getDeep(), preC.getPreCategory().getName());
-//                    log.debug("변경사항 - 변경 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", updateC.getId(), updateC.getName(), updateC.getDeep(), updateC.getPreCategory().getName());
-//
-//                    for(BookCategory bc: preBookCategories){
-//                        if(bc.getCategory().getId() == preC.getId()){
-//                            preC.getBookCategories().removeIf(preBc -> preBc.getId() == bc.getId());
-//                            bc.setCategory(updateC);
-//                            updateC.getBookCategories().add(bc);
-//                            break;
-//                        }
-//                    }
-//                    break;
-//                }
-//            }
-//        }
+        List<CategoryPathProjection> pathProjections = categoryRepository.findAncestorsPathByFinalCategoryId(categoryId);
+        if(pathProjections == null || pathProjections.isEmpty()){
+            log.error("[도서 수정] 해당 카테고리를 찾지 못했습니다 - category ID: {}", categoryId);
+            throw new NotFoundCategoryId("[도서 수정] 해당 카테고리를 찾지 못했습니다.");
+        }
+
+        Map<Integer, BookCategory> preBookCategoryMap = preBookCategories.stream()
+                .collect(Collectors.toMap(bc -> bc.getCategory().getDeep(), bookCategory -> bookCategory));
+
+        Map<Integer, Category> updateCategoryMap = categoryRepository.findAllByIdIn(pathProjections.stream()
+                    .map(CategoryPathProjection::getId)
+                    .toList()).stream()
+                .collect(Collectors.toMap(Category::getDeep, category -> category));
+
+        Map<Integer, Category> preCategoryMap = preBookCategories.stream()
+                    .map(BookCategory::getCategory)
+                    .toList().stream()
+                .collect(Collectors.toMap(Category::getDeep, category -> category));
+
+        int size = Math.max(updateCategoryMap.size(), preBookCategories.size());
+
+        List<BookCategory> saveBookCategoryList = new ArrayList<>();
+        List<Long> deleteBookCategoryIdList = new ArrayList<>();
+        for(int i = 1; i <= size; i++){
+            Category uc = updateCategoryMap.getOrDefault(i, null);
+            Category pc = preCategoryMap.getOrDefault(i, null);
+            BookCategory bookCategory = preBookCategoryMap.getOrDefault(i, null);
+
+            if(uc != null && pc != null){
+                if(uc.getId() == pc.getId()){
+                    continue;
+                }
+                pc.getBookCategories().remove(bookCategory);
+                uc.getBookCategories().add(bookCategory);
+                bookCategory.setCategory(uc);
+
+                log.debug("[도서 수정] 변경사항 - 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory().getName());
+                log.debug("[도서 수정] 변경사항 - 변경 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory().getName());
+
+            } else if(uc != null || pc != null) {
+                if(pc == null){
+                    BookCategory newBookCategory = new BookCategory(book, uc);
+
+                    uc.getBookCategories().add(newBookCategory);
+                    book.getBookCategories().add(newBookCategory);
+
+                    saveBookCategoryList.add(newBookCategory);
+                    log.debug("[도서 수정] 새로운 카테고리 추가 - 추가 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory().getName());
+
+                } else {
+                    pc.getBookCategories().remove(bookCategory);
+                    book.getBookCategories().remove(bookCategory);
+
+                    deleteBookCategoryIdList.add(bookCategory.getId());
+                    log.debug("[도서 수정] 이전 카테고리 삭제- 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory().getName());
+
+                }
+            }
+        }
+        if(!deleteBookCategoryIdList.isEmpty()) {
+            bookCategoryRepository.removeAllByIdIn(deleteBookCategoryIdList);
+        }
+        if(!saveBookCategoryList.isEmpty()) {
+            bookCategoryRepository.saveAll(saveBookCategoryList);
+        }
+    }
+
+    @Override
+    public void deleteCategoryOfBook(Book book) {
+        List<BookCategory> bookCategories = book.getBookCategories();
+        List<Category> categories = bookCategories.stream().map(BookCategory::getCategory).toList();
+
+        if(!categories.isEmpty()){
+            categories.forEach(c -> c.getBookCategories().removeAll(bookCategories));
+        }
+        book.getBookCategories().removeAll(bookCategories);
+
+        bookCategoryRepository.deleteAll(bookCategories);
     }
 }

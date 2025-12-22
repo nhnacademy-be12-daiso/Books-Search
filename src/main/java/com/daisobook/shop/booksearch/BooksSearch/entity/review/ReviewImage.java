@@ -30,6 +30,7 @@ public class ReviewImage {
     private String path;
 
     @Setter
+    @Enumerated(EnumType.STRING)
     @Column(name = "image_type")
     private ImageType imageType;
 

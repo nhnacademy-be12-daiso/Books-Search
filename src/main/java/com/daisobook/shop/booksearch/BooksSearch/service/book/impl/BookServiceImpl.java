@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
@@ -390,7 +391,7 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN),
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i != null ? i.setScale(2, RoundingMode.DOWN) : null,
                 discountPrice, book.isPackaging(), book.getStock(), book.getStatus(), imageRespDTOS, book.getVolumeNo(), categoryRespDTOS,
                 tagRespDTOS, count, check, reviews);
     }
@@ -519,9 +520,14 @@ public class BookServiceImpl implements BookService {
                         c.getPreCategory() != null ? c.getPreCategory().getName() : null))
                 .toList();
 
+        List<TagRespDTO> tagRespDTOS = book.getBookTags().stream()
+                .map(BookTag::getTag)
+                .map(t -> new TagRespDTO(t.getId(), t.getName()))
+                .toList();
+
         BigDecimal i = discount != null && book.getPrice() != null ? BigDecimal.valueOf ((1.0 - (double) discount / book.getPrice()) * 100.0): null;
 
-        return new BookListRespDTO(book.getId(), book.getTitle(),
+        return new BookListRespDTO(book.getId(), book.getIsbn(), book.getTitle(), book.getDescription(),
                 book.getBookAuthors().stream()
                         .map(ba ->
                                 new AuthorRespDTO(ba.getAuthor() != null ? ba.getAuthor().getId() : null,
@@ -529,8 +535,8 @@ public class BookServiceImpl implements BookService {
                                         ba.getRole() != null ? ba.getRole().getId() : null,
                                         ba.getRole() != null ? ba.getRole().getName() : null))
                         .toList(),
-                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN),
-                discount, book.getStatus(), imageRespDTOS, categoryRespDTOS, book.getVolumeNo(), book.isPackaging(), isLike);
+                book.getPublisher().getName(), book.getPublicationDate(), book.getPrice(), i != null ? i.setScale(2, RoundingMode.DOWN) : null,
+                discount, book.getStatus(), imageRespDTOS, categoryRespDTOS, tagRespDTOS,book.getVolumeNo(), book.isPackaging(), isLike);
     }
 
     private List<BookListRespDTO> createdBookListRespDTOs(List<Book> books, Long userId){
@@ -556,6 +562,10 @@ public class BookServiceImpl implements BookService {
 
         List<BookReviewResponse> bookReviewResponses = new ArrayList<>();
         for(BookOrderDetailRequest bod: bookOrderDetailRequests){
+            if(!bookMap.containsKey(bod.bookId())){
+                log.warn("존재하지 않는 도서입니다");
+                continue;
+            }
             Book book = bookMap.get(bod.bookId());
             BookResponse bookResponse = new BookResponse(book.getId(), book.getTitle(),
                     book.getBookImages().stream()
@@ -582,10 +592,6 @@ public class BookServiceImpl implements BookService {
         if(!bookReqDTO.title().equals(book.getTitle())){
             book.setTitle(bookReqDTO.title());
         }
-        //TODO 여기 작가 수정 좀 해 (미래의 나한톄 전하는 메시지)
-//        if(!bookReqDTO.author().equals(book.getBookAuthors().stream().map(BookAuthor::getAuthor).toList().toString())){
-////            book.setAuthor(bookReqDTO.author());
-//        }
         if(!bookReqDTO.index().equals(book.getIndex())){
             book.setIndex(bookReqDTO.index());
         }
@@ -893,7 +899,7 @@ public class BookServiceImpl implements BookService {
 
     private Long bookDiscountPrice(Book book){
         List<Long> categoryIdlist = book.getBookCategories().stream().map(BookCategory::getCategory).map(Category::getId).toList();
-        List<DiscountPolicy> discountPolicyList = discountPolicyService.getDiscountPolicyByBookIdOrCategoryIdsOrPublisherId(categoryIdlist, book.getPublisher().getId(), book.getId());
+        List<DiscountValueProjection> discountPolicyList = discountPolicyService.getDiscountValueByBookIdOrCategoryIdsOrPublisherId(categoryIdlist, book.getPublisher().getId(), book.getId());
 
         if(discountPolicyList == null || discountPolicyList.isEmpty()){
             return null;
@@ -901,11 +907,11 @@ public class BookServiceImpl implements BookService {
 
         long discountPercentage = 0;
         long discountFixedAmount = 0;
-        for(DiscountPolicy dp: discountPolicyList){
+        for(DiscountValueProjection dp: discountPolicyList){
             if(DiscountType.PERCENTAGE.equals(dp.getDiscountType())){
-                discountPercentage += dp.getDiscountValue();
+                discountPercentage += dp.getValue();
             } else if(DiscountType.FIXED_AMOUNT.equals(dp.getDiscountType())){
-                discountFixedAmount += dp.getDiscountValue();
+                discountFixedAmount += dp.getValue();
             }
         }
 

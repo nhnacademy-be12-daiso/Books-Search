@@ -40,6 +40,7 @@ public class PublisherV2ServiceImpl implements PublisherV2Service {
     }
 
     @Override
+    @Transactional
     public void assignPublisherToBooks(Map<String, Book> bookMap, Map<String, String> publisherNameMap) {
         Map<String, Publisher> publisherMap = publisherRepository.findAllByNameIn(publisherNameMap.values().stream()
                         .toList()).stream()
@@ -62,5 +63,42 @@ public class PublisherV2ServiceImpl implements PublisherV2Service {
         if(!savePublisher.isEmpty()){
             publisherRepository.saveAll(savePublisher);
         }
+    }
+
+    @Override
+    @Transactional
+    public void updatePublisherOfBook(Book book, String publisherName) {
+        if(book.getPublisher().getName().equals(publisherName)){
+            return;
+        }
+
+        Publisher updatePublisher = publisherRepository.findPublisherByName(publisherName);
+
+        boolean isNull = false;
+        if(updatePublisher == null){
+            updatePublisher = new Publisher(publisherName);
+            isNull = true;
+        }
+
+        Publisher prePublisher = book.getPublisher();
+
+        prePublisher.getBookList().remove(book);
+        book.setPublisher(updatePublisher);
+        updatePublisher.getBookList().add(book);
+
+        if(isNull){
+            publisherRepository.save(updatePublisher);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deletePublisherOfBook(Book book) {
+        Publisher publisher = book.getPublisher();
+
+        if(publisher != null) {
+            publisher.getBookList().remove(book);
+        }
+        book.setPublisher(null);
     }
 }

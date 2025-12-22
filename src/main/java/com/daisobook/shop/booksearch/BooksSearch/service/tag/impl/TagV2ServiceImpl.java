@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.tag.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.BookTag;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.Tag;
@@ -11,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,5 +93,53 @@ public class TagV2ServiceImpl implements TagV2Service {
             tagRepository.saveAll(saveTags);
         }
         bookTagRepository.saveAll(bookTags);
+    }
+
+    @Override
+    @Transactional
+    public void updateTagOfBook(Book book, List<String> tagNameList) {
+        List<BookTag> preBookTags = book.getBookTags();
+        List<Tag> preTags = preBookTags.stream().map(BookTag::getTag).toList();
+
+        Set<String> updateTagNames = new HashSet<>(tagNameList);
+
+        List<Long> tagIdsToDelete = preTags.stream()
+                .filter(preTag -> !updateTagNames.contains(preTag.getName()))
+                .map(Tag::getId)
+                .toList();
+
+        if (!tagIdsToDelete.isEmpty()) {
+            List<BookTag> bookTagsToDelete = bookTagRepository.findAllByBook_IdAndTag_IdIn(book.getId(), tagIdsToDelete);
+
+            book.getBookTags().removeAll(bookTagsToDelete);
+            bookTagRepository.deleteAllById(bookTagsToDelete.stream().map(BookTag::getId).toList());
+        }
+
+        Set<String> preTagNames = preTags.stream()
+                .map(Tag::getName)
+                .collect(Collectors.toSet());
+
+        List<String> assignTags = tagNameList.stream()
+                .filter(updateTagName -> !preTagNames.contains(updateTagName))
+                .toList();
+
+        if (!assignTags.isEmpty()) {
+            assignTagsToBook(book, assignTags);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteTagOfBook(Book book) {
+        List<BookTag> bookTags = book.getBookTags();
+        List<Tag> tags = bookTags.stream().map(BookTag::getTag).toList();
+
+        if(!tags.isEmpty()){
+            tags.forEach(t -> t.getBookTags().removeAll(bookTags));
+        }
+
+        book.getBookTags().removeAll(bookTags);
+
+        bookTagRepository.deleteAll(bookTags);
     }
 }
