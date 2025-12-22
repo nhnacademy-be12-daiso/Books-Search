@@ -46,7 +46,7 @@ public class BookEventListener {
         try {
             // TODO 실제 재고 차감 로직
 
-            BookDeduplicationLog logEntry = new BookDeduplicationLog(msgId);
+            BookDeduplicationLog logEntry = new BookDeduplicationLog(msgId.toString());
             bookDeduplicationRepository.save(logEntry);
             // 멱등성을 위한 로그 기록
 
@@ -83,8 +83,5 @@ public class BookEventListener {
             throw new AmqpRejectAndDontRequeueException(e.getMessage(), e);
             // ----> 이 예외를 날리면 Retry와 DLQ 플로우 시작함
         }
-
     }
-
-
 }

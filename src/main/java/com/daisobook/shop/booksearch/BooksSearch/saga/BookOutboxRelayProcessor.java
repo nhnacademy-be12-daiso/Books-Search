@@ -28,6 +28,7 @@ public class BookOutboxRelayProcessor {
                     outbox.getRoutingKey(),
                     outbox.getPayload()
             );
+            log.info("[Book API] Order ID : {}", outbox.getAggregateId());
             outbox.markAsPublished();
             bookOutboxRepository.save(outbox);
 
