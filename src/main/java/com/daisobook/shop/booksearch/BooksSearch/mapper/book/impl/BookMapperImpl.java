@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.book.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.BookIdAndPriceData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
@@ -169,5 +170,12 @@ public class BookMapperImpl implements BookMapper {
                                 categoryKeySet.contains(bl.getId()) ? categoryRespDTOMap.get(bl.getId()) : null,
                                 tagKeySet.contains(bl.getId()) ? tagRespDTOMap.get(bl.getId()) : null,
                                 bl.getVolumeNo(), bl.getIsPackaging())));
+    }
+
+    @Override
+    public Map<Long, BookIdAndPriceData> toBookIdAndPriceDataMap(Map<Long, BookListData> bookListDataMap) {
+        return bookListDataMap.values().stream()
+                .map(bl -> new BookIdAndPriceData(bl.getId(), bl.getPrice()))
+                .collect(Collectors.toMap(BookIdAndPriceData::bookId, bookIdAndPriceData -> bookIdAndPriceData));
     }
 }

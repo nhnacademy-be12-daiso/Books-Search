@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.book;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.BookIdAndPriceData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
@@ -26,4 +27,5 @@ public interface BookMapper {
     BookRespDTO toBookRespDTO(BookDetailProjection bookDetail, Integer likeCount, Boolean likeCheck, Long discountPrice) throws JsonProcessingException;
     List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Set<Long> likeSetBookId);
     Map<Long, BookListData> toBookListDataMap(List<BookListProjection> bookListProjectionList) throws JsonProcessingException;
+    Map<Long, BookIdAndPriceData> toBookIdAndPriceDataMap(Map<Long, BookListData> bookListDataMap);
 }

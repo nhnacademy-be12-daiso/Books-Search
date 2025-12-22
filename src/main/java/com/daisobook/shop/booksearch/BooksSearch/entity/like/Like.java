@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.ZonedDateTime;
+
 @NoArgsConstructor
 @Getter
 @Entity
@@ -23,8 +25,12 @@ public class Like {
     @Column(name="user_created_id")
     private long userId;
 
+    @Column(name = "created_at")
+    private ZonedDateTime createdAt;
+
     public Like(Book book, long userId){
         this.book = book;
         this.userId = userId;
+        this.createdAt = ZonedDateTime.now();
     }
 }
