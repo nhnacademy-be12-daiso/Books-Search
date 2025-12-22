@@ -83,8 +83,5 @@ public class BookEventListener {
             throw new AmqpRejectAndDontRequeueException(e.getMessage(), e);
             // ----> 이 예외를 날리면 Retry와 DLQ 플로우 시작함
         }
-
     }
-
-
 }
