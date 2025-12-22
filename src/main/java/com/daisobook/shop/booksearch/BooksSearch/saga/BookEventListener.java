@@ -46,7 +46,7 @@ public class BookEventListener {
         try {
             // TODO 실제 재고 차감 로직
 
-            BookDeduplicationLog logEntry = new BookDeduplicationLog(msgId);
+            BookDeduplicationLog logEntry = new BookDeduplicationLog(msgId.toString());
             bookDeduplicationRepository.save(logEntry);
             // 멱등성을 위한 로그 기록
 
