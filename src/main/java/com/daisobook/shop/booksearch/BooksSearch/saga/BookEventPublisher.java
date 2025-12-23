@@ -51,7 +51,7 @@ public class BookEventPublisher {
 
             rabbitTemplate.send(topic, routingKey, message); // 직렬화 해서 생으로 보냄
 
-            log.info("[Payment API] 다음 이벤트 발행 완료 : Payment API -> Order API");
+            log.info("[Book API] 다음 이벤트 발행 완료 : Book API -> User API");
 
         } catch(Exception e) {
             log.warn("[Book API] RabbitMQ 발행 실패 : {}", e.getMessage());

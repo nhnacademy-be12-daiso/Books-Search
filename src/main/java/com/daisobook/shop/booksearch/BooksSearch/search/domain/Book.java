@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.search.domain;
 
+import com.daisobook.shop.booksearch.BooksSearch.search.dto.AiAnalysisDto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,25 +10,28 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * ES books 문서 매핑 모델.
+ * - _id == isbn 구조(Repository.save에서 id=isbn) 기준으로 운영
+ * - embedding은 응답에서 excludes 처리하므로 여기 필드가 없어도 검색 응답엔 영향 없음
+ * - aiResult는 ES에 저장된 AI 분석 결과(object)를 그대로 매핑해서 내려줌
+ */
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true) // ES에 있는데 여기 없는 필드(review_content 등) 무시
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Document(indexName = "books", createIndex = false, writeTypeHint = WriteTypeHint.FALSE)
 public class Book {
 
     @Id
-    private String id; // ES의 _id로 사용됨
+    private String id; // ES의 _id
 
     @Field(type = FieldType.Keyword)
     private String isbn;
@@ -35,7 +39,6 @@ public class Book {
     @Field(type = FieldType.Text, analyzer = "korean_analyzer")
     private String title;
 
-    // JSON 매핑과 일치시키기 위해 Keyword로 변경 (이름 검색 필요시 Text 권장)
     @Field(type = FieldType.Keyword)
     private String author;
 
@@ -45,11 +48,9 @@ public class Book {
     @Field(type = FieldType.Text, analyzer = "korean_analyzer")
     private String description;
 
-    // JSON 데이터가 List 형태이므로 자동으로 매핑됨
     @Field(type = FieldType.Keyword)
     private List<String> categories;
 
-    // 날짜 포맷 지정
     @Field(type = FieldType.Date, format = {}, pattern = "yyyy-MM-dd")
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
@@ -59,12 +60,12 @@ public class Book {
     @Field(type = FieldType.Integer)
     private Integer price;
 
-    // ES 필드명(book_vector)과 매핑
-    @Field(name = "book_vector", type = FieldType.Dense_Vector, dims = 1024, index = true)
-    private List<Double> embedding;
-
-    // ES 필드명(image_url)과 매핑
+    // ES 필드명(image_url)
     @Field(name = "image_url", type = FieldType.Keyword, index = false)
-    @JsonProperty("image_url") // Jackson이 JSON 파싱할 때도 인식하게 함
+    @JsonProperty("image_url")
     private String imageUrl;
+
+    // ES 필드명(aiResult) (dynamic mapping object)
+    @JsonProperty("aiResult")
+    private AiAnalysisDto aiResult;
 }

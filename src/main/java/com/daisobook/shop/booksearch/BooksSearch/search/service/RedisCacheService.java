@@ -16,6 +16,7 @@ public class RedisCacheService {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
+    // Redis에서 Generic하게 가져오는 메서드 -> 어떤 타입이든 다 처리 가능
     public <T> T get(String key, Class<T> clazz) {
         try {
             String json = redisTemplate.opsForValue().get(key);
@@ -27,6 +28,7 @@ public class RedisCacheService {
         }
     }
 
+    // Redis에 Generic하게 저장하는 메서드 -> 어떤 타입이든 다 처리 가능
     public void save(String key, Object value, Duration ttl) {
         try {
             String json = objectMapper.writeValueAsString(value);

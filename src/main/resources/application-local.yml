@@ -86,6 +86,17 @@ management:
         enabled: false
       endpoint: http://localhost:9411/api/v2/spans
 
+logging:
+  level:
+    org:
+      springframework:
+        web: INFO
+      # For Lazy Loading Test
+      hibernate:
+        SQL: INFO
+        orm:
+          jdbc:
+            bind: INFO
 
 minio:
   url: http://storage.java21.net:8000  # MiniIO 서버의 엔드포인트 주소
