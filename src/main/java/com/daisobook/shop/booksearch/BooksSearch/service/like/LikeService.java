@@ -1,11 +1,11 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public interface LikeService {
@@ -18,4 +18,9 @@ public interface LikeService {
     boolean likeCheck(long bookId, Long userId);
     Set<Long> getLikeByUserIdAndBookIds(Long userId, List<Long> bookIds);
     List<Like> getBookIsLike(Long userId, List<Book> books);
+
+//    //v2
+//    void addLike(long bookId, long userId);
+//    void deleteLike(long bookId, long likeId, long userId);
+//    List<LikeListRespDTO> getMyLikeList(long userId);
 }

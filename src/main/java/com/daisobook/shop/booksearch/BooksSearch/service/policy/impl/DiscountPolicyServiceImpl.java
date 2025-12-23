@@ -1,6 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.policy.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueListProjection;
@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -111,14 +110,12 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
     @Transactional
     @Override
-    public Map<Long, Long> getDiscountPriceMap(Map<Long, BookListData> bookListDataMap) throws JsonProcessingException {
-        Set<Long> bookIdSet = bookListDataMap.values().stream()
-                .map(BookListData::getId)
-                .collect(Collectors.toSet());
+    public Map<Long, DiscountDTO.Response> getDiscountPriceMap(Map<Long, DiscountDTO.Request> discountDTORequestMap) throws JsonProcessingException {
+        Set<Long> bookIdSet = new HashSet<>(discountDTORequestMap.keySet());
 
         Map<Long, List<DiscountValueListData>> discountPolicyByDataMap = getDiscountPolicyByDataMap(bookIdSet.stream().toList());
 
-        Map<Long, Long> discountPriceMap = new HashMap<>();
+        Map<Long, DiscountDTO.Response> discountPriceMap = new HashMap<>();
         for(Long bookId: bookIdSet){
             if(!discountPolicyByDataMap.containsKey(bookId)){
                 continue;
@@ -129,7 +126,8 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
                 continue;
             }
 
-            BookListData bookListData = bookListDataMap.get(bookId);
+            DiscountDTO.Request discountRequest = discountDTORequestMap.get(bookId);
+            DiscountDTO.Response discountResponse = null;
 
             long discountPercentage = 0;
             long discountFixedAmount = 0;
@@ -141,9 +139,9 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
                 }
             }
 
-            Long price = bookListData.getPrice();
+            Long price = discountRequest.price();
             if(price == null){
-                log.warn("[도서 목록] 해당 도서의 가격이 존재하지 않습니다 - bookId:{}", bookListData.getId());
+                log.warn("[도서 목록] 해당 도서의 가격이 존재하지 않습니다 - bookId:{}", discountRequest.bookId());
                 return null;
             }
             if(discountPercentage > 0){
@@ -154,12 +152,12 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
             }
 
             long discountPrice = price < 0 ? 0: price;
-            bookListData.setDiscountPrice(discountPrice);
 
-            BigDecimal i = bookListData.getPrice() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / bookListData.getPrice()) * 100.0): null;
-            bookListData.setDiscountPercentage(i != null ? i.setScale(2, RoundingMode.DOWN) : null);
+            BigDecimal i = discountRequest.price() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / discountRequest.price()) * 100.0): null;
+
+            discountResponse = new DiscountDTO.Response(bookId, price, i != null ? i.setScale(2, RoundingMode.DOWN) : null, discountPrice);
             
-            discountPriceMap.put(bookId, price < 0 ? 0: price);
+            discountPriceMap.put(bookId, discountResponse);
         }
 
         return discountPriceMap;
