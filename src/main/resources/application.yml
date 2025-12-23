@@ -12,6 +12,13 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: Book-Service-Pool
+      maximum-pool-size: 20       # 기본 10개에서 20개로 상향
+      minimum-idle: 20            # 미리 20개를 다 만들어 두어(Warm-up) 첫 요청 지연 방지
+      connection-timeout: 3000     # 커넥션 획득 대기 시간을 3초로 제한
+      idle-timeout: 600000
+      max-lifetime: 1800000        # 커넥션 최대 수명 (30분)
   jpa:
     properties:
       hibernate:
@@ -40,6 +47,12 @@ spring:
       port: 6379
       password: '*N2vya7H@muDTwdNMR!'
       database: 379
+    jpa:
+      repositories:
+        bootstrap-mode: default
+      elasticsearch:
+        repositories:
+          enabled: true # 이 설정은 유지하되 DataConfig에서 범위를 제한함
 
 
   rabbitmq:
@@ -109,6 +122,8 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
+    com.zaxxer.hikari: DEBUG  # 히카리 상세 로그 활성화
+#    com.zaxxer.hikari.HikariConfig: DEBUG
 
 management:
   endpoints:
