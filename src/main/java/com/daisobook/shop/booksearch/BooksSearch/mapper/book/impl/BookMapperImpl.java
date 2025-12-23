@@ -1,16 +1,19 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.book.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.BookIdAndPriceData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookInfoListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookSummeryProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.author.AuthorMapper;
@@ -92,9 +95,21 @@ public class BookMapperImpl implements BookMapper {
 
         return new OrderBooksInfoRespDTO(bookList.stream()
                 .map(b ->
-                        new OrderBookInfoRespDTO(b.getId(), b.getTitle(), b.getPrice(), b.getStock(),
+                        new OrderBookInfoRespDTO(b.getId(), b.getTitle(), b.getPrice(), b.getStock(), b.getStatus(),
                                 discountPriceMap.containsKey(b.getId()) ? BigDecimal.valueOf((double) discountPriceMap.get(b.getId()) / b.getPrice() * 100.0) : null,
-                                discountPriceMap.getOrDefault(b.getId(), null), b.getBookImages() != null ? b.getBookImages().getFirst() != null ? b.getBookImages().getFirst().getPath() : null : null))
+                                discountPriceMap.getOrDefault(b.getId(), null), b.getBookImages() != null ? b.getBookImages().getFirst() != null ? b.getBookImages().getFirst().getPath() : null : null,
+                                b.getVolumeNo(), b.isPackaging()))
+                .toList());
+    }
+
+    @Override
+    public OrderBooksInfoRespDTO toOrderBookInfoRespDTOList(Map<Long, DiscountDTO.Response> discountDTOMap, List<BookInfoListProjection> bookInfoListProjections) {
+        return new OrderBooksInfoRespDTO(bookInfoListProjections.stream()
+                .map(bi ->
+                        new OrderBookInfoRespDTO(bi.getBookId(), bi.getTitle(), bi.getPrice(), bi.getStock(), bi.getStatus(),
+                                discountDTOMap.containsKey(bi.getBookId()) ? discountDTOMap.get(bi.getBookId()).discountPercentage() : null,
+                                discountDTOMap.containsKey(bi.getBookId()) ? discountDTOMap.get(bi.getBookId()).discountPrice() : null,
+                                bi.getCoverImage(), bi.getVolumeNo(), bi.getIsPackaging()))
                 .toList());
     }
 
@@ -117,11 +132,13 @@ public class BookMapperImpl implements BookMapper {
     }
 
     @Override
-    public List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Set<Long> likeSetBookId) {
+    public List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Map<Long, DiscountDTO.Response> discountPriceMap, Set<Long> likeSetBookId) {
         return bookListDataMap.values().stream()
                 .map(bl ->
                         new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getDescription(), bl.getAuthorList(), bl.getPublisher().name(),
-                                bl.getPublicationDate(), bl.getPrice(), bl.getDiscountPercentage(), bl.getDiscountPrice(), bl.getStatus(),
+                                bl.getPublicationDate(), discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).price() : null,
+                                discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPercentage() : null,
+                                discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPrice() : null, bl.getStatus(),
                                 bl.getImageList(), bl.getCategoryList(), bl.getTagList(), bl.getVolumeNo(), bl.getIsPackaging(),
                                 likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null))
                 .toList();
@@ -173,9 +190,24 @@ public class BookMapperImpl implements BookMapper {
     }
 
     @Override
-    public Map<Long, BookIdAndPriceData> toBookIdAndPriceDataMap(Map<Long, BookListData> bookListDataMap) {
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMap(Map<Long, BookListData> bookListDataMap) {
         return bookListDataMap.values().stream()
-                .map(bl -> new BookIdAndPriceData(bl.getId(), bl.getPrice()))
-                .collect(Collectors.toMap(BookIdAndPriceData::bookId, bookIdAndPriceData -> bookIdAndPriceData));
+                .map(bl -> new DiscountDTO.Request(bl.getId(), bl.getPrice()))
+                .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
+    }
+
+    @Override
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMap(List<BookInfoListProjection> bookInfoListDataMap) {
+        return bookInfoListDataMap.stream()
+                .map(bi -> new DiscountDTO.Request(bi.getBookId(), bi.getPrice()))
+                .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
+    }
+
+    @Override
+    public List<OrderBookSummeryDTO> toOrderBookSummeryDTOList(List<BookSummeryProjection> bookSummeryProjections) {
+        return bookSummeryProjections.stream()
+                .map(bp ->
+                        new OrderBookSummeryDTO(bp.getBookId(), bp.getTitle(), bp.getPrice()))
+                .toList();
     }
 }

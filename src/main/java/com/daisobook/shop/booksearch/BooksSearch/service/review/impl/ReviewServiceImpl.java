@@ -1,19 +1,24 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.review.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookReviewProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookOrderDetailRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.ReviewImage;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.review.CannotChangedReview;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.review.DuplicatedReview;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.review.NotFoundReview;
+import com.daisobook.shop.booksearch.BooksSearch.mapper.review.ReviewMapper;
 import com.daisobook.shop.booksearch.BooksSearch.repository.review.ReviewRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.ReviewImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
@@ -40,6 +45,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewImageServiceImpl imageService;
 
     private final ObjectMapper objectMapper;
+    private final ReviewMapper reviewMapper;
 
     @Override
     public ReviewGroupReqDTO parsing(ReviewMetadataReqDTO dto) throws JsonProcessingException {
@@ -241,4 +247,24 @@ public class ReviewServiceImpl implements ReviewService {
     public Review findReviewByUserIdAndBookIdAndOrderDetailId(long userId, long bookId, long orderDetailId) {
         return reviewRepository.findReviewByUserIdAndBook_IdAndOderDetailId(userId, bookId, orderDetailId);
     }
+
+    @Override
+    public List<BookReviewResponse> findBookReviewList(Long userId, List<BookOrderDetailRequest> bookOrderDetailRequests) {
+        List<BookReviewProjection> bookReviewProjectionList = reviewRepository.getBookReviewProjectionList(userId,
+                bookOrderDetailRequests.stream()
+                        .map(BookOrderDetailRequest::bookId)
+                        .toList(),
+                bookOrderDetailRequests.stream()
+                        .map(BookOrderDetailRequest::orderDetailId)
+                        .toList());
+
+        try {
+            return reviewMapper.toBookReviewResponseList(bookReviewProjectionList);
+        } catch (JsonProcessingException e) {
+            log.error("[리뷰 리스트] 리뷰 리스트 매핑을 실패");
+            throw new FailObjectMapper(e.getMessage());
+        }
+    }
+
+
 }

@@ -1,28 +1,20 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.LikeBookListProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.like.ExistedLike;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.like.LikeMapper;
 import com.daisobook.shop.booksearch.BooksSearch.repository.like.LikeRepository;
-import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookCoreService;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
 import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 

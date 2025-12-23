@@ -1,9 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.repository.book;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
@@ -163,23 +160,12 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                     WHERE b.book_id = :bookId
                     AND (
                             :includeDeleted = TRUE
-                            OR b.is_deleted = FALSE
+                            OR b.is_deleted = 0
                         )
                 """, nativeQuery = true)
 BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("includeDeleted") boolean includeDeleted);
 //DATE_FORMAT(r.created_at, '%Y-%m-%dT%H:%i:%sZ') zone에 대한 정보 받기 - 그냥 json으로 받으려고 하면 zone정보가 날아간다
 //DATE_FORMAT(r.created_at, '%Y-%m-%dT%H:%i:%s.%f+09:00') - 한국으로 기준
-
-    @Query("""
-        SELECT DISTINCT b
-        FROM Book b
-        LEFT JOIN FETCH b.publisher
-        LEFT JOIN FETCH b.bookAuthors ba
-        LEFT JOIN FETCH ba.author
-        LEFT JOIN FETCH ba.role
-        WHERE b.id = ?1
-    """)
-    Book findBookDetailById(long id);
 
     @Query(value = """
             SELECT DISTINCT
@@ -235,12 +221,38 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                 WHERE b.book_id IN (:bookIds)
                 AND (
                         :includeDeleted = TRUE
-                        OR b.is_deleted = FALSE
+                        OR b.is_deleted = 0
                       )
             """,
             nativeQuery = true
     )
     List<BookListProjection> getBookListBy(@Param("bookIds") List<Long> bookIds, @Param("includeDeleted") boolean includeDeleted);
+
+    @Query(value = """
+            SELECT DISTINCT
+                b.book_id as bookId,
+                b.title,
+                b.price,
+                b.stock,
+                b.status,
+                (
+                  SELECT
+                        bi.book_image_path
+                  FROM book_images bi
+                  WHERE bi.book_id = b.book_id AND bi.book_image_no = 1
+                ) AS coverImage,
+                b.volume_no as volumeNO,
+                b.is_packaging as isPackaging
+                FROM books b
+                WHERE b.book_id IN (:bookIds)
+                AND (
+                        :includeDeleted = TRUE
+                        OR b.is_deleted = 0
+                      )
+            """,
+            nativeQuery = true
+    )
+    List<BookInfoListProjection> getBookInfoListBy(@Param("bookIds") List<Long> bookIds, @Param("includeDeleted") boolean includeDeleted);
 
     @Query(value = """
             SELECT b.book_id as id
@@ -251,4 +263,15 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
             nativeQuery = true
     )
     List<BookIdProjection> getBookIdByNewReleases(@Param("startDate")LocalDate startDate, Pageable pageable);
+
+    @Query(value = """
+            SELECT
+                b.book_id as bookId,
+                b.title,
+                b.price
+            FROM books b
+            WHERE b.book_id IN (:bookIds)
+            """,
+            nativeQuery = true)
+    List<BookSummeryProjection> getBookSummeryByIdIn(@Param("bookIds") List<Long> bookIds);
 }

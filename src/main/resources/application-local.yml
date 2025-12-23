@@ -95,6 +95,7 @@ minio:
     book: daiso-book-cover
     review: daiso-review-image
     test: daiso-book-image
+#    test: daiso-book-cover
 
 app:
   ai:
