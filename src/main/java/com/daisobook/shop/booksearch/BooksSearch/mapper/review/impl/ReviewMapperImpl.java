@@ -52,13 +52,13 @@ public class ReviewMapperImpl implements ReviewMapper {
     public List<BookReviewResponse> toBookReviewResponseList(List<BookReviewProjection> bookReviewProjectionList) throws JsonProcessingException {
         Map<Long, BookResponse> bookResponseMap = new HashMap<>();
         for(BookReviewProjection b: bookReviewProjectionList) {
-            BookResponse bookResponse = objectMapper.readValue(b.getBook(), BookResponse.class);
-            bookResponseMap.put(b.getReviewId(), bookResponse);
+            BookResponse bookResponse = new BookResponse(b.getBookId(), b.getTitle(), imageMapper.toImageRespDTOList(b.getImages()));
+            bookResponseMap.put(b.getBookId(), bookResponse);
         }
 
         return bookReviewProjectionList.stream()
                 .map(b ->
-                        new BookReviewResponse(bookResponseMap.getOrDefault(b.getReviewId(), null),
+                        new BookReviewResponse(bookResponseMap.getOrDefault(b.getBookId(), null),
                                 b.getOrderDetailId(), b.getReviewId()
                                 )
                 )

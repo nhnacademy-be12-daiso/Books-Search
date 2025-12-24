@@ -1,7 +1,9 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.projection;
 
 public interface BookReviewProjection {
-    String getBook();
-    long getOrderDetailId();
+    Long getBookId();
+    String getTitle();
+    String getImages();
+    Long getOrderDetailId();
     Long getReviewId();
 }
