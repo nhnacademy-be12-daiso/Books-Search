@@ -21,27 +21,22 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query(value = """
                 SELECT
+                    b.book_id AS bookId,
+                    b.title AS title,
                     (
-                        SELECT JSON_OBJECT(
-                            'bookId', b.book_id, 'title', b.title,
-                            'imageList',
-                            (
-                                SELECT JSON_ARRAYAGG(
-                                JSON_OBJECT('no', bi.book_image_no, 'path', bi.book_image_path, 'imageType', bi.image_type)
-                                )
-                                FROM book_images bi
-                                WHERE bi.book_id = b.book_id
-                            )
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT('no', bi.book_image_no, 'path', bi.book_image_path, 'imageType', bi.image_type)
                         )
-                        FROM books b
-                        WHERE r.book_id = b.book_id
-                    ) as book,
-                    r.order_detail_id as orderDetailId,
-                    r.review_id as reviewId
-                FROM reviews r
-                WHERE r.user_created_id = :userId
-                    AND r.book_id IN (:bookIds)
+                        FROM book_images bi
+                        WHERE bi.book_id = b.book_id
+                    ) AS images,
+                    r.order_detail_id AS orderDetailId,
+                    r.review_id AS reviewId
+                FROM books b
+                LEFT JOIN reviews r ON b.book_id = r.book_id
+                    AND r.user_created_id = :userId
                     AND r.order_detail_id IN (:orderDetailIds)
+                WHERE b.book_id IN (:bookIds)
             """,
             nativeQuery = true)
     List<BookReviewProjection> getBookReviewProjectionList(@Param("userId") long userId, @Param("bookIds") List<Long> bookIds, @Param("orderDetailIds") List<Long> orderDetailIds);
