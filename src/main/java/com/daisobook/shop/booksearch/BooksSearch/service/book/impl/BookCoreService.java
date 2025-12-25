@@ -1,10 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
@@ -259,5 +256,15 @@ public class BookCoreService {
     @Transactional(readOnly = true)
     public List<BookListProjection> getBookByIds(List<Long> bookIds, boolean includeDeleted){
         return bookRepository.getBookListBy(bookIds, includeDeleted);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookInfoListProjection> getBookInfoListByInd(List<Long> bookIds, boolean includeDeleted){
+        return bookRepository.getBookInfoListBy(bookIds, includeDeleted);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookSummeryProjection> getBookSummeryByIds(List<Long> bookIds){
+        return bookRepository.getBookSummeryByIdIn(bookIds);
     }
 }

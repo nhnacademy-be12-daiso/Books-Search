@@ -16,5 +16,5 @@ public record ReviewRespDTO(
         ZonedDateTime createdAt,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX")
         ZonedDateTime modifiedAt,
-        List<ImageRespDTO> imageRespDTOList
+        List<ImageRespDTO> reviewImages
 ) { }

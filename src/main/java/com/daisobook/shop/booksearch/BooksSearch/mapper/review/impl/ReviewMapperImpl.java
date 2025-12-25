@@ -1,8 +1,11 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.review.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookReviewProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.review.ReviewMapper;
@@ -12,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,5 +46,22 @@ public class ReviewMapperImpl implements ReviewMapper {
         }
 
         return objectMapper.readValue(reviewsData, new TypeReference<List<ReviewRespDTO>>() {});
+    }
+
+    @Override
+    public List<BookReviewResponse> toBookReviewResponseList(List<BookReviewProjection> bookReviewProjectionList) throws JsonProcessingException {
+        Map<Long, BookResponse> bookResponseMap = new HashMap<>();
+        for(BookReviewProjection b: bookReviewProjectionList) {
+            BookResponse bookResponse = new BookResponse(b.getBookId(), b.getTitle(), imageMapper.toImageRespDTOList(b.getImages()));
+            bookResponseMap.put(b.getBookId(), bookResponse);
+        }
+
+        return bookReviewProjectionList.stream()
+                .map(b ->
+                        new BookReviewResponse(bookResponseMap.getOrDefault(b.getBookId(), null),
+                                b.getOrderDetailId(), b.getReviewId()
+                                )
+                )
+                .toList();
     }
 }

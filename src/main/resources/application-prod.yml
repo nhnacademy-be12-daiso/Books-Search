@@ -54,6 +54,6 @@ minio:
   accessKey: tUQ5cvl8WJSqBDwtqWAW  # MiniIO 사용자 Access Key
   secretKey: ufyZgbYaKPG2Syfv4C0CExifq7B4z8ZzzCndGX2c  # MiniIO 사용자 Secret Key
   bucketName:
-    book: daiso-book-image
+    book: daiso-book-cover
     review: daiso-review-image
-    test: daiso-book-cover
+    test: daiso-book-image

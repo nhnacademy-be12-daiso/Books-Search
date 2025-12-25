@@ -1,6 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.policy;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
+import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueProjection;
@@ -14,5 +14,5 @@ public interface DiscountPolicyService {
     List<DiscountValueListData> getDiscountPolicyByData(Long bookId) throws JsonProcessingException;
     Long getDiscountPrice(BookDetailProjection bookDetail) throws JsonProcessingException;
     Map<Long, List<DiscountValueListData>> getDiscountPolicyByDataMap(List<Long> bookIds) throws JsonProcessingException;
-    Map<Long, Long> getDiscountPriceMap(Map<Long, BookListData> bookListDataMap) throws JsonProcessingException;
+    Map<Long, DiscountDTO.Response> getDiscountPriceMap(Map<Long, DiscountDTO.Request> discountDTORequestMap) throws JsonProcessingException;
 }

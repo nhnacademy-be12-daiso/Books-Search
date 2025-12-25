@@ -2,9 +2,8 @@ package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIsbnProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
@@ -12,6 +11,8 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
@@ -34,10 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -253,9 +251,10 @@ public class BookFacade {
                         .map(BookListProjection::getId)
                         .toList());
 
-        Map<Long, Long> discountPriceMap = null;
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMap(bookListDataMap);
+        Map<Long, DiscountDTO.Response> discountPriceMap = null;
         try {
-            discountPriceMap = discountPolicyService.getDiscountPriceMap(bookListDataMap);
+            discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
         } catch (JsonProcessingException e) {
             log.error("[도서 목록] 할인 정책 매핑을 실패했습니다");
             throw new FailObjectMapper(e.getMessage());
@@ -264,14 +263,38 @@ public class BookFacade {
             return null;
         }
 
-        List<BookListRespDTO> bookRespDTOList = bookMapper.toBookRespDTOList(bookListDataMap, likeSetBookId);
+        List<BookListRespDTO> bookRespDTOList = bookMapper.toBookRespDTOList(bookListDataMap, discountPriceMap, likeSetBookId);
 
         return new SortBookListRespDTO(bookRespDTOList);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public OrderBooksInfoRespDTO findBooksByIdIn(List<Long> bookId){
-        return null;
+        List<BookInfoListProjection> bookListProjections = bookCoreService.getBookInfoListByInd(bookId, false);
+        if(bookListProjections == null || bookListProjections.isEmpty()){
+            return null;
+        }
+
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMap(bookListProjections);
+        Map<Long, DiscountDTO.Response> discountPriceMap = null;
+        try {
+            discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
+        } catch (JsonProcessingException e) {
+            log.error("[도서 목록] 할인 정책 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
+        if(discountPriceMap == null){
+            return null;
+        }
+
+        return bookMapper.toOrderBookInfoRespDTOList(discountPriceMap, bookListProjections);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderBookSummeryDTO> getOrderBookList(List<Long> bookIds){
+        List<BookSummeryProjection> bookSummeryProjections = bookCoreService.getBookSummeryByIds(bookIds);
+
+        return bookMapper.toOrderBookSummeryDTOList(bookSummeryProjections);
     }
 
 }
