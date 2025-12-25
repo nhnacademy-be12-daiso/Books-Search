@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.projection;
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.ZonedDateTime;
 
@@ -15,5 +16,5 @@ public interface LikeBookListProjection {
     String getImage();
     Integer getVolumeNo();
     boolean getPackaging();
-    ZonedDateTime getCreatedAt();
+    String getCreatedAt();
 }

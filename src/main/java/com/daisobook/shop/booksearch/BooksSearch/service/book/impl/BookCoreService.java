@@ -116,7 +116,7 @@ public class BookCoreService {
 
     @Transactional
     public Book getBook_Id(long bookId){
-        Book book = bookRepository.getBookById(bookId);
+        Book book = bookRepository.findBookById(bookId);
         if(book == null){
             log.error("해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
             return null;

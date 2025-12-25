@@ -66,7 +66,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     LEFT JOIN FETCH b.publisher
     WHERE b.id = ?1
 """)
-    Book getBookById(long id);
+    Book getBookById(long id); //저렇게 다수의 일대다 인경우 패치종인으로 다 가져오지 못한다 하나의 관계에대해서만 가져올수 있다
 
     @Query("SELECT b.id FROM Book b WHERE b.isbn = ?1")
     BookIdProjection getBookId(String isbn);

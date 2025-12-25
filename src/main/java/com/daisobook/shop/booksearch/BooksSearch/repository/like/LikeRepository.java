@@ -59,11 +59,13 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
                 b.volume_no as volumeNo,
                 b.is_packaging as packaging,
                 DATE_FORMAT(l.created_at, '%Y-%m-%dT%H:%i:%s.%f+09:00') as createdAt
-            FROM Likes l
-            JOIN Books b ON b.book_id = l.book_id
-            WHERE l.user_id = :userId
+            FROM likes l
+            JOIN books b ON b.book_id = l.book_id
+            WHERE l.user_created_id = :userId
             ORDER BY l.created_at DESC
             """,
             nativeQuery = true)
     List<LikeBookListProjection> getAllByUserId(@Param("userId") long userId);
+
+    Like findLikeByBook_IdAndUserId(long bookId, long userId);
 }

@@ -1,5 +1,6 @@
-package com.daisobook.shop.booksearch.BooksSearch.dto.response;
+package com.daisobook.shop.booksearch.BooksSearch.dto.response.like;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 
 import java.math.BigDecimal;
