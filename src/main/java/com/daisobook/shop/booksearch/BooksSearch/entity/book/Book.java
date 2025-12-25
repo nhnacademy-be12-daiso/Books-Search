@@ -68,7 +68,7 @@ public class Book {
 
     @Setter
     @Enumerated(EnumType.STRING)
-    @Column(name="status", columnDefinition = "ENUM('DISCONTINUE', 'ON_SALE') DEFAULT 'ON_SALE'")
+    @Column(name="status", length = 20, nullable = false)
     private Status status;
 
 //    @Setter

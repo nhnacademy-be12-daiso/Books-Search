@@ -1,10 +1,13 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.category.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryPathProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
+import com.daisobook.shop.booksearch.BooksSearch.mapper.category.CategoryMapper;
 import com.daisobook.shop.booksearch.BooksSearch.repository.category.BookCategoryRepository;
 import com.daisobook.shop.booksearch.BooksSearch.repository.category.CategoryRepository;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
@@ -23,12 +26,13 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
 
     private final CategoryRepository categoryRepository;
     private final BookCategoryRepository bookCategoryRepository;
+    private final CategoryMapper categoryMapper;
 
     @Override
     @Transactional
     public void assignCategoriesToBook(Book book, Long categoryId) {
         if(categoryId == null){
-            log.error("[도서 등록] category Id가 null입니다 - 해당 도서 ISBN: {}, 등록시도 카테고리 ID: {}", book.getIsbn(), categoryId);
+            log.error("[도서 등록] category Id가 null입니다 - 해당 도서 ISBN: {}", book.getIsbn());
             return;
         }
 
@@ -188,5 +192,27 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         book.getBookCategories().removeAll(bookCategories);
 
         bookCategoryRepository.deleteAll(bookCategories);
+    }
+
+    @Override
+    public CategoryList getCategoryList() {
+        Map<Long, CategoryListProjection> categoryRepositoryAll = categoryRepository.getAll().stream()
+                .collect(Collectors.toMap(CategoryListProjection::getCategoryId, c -> c));
+
+        Set<Long> preCategoryIdSet = categoryRepositoryAll.values().stream()
+                .map(CategoryListProjection::getPreCategoryId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        List<CategoryListProjection> categoryLeafList = new ArrayList<>();
+        for(CategoryListProjection c : categoryRepositoryAll.values()){
+            if(!preCategoryIdSet.contains(c.getCategoryId())){
+                categoryLeafList.add(c);
+            }
+        }
+
+        CategoryList categoryList = categoryMapper.toCategoryList(categoryRepositoryAll, categoryLeafList);
+
+        return categoryList;
     }
 }

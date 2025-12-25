@@ -1,11 +1,11 @@
 package com.daisobook.shop.booksearch.BooksSearch.repository.category;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryPathProjection;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,9 +44,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 SELECT c.category_id, c.pre_category_id, c.deep
                 FROM categories c
                 WHERE c.category_id = ?1
-                            
+            
                 UNION ALL
-                            
+            
                 -- 재귀 멤버 (부모를 타고 올라감)
                 SELECT c.category_id, c.pre_category_id, c.deep
                 FROM categories c
@@ -66,9 +66,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 SELECT c.category_id, c.pre_category_id, c.deep
                 FROM categories c
                 WHERE c.category_id IN :?1 -- 리스트 형태로 IN (...) 들어가기 위해서는 :?1 #?1 둘중에 하나를 사용 - nativeQuery에서만 작동
-                            
+            
                 UNION ALL
-                            
+            
                 -- 재귀 멤버 (부모를 타고 올라감)
                 SELECT c.category_id, c.pre_category_id, c.deep
                 FROM categories c
@@ -81,4 +81,14 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     )
     List<CategoryPathProjection> findAncestorsPathByFinalCategoryIdIn(List<Long> finalCategoryIds);
 
+    @Query(value = """
+            SELECT
+                c.category_id as categoryId,
+                c.category_name as categoryName,
+                c.pre_category_id as preCategoryId,
+                c.deep
+            FROM categories c
+            """,
+            nativeQuery = true)
+    List<CategoryListProjection> getAll();
 }

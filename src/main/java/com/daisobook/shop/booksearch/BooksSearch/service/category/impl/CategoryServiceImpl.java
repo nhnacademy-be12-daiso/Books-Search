@@ -1,7 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.category.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.*;

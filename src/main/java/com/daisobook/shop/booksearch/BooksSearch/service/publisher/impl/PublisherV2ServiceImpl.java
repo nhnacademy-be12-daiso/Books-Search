@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class PublisherV2ServiceImpl implements PublisherV2Service {
-    private PublisherRepository publisherRepository;
+    private final PublisherRepository publisherRepository;
 
     @Override
     @Transactional

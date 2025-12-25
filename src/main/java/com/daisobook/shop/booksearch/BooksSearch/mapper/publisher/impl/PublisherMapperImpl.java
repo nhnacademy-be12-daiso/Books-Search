@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.publisher.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.PublisherRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.publisher.PublisherMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

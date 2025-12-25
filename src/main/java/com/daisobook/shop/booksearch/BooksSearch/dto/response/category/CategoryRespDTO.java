@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.dto.response;
+package com.daisobook.shop.booksearch.BooksSearch.dto.response.category;
 
 public record CategoryRespDTO(
         long categoryId,

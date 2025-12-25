@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.category;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 
 import java.util.Map;
@@ -10,4 +11,5 @@ public interface CategoryV2Service {
     void assignCategoriesToBooks(Map<String, Book> bookMap, Map<String, Long> categoryIdMap);
     void updateCategoryOfBook(Book book, Long categoryId);
     void deleteCategoryOfBook(Book book);
+    CategoryList getCategoryList();
 }

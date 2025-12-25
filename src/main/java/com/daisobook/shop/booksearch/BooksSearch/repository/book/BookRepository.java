@@ -122,7 +122,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                     ) AS images,
                     (
                         SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT('id', c.category_id, 'name', c.category_name, 'deep', c.deep, 'preCategoryId', pc.category_id, 'preCategoryName', pc.category_name)
+                            JSON_OBJECT('categoryId', c.category_id, 'categoryName', c.category_name, 'deep', c.deep, 'preCategoryId', pc.category_id, 'preCategoryName', pc.category_name)
                         )
                         FROM book_categories bc
                         LEFT JOIN categories c ON bc.category_id = c.category_id
@@ -131,7 +131,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                     ) AS categories,
                     (
                         SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT('id', t.tag_id, 'name', t.tag_name)
+                            JSON_OBJECT('tagId', t.tag_id, 'tagName', t.tag_name)
                         )
                         FROM book_tags bt
                         LEFT JOIN tags t ON bt.tag_id = t.tag_id
@@ -199,7 +199,7 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                 ) AS images,
                 (
                   SELECT JSON_ARRAYAGG(
-                     JSON_OBJECT('id', c.category_id, 'name', c.category_name, 'deep', c.deep, 'preCategoryId', pc.category_id, 'preCategoryName', pc.category_name)
+                     JSON_OBJECT('categoryId', c.category_id, 'CategoryName', c.category_name, 'deep', c.deep, 'preCategoryId', pc.category_id, 'preCategoryName', pc.category_name)
                   )
                   FROM book_categories bc
                       LEFT JOIN categories c ON bc.category_id = c.category_id
@@ -208,7 +208,7 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                 ) AS categories,
                 (
                   SELECT JSON_ARRAYAGG(
-                     JSON_OBJECT('id', t.tag_id, 'name', t.tag_name)
+                     JSON_OBJECT('tagId', t.tag_id, 'tagName', t.tag_name)
                   )
                   FROM book_tags bt
                       LEFT JOIN tags t ON bt.tag_id = t.tag_id
@@ -257,7 +257,7 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
     @Query(value = """
             SELECT b.book_id as id
             FROM books b
-            WHERE b.publication_date > :startDate
+            WHERE b.publication_date > :startDate AND b.status != 'UNPUBLISHED'
             ORDER BY b.publication_date DESC
             """,
             nativeQuery = true
