@@ -267,4 +267,9 @@ public class BookCoreService {
     public List<BookSummeryProjection> getBookSummeryByIds(List<Long> bookIds){
         return bookRepository.getBookSummeryByIdIn(bookIds);
     }
+
+    @Transactional
+    public List<Book> getBookByIdIn(List<Long> bookIds){
+        return bookRepository.findAllByIdIn(bookIds);
+    }
 }
