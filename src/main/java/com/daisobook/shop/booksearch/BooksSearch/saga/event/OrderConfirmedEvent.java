@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.saga;
+package com.daisobook.shop.booksearch.BooksSearch.saga.event;
 
 
 import lombok.AllArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderConfirmedEvent {
+public class OrderConfirmedEvent implements SagaEvent {
 
     private Long orderId;
     private Long userId;
