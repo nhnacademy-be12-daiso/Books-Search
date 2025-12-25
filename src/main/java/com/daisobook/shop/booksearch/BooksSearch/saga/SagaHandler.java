@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.saga;
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.entity.saga.BookOutbox;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.BookOutOfStockException;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.FailedSerializationException;
@@ -67,6 +68,11 @@ public class SagaHandler {
                 }
 
                 Book book = books.get(bookId);
+                if(!book.getStatus().equals(Status.ON_SALE)){
+                    log.error("[주문 saga:재고 감소] 해당하는 도서가 판매 중이 아닙니다 - 도서ID:{}, 도서상태:{}", book.getId(), book.getStatus());
+                    throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서가 판매 중이 아닙니다");
+                }
+
                 int stock = book.getStock();
                 if(stock < n){
                     log.error("[주문 saga:재고 감소] 해당하는 도서 재고가 부족합니다 - 도서ID:{}, 도서 재고:{}, 주무 수량:{}", bookId, stock, n);
