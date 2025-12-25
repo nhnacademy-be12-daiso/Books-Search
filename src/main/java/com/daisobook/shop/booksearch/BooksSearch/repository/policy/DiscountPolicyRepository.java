@@ -38,12 +38,12 @@ public interface DiscountPolicyRepository extends JpaRepository<DiscountPolicy, 
                     -- 카테고리 할인
                     SELECT p.policy_id, p.policy_name, p.discount_type, p.discount_value
                     FROM discount_policies p
-                    JOIN book_categories bc ON p.target_id = bc.category_id
+                    JOIN book_categories bc ON bc.book_id = b.book_id
                     WHERE p.target_type = 'CATEGORY'
                         AND p.is_active = TRUE
                         AND p.start_date <= now()
                         AND (p.end_date IS NULL OR p.end_date >= now())
-                        AND bc.book_id = b.book_id
+                        AND p.target_id = bc.category_id
             
                     UNION ALL
                     -- 출판사 할인
