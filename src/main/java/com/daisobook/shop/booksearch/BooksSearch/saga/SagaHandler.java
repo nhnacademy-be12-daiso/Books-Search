@@ -21,10 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class SagaHandler {
 
-    private final ObjectMapper objectMapper;
-    private final BookOutboxRepository outboxRepository;
-    private final ApplicationEventPublisher publisher;
     private final SagaTestService testService;
+    private final SagaReplyService replyService;
 
     @Transactional
     public void handleEvent(OrderConfirmedEvent event) {
@@ -33,13 +31,18 @@ public class SagaHandler {
         String reason = null; // 실패시 사유
 
         try {
-            // TODO 재고 차감 로직
-            // 서비스 주입받아서 하시면 됨
+//            testService.process(); // 재고 부족 시나리오 테스트 용 --> 무시하셔도 됩니다.
 
-//            testService.process(); // 일부러 재고 부족 터트리기
-
-            // 로직 중에 재고 부족하면 해당 커스텀 예외 던지시면 됩니다.
-            // 더 좋은 방법 있으면 추천 좀
+            // TODO 01 재고 차감 로직 (김동건 님)
+            /**
+             *  본인들 서비스 주입받아서 로직 구현하시면 됩니다.
+             *  매개변수로 넘어온 event DTO를 까보시면 필요한 정보들이 담겨 있습니다.
+             *  그거 토대로 각자 로직에 구현해주면 됨 (재고 차감, 포인트 차감, 쿠폰 사용 처리)
+             *
+             *  만약 재고가 부족하다? 그럼 하단에 BookOutOfStockException을 던지면 됩니다!
+             *
+             *  더 좋은 로직 있다면 추천 가능
+             */
 
             log.error("[Book API] 재고 차감 성공 - Order : {}", event.getOrderId());
 
@@ -47,12 +50,14 @@ public class SagaHandler {
             log.error("[Book API] 재고 부족으로 인한 차감 실패 - Order : {}", event.getOrderId());
             isSuccess = false;
             reason = "OUT_OF_STOCK";
+            throw e; // 롤백
         } catch(Exception e) {
             log.error("[Book API] 예상치 못한 시스템 에러 발생 - Order : {}", event.getOrderId(), e);
             isSuccess = false;
             reason = "SYSTEM_ERROR";
-            // 이렇게 예외 범위를 넓게 해놔야 무슨 에러가 터져도 finally 문이 실행됨
+            throw e; // 롤백
         }
+        // 이렇게 예외 범위를 넓게 해놔야 무슨 에러가 터져도 finally 문이 실행됨
         finally {
             // 성공했든 실패했든 답장은 해야함
             SagaReply reply = new SagaReply(
@@ -63,7 +68,7 @@ public class SagaHandler {
             );
 
             // 응답 메시지 전송
-            this.send(event, reply, SagaTopic.REPLY_RK);
+            replyService.send(event, reply, SagaTopic.REPLY_RK);
         }
     }
 
@@ -74,8 +79,12 @@ public class SagaHandler {
         String reason = null; // 실패시 사유
 
         try {
-            // TODO 재고 '보상' 로직
-            // 서비스 주입받아서 하시면 됨
+            // TODO 02 재고 '보상' 로직 (김동건 님)
+            /**
+             * 동일하게 서비스 주입받아서 하시면 되는데,
+             * 여기서는 '뭔가 잘못돼서 다시 원복시키는 롤백'의 과정입니다.
+             * 그니까 아까 차감했던 재고를 다시 원복시키는 로직을 구현하시면 됩니다.
+             */
 
             log.error("[Book API] 재고 보상 성공 - Order : {}", event.getOrderId());
 
@@ -83,6 +92,12 @@ public class SagaHandler {
             log.error("[Book API] 예상치 못한 시스템 에러 발생 - Order : {}", event.getOrderId(), e);
             isSuccess = false;
             reason = "SYSTEM_ERROR";
+            // TODO 재시도 로직
+            /**
+             * 보상 자체가 실패했을때 재시도 로직을 구현할 필요가 있음
+             * 비즈니스 로직의 문제가 아니라 기술적 문제라면 재시도하는게 맞음
+             * 그냥 무지성으로 롤백해버리면 안됨
+             */
         }
         finally {
             // 성공했든 실패했든 답장은 해야함
@@ -94,29 +109,7 @@ public class SagaHandler {
             );
 
             // 응답 메시지 전송
-            this.send(event, reply, SagaTopic.REPLY_COMPENSATION_RK);
-        }
-    }
-
-    public void send(SagaEvent event, SagaReply reply, String key) {
-        try {
-            BookOutbox outbox = new BookOutbox(
-                event.getOrderId(),
-                "BOOK",
-                SagaTopic.ORDER_EXCHANGE,
-                key,
-                objectMapper.writeValueAsString(reply)
-            );
-
-            outboxRepository.save(outbox);
-
-            log.info("[Saga Outbox] {} 토픽으로 메시지 저장 완료 (OrderID: {})", SagaTopic.REPLY_RK, event.getOrderId());
-            publisher.publishEvent(new BookOutboxCommittedEvent(this, outbox.getId()));
-
-
-        } catch (JsonProcessingException e) {
-            log.warn("객체 직렬화 실패");
-            throw new FailedSerializationException("객체 직렬화 실패");
+            replyService.send(event, reply, SagaTopic.REPLY_COMPENSATION_RK);
         }
     }
 }
