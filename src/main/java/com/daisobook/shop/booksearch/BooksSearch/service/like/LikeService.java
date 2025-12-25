@@ -1,14 +1,16 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.LikeBookListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.LikeRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Set;
 
 public interface LikeService {
+    void existLike(long bookId, long userId);
     void createLike(long userId, Book book);
     List<LikeRespDTO> getLikeList(long userId);
 //    void updateLike(long likeId);// 필요한가?
@@ -20,7 +22,7 @@ public interface LikeService {
     List<Like> getBookIsLike(Long userId, List<Book> books);
 
 //    //v2
-//    void addLike(long bookId, long userId);
-//    void deleteLike(long bookId, long likeId, long userId);
-//    List<LikeListRespDTO> getMyLikeList(long userId);
+    void saveLike(Like like);
+    void deleteLike(long bookId, long userId);
+    List<LikeBookListProjection> getMyLikeList(long userId, Pageable pageable);
 }

@@ -128,7 +128,7 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
-    com.zaxxer.hikari: DEBUG  # 히카리 상세 로그 활성화
+#    com.zaxxer.hikari: DEBUG  # 히카리 상세 로그 활성화
 #    com.zaxxer.hikari.HikariConfig: DEBUG
 
 management:
