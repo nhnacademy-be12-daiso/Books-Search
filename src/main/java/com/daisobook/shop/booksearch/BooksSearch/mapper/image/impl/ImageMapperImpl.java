@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.image.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;

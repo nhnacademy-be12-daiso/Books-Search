@@ -7,11 +7,13 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjec
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookInfoListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookSummeryProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
@@ -87,7 +89,7 @@ public class BookMapperImpl implements BookMapper {
     public BookUpdateData toBookUpdateData(BookReqV2DTO req){
         return new BookUpdateData(req.title(), req.index(), req.description(), req.authorReqDTOList(), req.publisher(),
                 req.publicationDate(), req.price(), req.isPackaging(), req.stock(), req.status(), req.volumeNo(), req.categoryId(),
-                req.tagNameList(),req.isDeleted());
+                req.tags().stream().map(TagReqDTO::tagName).toList(),req.isDeleted());
     }
 
     @Override

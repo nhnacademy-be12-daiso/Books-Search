@@ -54,12 +54,8 @@ spring:
         repositories:
           enabled: true # 이 설정은 유지하되 DataConfig에서 범위를 제한함
   ai:
-    openai:
-      api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
-      chat:
-        options:
-          model: gemini
-
+    gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    gemini-api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
 
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST}

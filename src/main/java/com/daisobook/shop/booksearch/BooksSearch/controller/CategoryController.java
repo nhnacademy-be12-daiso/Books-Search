@@ -1,7 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

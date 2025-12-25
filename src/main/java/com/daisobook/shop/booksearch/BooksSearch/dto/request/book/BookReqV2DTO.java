@@ -2,6 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.dto.request.book;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 
 import java.time.LocalDate;
@@ -22,6 +23,6 @@ public record BookReqV2DTO (
         List<ImageMetadataReqDTO> imageMetadataReqDTOList,
         Integer volumeNo,
         Long categoryId,
-        List<String> tagNameList,
+        List<TagReqDTO> tags,
         boolean isDeleted){
 }

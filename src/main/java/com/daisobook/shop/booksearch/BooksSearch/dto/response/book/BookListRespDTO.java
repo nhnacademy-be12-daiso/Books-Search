@@ -1,7 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.response.book;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TagRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;

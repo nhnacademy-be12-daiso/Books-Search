@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.review.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookReviewProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookResponse;

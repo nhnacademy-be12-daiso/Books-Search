@@ -1,6 +1,9 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.category.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryPath;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.category.CategoryMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,10 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Component
@@ -52,5 +52,25 @@ public class CategoryMapperImpl implements CategoryMapper {
             listMap.put(key, categoryRespDTOList);
         }
         return listMap;
+    }
+
+    @Override
+    public CategoryList toCategoryList(Map<Long, CategoryListProjection> categoryListProjectionMap, List<CategoryListProjection> categoryLeafList) {
+        List<CategoryPath> categoryPathList = new ArrayList<>();
+        for(CategoryListProjection c : categoryLeafList){
+            CategoryListProjection current = c;
+            StringBuilder path = new StringBuilder();
+            while (true) {
+                path.insert(0, " > %s:%s".formatted(current.getCategoryId(), current.getCategoryName()));
+                if(current.getPreCategoryId() == null){
+                    break;
+                }
+                current = categoryListProjectionMap.get(current.getPreCategoryId());
+            }
+
+            categoryPathList.add(new CategoryPath(c.getCategoryId(), c.getCategoryName(), path.toString().trim()));
+        }
+
+        return new CategoryList(categoryPathList);
     }
 }

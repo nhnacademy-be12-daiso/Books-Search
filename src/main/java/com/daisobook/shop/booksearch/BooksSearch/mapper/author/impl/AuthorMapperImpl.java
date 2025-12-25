@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.author.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.author.BookAuthor;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.author.AuthorMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;

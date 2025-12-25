@@ -13,10 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public abstract class ImageTemplateServiceImpl implements ImageService {
@@ -115,13 +112,33 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
     public String uploadImageFromUrl(String imageUrl, Long id) {
         try {
             // 1. 외부 이미지 다운로드
-            byte[] imageBytes = webClient.get()
-                    .uri(imageUrl)
-                    .retrieve()
-                    .bodyToMono(byte[].class)
-                    .toFuture().get();
+//            byte[] imageBytes = webClient.get()
+//                    .uri(imageUrl)
+//                    .retrieve()
+//                    .bodyToMono(byte[].class)
+//                    .toFuture().get();
 
-            String fileExtension = getFileExtension(imageUrl);
+            byte[] imageBytes;
+            String fileExtension;
+            if (imageUrl.startsWith("data:image")) {
+                // 1. Base64 데이터인 경우 (직접 디코딩)
+                String[] parts = imageUrl.split(",");
+                String base64Data = parts[1];
+                imageBytes = Base64.getDecoder().decode(base64Data);
+
+                // 확장자 추출 (예: data:image/jpeg;base64 -> .jpeg)
+                fileExtension = "." + parts[0].split("/")[1].split(";")[0];
+            } else {
+                // 2. 실제 URL인 경우 (기존처럼 WebClient 사용)
+                imageBytes = webClient.get()
+                        .uri(imageUrl)
+                        .retrieve()
+                        .bodyToMono(byte[].class)
+                        .toFuture().get();
+                fileExtension = getFileExtension(imageUrl);
+            }
+
+//            String fileExtension = getFileExtension(imageUrl);
             String objectName = String.format("%d/%s%s",
                     id, UUID.randomUUID().toString(), fileExtension);
 

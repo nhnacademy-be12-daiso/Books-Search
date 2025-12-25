@@ -75,12 +75,12 @@ public class BookCoreService {
     public Book registerBook(Book book, Long categoryId, List<String> tagNameList, List<AuthorReqDTO> authorReqDTOList,
                              String publisherName) {
 
+        bookRepository.save(book);
         categoryService.assignCategoriesToBook(book, categoryId);
         tagService.assignTagsToBook(book, tagNameList);
         authorService.assignAuthorsToBook(book, authorReqDTOList);
         publisherService.assignPublisherToBook(book, publisherName);
 
-        bookRepository.save(book);
         log.debug("도서 저장 - ISBN: {}, Title: {}, Author: {}", book.getIsbn(), book.getTitle(),
                 book.getBookAuthors().stream()
                         .map(ba -> ba.getAuthor().getName() + ba.getRole().getName())

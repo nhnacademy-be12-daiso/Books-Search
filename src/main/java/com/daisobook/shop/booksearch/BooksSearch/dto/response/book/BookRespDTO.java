@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.dto.response.book;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 
 import java.math.BigDecimal;

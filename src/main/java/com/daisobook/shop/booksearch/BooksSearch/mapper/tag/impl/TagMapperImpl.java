@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.BooksSearch.mapper.tag.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TagRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.BookTag;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.tag.TagMapper;

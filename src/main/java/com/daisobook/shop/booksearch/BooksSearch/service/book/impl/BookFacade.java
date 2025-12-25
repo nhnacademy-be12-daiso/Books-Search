@@ -6,6 +6,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
@@ -68,7 +69,7 @@ public class BookFacade {
         book = bookCoreService.registerBook(
                 book,
                 bookReqDTO.categoryId(),
-                bookReqDTO.tagNameList(),
+                bookReqDTO.tags().stream().map(TagReqDTO::tagName).toList(),
                 bookReqDTO.authorReqDTOList(),
                 bookReqDTO.publisher()
         );
@@ -100,7 +101,7 @@ public class BookFacade {
 
             bookMap.put(book.getIsbn(), book);
             categoryIdMap.put(book.getIsbn(), br.categoryId());
-            tagNameListMap.put(book.getIsbn(), br.tagNameList());
+            tagNameListMap.put(book.getIsbn(), br.tags().stream().map(TagReqDTO::tagName).toList());
             authorListMap.put(book.getIsbn(), br.authorReqDTOList());
             publisherNameMap.put(book.getIsbn(), br.publisher());
             imageListMap.put(book.getIsbn(), br.imageMetadataReqDTOList());
