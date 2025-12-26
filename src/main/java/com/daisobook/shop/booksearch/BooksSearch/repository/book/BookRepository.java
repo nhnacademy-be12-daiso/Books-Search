@@ -168,6 +168,63 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
 //DATE_FORMAT(r.created_at, '%Y-%m-%dT%H:%i:%s.%f+09:00') - 한국으로 기준
 
     @Query(value = """
+                SELECT DISTINCT
+                    b.book_id as id,
+                    b.isbn,
+                    b.title,
+                    b.indexs as 'index',
+                    b.description,
+                    (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT('authorId', a.author_id, 'authorName', a.author_name, 'roleId', r.role_id, 'roleName', r.role_name)
+                            )
+                        FROM book_authors ba
+                        LEFT JOIN authors a ON ba.author_id = a.author_id
+                        LEFT JOIN roles r ON ba.role_id = r.role_id
+                        WHERE ba.book_id = b.book_id
+                    ) AS authors,
+                    (
+                        SELECT JSON_OBJECT('id', p.publisher_id, 'name', p.publisher_name)
+                        FROM publishers p
+                        WHERE b.publisher_id = p.publisher_id
+                    ) AS publisher,
+                    b.publication_date as publicationDate,
+                    b.price,
+                    b.stock,
+                    b.status,
+                    (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT('no', bi.book_image_no, 'path', bi.book_image_path, 'imageType', bi.image_type)
+                        )
+                        FROM book_images bi
+                        WHERE bi.book_id = b.book_id
+                    ) AS images,
+                    (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT('categoryId', c.category_id, 'categoryName', c.category_name, 'deep', c.deep, 'preCategoryId', pc.category_id, 'preCategoryName', pc.category_name)
+                        )
+                        FROM book_categories bc
+                        LEFT JOIN categories c ON bc.category_id = c.category_id
+                        LEFT JOIN categories pc ON c.pre_category_id = pc.category_id
+                        WHERE bc.book_id = b.book_id
+                    ) AS categories,
+                    (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT('tagId', t.tag_id, 'tagName', t.tag_name)
+                        )
+                        FROM book_tags bt
+                        LEFT JOIN tags t ON bt.tag_id = t.tag_id
+                        WHERE bt.book_id = b.book_id
+                    ) AS tags,
+                    b.volume_no as volumeNO,
+                    b.is_packaging as isPackaging,
+                    FROM books b
+                    LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+                    WHERE b.book_id = :bookId
+                """, nativeQuery = true)
+    BookUpdateViewProjection getBookUpdateView(@Param("bookId") Long bookId);
+
+    @Query(value = """
             SELECT DISTINCT
                 b.book_id as id,
                 b.isbn,

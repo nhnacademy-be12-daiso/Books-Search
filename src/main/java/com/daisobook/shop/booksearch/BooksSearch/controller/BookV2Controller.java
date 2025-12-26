@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.controller;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -81,5 +82,21 @@ public class BookV2Controller {
     public BookRespDTO getBookDetail(@PathVariable("bookId") long bookId,
                                      @RequestHeader(value = "X-User-Id", required = false)Long userId){
         return bookFacade.getBookDetail(bookId, userId);
+    }
+
+    //GET: /api/v2/books/{bookId} 해당 도서 조회
+    @GetMapping("/{bookId}/modify")
+    public BookUpdateView getBookUpdateView(@PathVariable("bookId") long bookId){
+        return bookFacade.getBookUpdateView(bookId);
+    }
+
+    @GetMapping("/isbn-search/{isbn}")
+    public boolean getBookRegisterInfoByIsbn(@PathVariable("isbn") String isbn){
+        return bookFacade.existIsbn(isbn);
+    }
+
+    @PostMapping("/isbn-search/{isbn}")
+    public BookRespDTO postBookRegisterInfoByIsbn(@PathVariable("isbn") String isbn){
+        return null;
     }
 }
