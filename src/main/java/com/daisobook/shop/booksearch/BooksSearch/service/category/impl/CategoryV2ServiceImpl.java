@@ -222,6 +222,7 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         return categoryRepository.count();
     }
 
+    @Transactional
     @Override
     public BookCategoryResponse bookCategory(Long bookId) {
         // 1. 책에 연결된 카테고리 정보 조회
