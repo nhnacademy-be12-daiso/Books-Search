@@ -27,5 +27,6 @@ public record BookListRespDTO(
         List<TagRespDTO> tags,
         Integer volumeNo,
         boolean isPackaging,
-        Boolean isLike){
+        Boolean isLike,
+        boolean isDeleted){
 }

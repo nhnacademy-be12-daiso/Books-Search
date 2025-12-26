@@ -21,4 +21,5 @@ public interface BookUpdateViewProjection {
     String getTags();
     Integer getVolumeNo();
     boolean getIsPackaging();
+    boolean getIsDeleted();
 }

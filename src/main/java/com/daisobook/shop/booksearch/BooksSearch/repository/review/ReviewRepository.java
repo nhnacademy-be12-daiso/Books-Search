@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -40,4 +41,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             """,
             nativeQuery = true)
     List<BookReviewProjection> getBookReviewProjectionList(@Param("userId") long userId, @Param("bookIds") List<Long> bookIds, @Param("orderDetailIds") List<Long> orderDetailIds);
+
+    Long countAllByCreatedAtAfterOrModifiedAtAfter(ZonedDateTime createdAtAfter, ZonedDateTime modifiedAtAfter);
 }

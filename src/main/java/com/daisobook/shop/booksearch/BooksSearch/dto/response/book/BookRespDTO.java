@@ -30,5 +30,6 @@ public record BookRespDTO(
         List<TagRespDTO> tags,
         int likeCount,
         boolean isLike,
-        List<ReviewRespDTO> reviewList){
+        List<ReviewRespDTO> reviewList,
+        boolean isDeleted){
 }

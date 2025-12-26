@@ -12,4 +12,5 @@ public interface CategoryV2Service {
     void updateCategoryOfBook(Book book, Long categoryId);
     void deleteCategoryOfBook(Book book);
     CategoryList getCategoryList();
+    Long getCountAll();
 }

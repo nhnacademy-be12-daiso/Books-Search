@@ -24,4 +24,5 @@ public interface ReviewService {
     void updateReview(long reviewId, ReviewReqDTO reviewReqDTO, Map<String , MultipartFile> fileMap);
     Review findReviewByUserIdAndBookIdAndOrderDetailId(long userId, long bookId, long orderDetailId);
     List<BookReviewResponse> findBookReviewList(Long userId, List<BookOrderDetailRequest> bookOrderDetailRequests);
+    Long getCountByRelease(int day);
 }

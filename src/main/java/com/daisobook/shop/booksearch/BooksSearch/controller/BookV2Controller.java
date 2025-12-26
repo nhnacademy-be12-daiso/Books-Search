@@ -2,12 +2,18 @@ package com.daisobook.shop.booksearch.BooksSearch.controller;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -88,6 +94,16 @@ public class BookV2Controller {
     @GetMapping("/{bookId}/modify")
     public BookUpdateView getBookUpdateView(@PathVariable("bookId") long bookId){
         return bookFacade.getBookUpdateView(bookId);
+    }
+
+    @GetMapping("/admin-book-list")
+    public Page<BookAdminResponseDTO> findAllForAdmin(@PageableDefault(size = 15, sort = "publication_date", direction = Sort.Direction.DESC) Pageable pageable){
+        return bookFacade.findAllForAdmin(pageable);
+    }
+
+    @GetMapping("/admin-total-info")
+    public TotalDataRespDTO getTotalData(){
+        return bookFacade.getTotalDate();
     }
 
     @GetMapping("/isbn-search/{isbn}")
