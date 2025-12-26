@@ -1,25 +1,25 @@
-package com.daisobook.shop.booksearch.BooksSearch.service.book;
-
-import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookOrderDetailRequest;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Map;
-
-public interface BookService {
+//package com.daisobook.shop.booksearch.BooksSearch.service.book;
+//
+//import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.*;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookOrderDetailRequest;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+//import com.fasterxml.jackson.core.JsonProcessingException;
+//import org.springframework.web.multipart.MultipartFile;
+//
+//import java.util.List;
+//import java.util.Map;
+//
+//public interface BookService {
 //    BookGroupReqDTO parsing(BookMetadataReqDTO dto) throws JsonProcessingException;
 //    void validateExistsById(long bookId);
 //    void validateExistsByIsbn(String isbn);
@@ -46,6 +46,6 @@ public interface BookService {
 //    void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap);
 //    //다른 서비스에서 사용하는 메서드
 //    Book getBookById(long bookId);
-
-    BookCategoryResponse bookcategory(long bookId);
-}
+//
+//    BookCategoryResponse bookcategory(long bookId);
+//}
