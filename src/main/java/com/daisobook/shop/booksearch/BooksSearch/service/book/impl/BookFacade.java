@@ -12,6 +12,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
@@ -20,6 +21,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.BookListTypeNull;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
@@ -216,6 +218,32 @@ public class BookFacade {
     }
 
     @Transactional(readOnly = true)
+    public BookUpdateView getBookUpdateView(long bookId){
+//        BookUpdateViewProjection detail = bookCoreService.getBookUpdateView_Id(bookId);
+//
+//        Integer likeCount = likeService.likeCount(detail.getId());
+//        Boolean likeCheck = likeService.likeCheck(detail.getId(), userId);
+//        Long discountPrice = null;
+//        try {
+//            discountPrice = discountPolicyService.getDiscountPrice(detail);
+//        } catch (JsonProcessingException e) {
+//            log.error("[도서 상세] 할인 정책 매핑을 실패했습니다");
+//            throw new FailObjectMapper(e.getMessage());
+//        }
+//
+//        BookRespDTO bookRespDTO = null;
+//        try {
+//            bookRespDTO = bookMapper.toBookRespDTO(detail, likeCount, likeCheck, discountPrice);
+//        } catch (JsonProcessingException e) {
+//            log.error("[도서 상세] 도서 매핑을 실패했습니다");
+//            throw new FailObjectMapper(e.getMessage());
+//        }
+//
+//        return bookRespDTO;
+        return null;
+    }
+
+    @Transactional(readOnly = true)
     public SortBookListRespDTO getBookList(BookListType listType, Long userId){
         if(listType == null){
             log.error("[도서 목록] book list type가 null입니다");
@@ -281,7 +309,7 @@ public class BookFacade {
         try {
             discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
         } catch (JsonProcessingException e) {
-            log.error("[도서 목록] 할인 정책 매핑을 실패했습니다");
+            log.error("[주문:도서 목록] 할인 정책 매핑을 실패했습니다");
             throw new FailObjectMapper(e.getMessage());
         }
         if(discountPriceMap == null){
@@ -296,6 +324,21 @@ public class BookFacade {
         List<BookSummeryProjection> bookSummeryProjections = bookCoreService.getBookSummeryByIds(bookIds);
 
         return bookMapper.toOrderBookSummeryDTOList(bookSummeryProjections);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existIsbn(String isbn){
+        Boolean existed = bookCoreService.existIsbn(isbn);
+        if(existed == null){
+            log.error("[도서 isbn 유무] 해당 도서 유무에 대한 판단 불가 - isbn:{}", isbn);
+            throw new NotFoundBookISBN("[도서 isbn 유무] 해당 도서 유무에 대한 판단 불가");
+        }
+
+        return existed;
+    }
+
+    public BookRespDTO getBookFromOpenApi(String isbn){
+        return null;
     }
 
 }

@@ -223,6 +223,17 @@ public class BookCoreService {
     }
 
     @Transactional(readOnly = true)
+    public BookUpdateViewProjection getBookUpdateView_Id(long bookId){
+        BookUpdateViewProjection updateView = bookRepository.getBookUpdateView(bookId);
+        if(updateView == null){
+            log.error("[수정 도서 조회] 해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
+            return null;
+        }
+
+        return updateView;
+    }
+
+    @Transactional(readOnly = true)
     public List<Long> getBookIdsFromBookOfTheWeek(Integer limit){
         if(limit == null) {
             limit = 10;
@@ -271,5 +282,10 @@ public class BookCoreService {
     @Transactional
     public List<Book> getBookByIdIn(List<Long> bookIds){
         return bookRepository.findAllByIdIn(bookIds);
+    }
+
+    @Transactional
+    public Boolean existIsbn(String isbn){
+        return bookRepository.existsBookByIsbn(isbn);
     }
 }
