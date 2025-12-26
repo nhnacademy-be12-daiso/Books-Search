@@ -22,4 +22,5 @@ public interface BookDetailProjection {
     Integer getVolumeNo();
     boolean getIsPackaging();
     String getReviews();
+    boolean getIsDeleted();
 }

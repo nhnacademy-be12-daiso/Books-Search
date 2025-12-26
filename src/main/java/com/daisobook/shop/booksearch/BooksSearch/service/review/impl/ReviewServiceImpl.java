@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -264,6 +265,12 @@ public class ReviewServiceImpl implements ReviewService {
             log.error("[리뷰 리스트] 리뷰 리스트 매핑을 실패");
             throw new FailObjectMapper(e.getMessage());
         }
+    }
+
+    @Override
+    public Long getCountByRelease(int day) {
+        ZonedDateTime dateTime = ZonedDateTime.now().minusDays(day);
+        return reviewRepository.countAllByCreatedAtAfterOrModifiedAtAfter(dateTime, dateTime);
     }
 
 

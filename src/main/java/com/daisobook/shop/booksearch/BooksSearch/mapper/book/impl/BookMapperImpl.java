@@ -3,16 +3,15 @@ package com.daisobook.shop.booksearch.BooksSearch.mapper.book.impl;
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookInfoListProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookSummeryProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.*;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
@@ -28,6 +27,7 @@ import com.daisobook.shop.booksearch.BooksSearch.mapper.tag.TagMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -130,7 +130,7 @@ public class BookMapperImpl implements BookMapper {
                 authorRespDTOS, publisherRespDTO.name(), bookDetail.getPublicationDate(), bookDetail.getPrice(),
                 Objects.requireNonNull(i).setScale(2, RoundingMode.DOWN), discountPrice, bookDetail.getIsPackaging(),
                 bookDetail.getStock(), bookDetail.getStatus(), imageRespDTOS, bookDetail.getVolumeNo(), categoryRespDTOS,
-                tagRespDTOS, likeCount, likeCheck, reviews);
+                tagRespDTOS, likeCount, likeCheck, reviews, bookDetail.getIsDeleted());
     }
 
     @Override
@@ -142,7 +142,7 @@ public class BookMapperImpl implements BookMapper {
                                 discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPercentage() : null,
                                 discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPrice() : null, bl.getStatus(),
                                 bl.getImageList(), bl.getCategoryList(), bl.getTagList(), bl.getVolumeNo(), bl.getIsPackaging(),
-                                likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null))
+                                likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null, bl.isDeleted()))
                 .toList();
     }
 
@@ -188,7 +188,7 @@ public class BookMapperImpl implements BookMapper {
                                 imageKeySet.contains(bl.getId()) ? imageRespDTOMap.get(bl.getId()) : null,
                                 categoryKeySet.contains(bl.getId()) ? categoryRespDTOMap.get(bl.getId()) : null,
                                 tagKeySet.contains(bl.getId()) ? tagRespDTOMap.get(bl.getId()) : null,
-                                bl.getVolumeNo(), bl.getIsPackaging())));
+                                bl.getVolumeNo(), bl.getIsPackaging(), bl.getIsDeleted())));
     }
 
     @Override
@@ -206,10 +206,46 @@ public class BookMapperImpl implements BookMapper {
     }
 
     @Override
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMap(Page<BookAdminProjection> bookAdminProjectionPage) {
+        return bookAdminProjectionPage.stream()
+                .map(ba -> new DiscountDTO.Request(ba.getBookId(), ba.getPrice()))
+                .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
+    }
+
+    @Override
     public List<OrderBookSummeryDTO> toOrderBookSummeryDTOList(List<BookSummeryProjection> bookSummeryProjections) {
         return bookSummeryProjections.stream()
                 .map(bp ->
                         new OrderBookSummeryDTO(bp.getBookId(), bp.getTitle(), bp.getPrice()))
                 .toList();
+    }
+
+    @Override
+    public BookUpdateView toBookUpdateView(BookUpdateViewProjection detail) throws JsonProcessingException {
+        List<CategoryRespDTO> categoryRespDTOS = categoryMapper.toCategoryRespDTOList(detail.getCategories());
+        List<TagRespDTO> tagRespDTOS = tagMapper.toTagRespDTOList(detail.getTags());
+        List<ImageRespDTO> imageRespDTOS = imageMapper.toImageRespDTOList(detail.getImages());
+        List<AuthorRespDTO> authorRespDTOS = authorMapper.toAuthorRespDTOList(detail.getAuthors());
+        PublisherRespDTO publisherRespDTO = publisherMapper.toPublisherRespDTO(detail.getPublisher());
+
+        return new BookUpdateView(detail.getId(), detail.getIsbn(), detail.getTitle(), detail.getIndex(),
+                detail.getDescription(), authorRespDTOS, publisherRespDTO.name(), detail.getPublicationDate(),
+                detail.getPrice(), detail.getIsPackaging(), detail.getStock(), detail.getStatus(), imageRespDTOS,
+                detail.getVolumeNo(), categoryRespDTOS, tagRespDTOS, detail.getIsDeleted());
+    }
+
+    @Override
+    public Page<BookAdminResponseDTO> toBookAdminResopnseDTOPage(Page<BookAdminProjection> adminProjectionPage, Map<Long, DiscountDTO.Response> discountPriceMap) throws JsonProcessingException {
+        Map<Long, List<ImageRespDTO>> imageRespDTOMap = imageMapper.toIageRespDTOMap(adminProjectionPage.stream()
+                .filter(ap -> ap.getImages() != null)
+                .collect(Collectors.toMap(BookAdminProjection::getBookId, BookAdminProjection::getImages)));
+
+        return adminProjectionPage
+                .map(ap ->
+                        new BookAdminResponseDTO(ap.getBookId(), ap.getIsbn(), ap.getTitle(),
+                                imageRespDTOMap.getOrDefault(ap.getBookId(), null), ap.getPrice(),
+                                discountPriceMap.containsKey(ap.getBookId()) ? discountPriceMap.get(ap.getBookId()).discountPercentage() : null,
+                                discountPriceMap.containsKey(ap.getBookId()) ? discountPriceMap.get(ap.getBookId()).discountPrice() : null,
+                                ap.getStock(), ap.getStatus(), ap.getPublicationDate(), ap.getPublisher(), ap.getIsDeleted()));
     }
 }

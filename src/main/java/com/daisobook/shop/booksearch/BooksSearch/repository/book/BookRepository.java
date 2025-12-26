@@ -2,7 +2,9 @@ package com.daisobook.shop.booksearch.BooksSearch.repository.book;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -154,7 +156,8 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                         )
                         FROM reviews r
                         WHERE r.book_id = b.book_id
-                    ) AS reviews
+                    ) AS reviews,
+                    b.is_deleted as isDeleted
                     FROM books b
                     LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
                     WHERE b.book_id = :bookId
@@ -218,6 +221,7 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                     ) AS tags,
                     b.volume_no as volumeNO,
                     b.is_packaging as isPackaging,
+                    b.is_deleted as isDeleted
                     FROM books b
                     LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
                     WHERE b.book_id = :bookId
@@ -272,7 +276,8 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                   WHERE bt.book_id = b.book_id
                 ) AS tags,
                 b.volume_no as volumeNO,
-                b.is_packaging as isPackaging
+                b.is_packaging as isPackaging,
+                b.is_deleted as isDeleted
                 FROM books b
                 LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
                 WHERE b.book_id IN (:bookIds)
@@ -331,4 +336,31 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
             """,
             nativeQuery = true)
     List<BookSummeryProjection> getBookSummeryByIdIn(@Param("bookIds") List<Long> bookIds);
+
+    @Query(value = """
+            SELECT
+                b.book_id as bookId,
+                b.isbn,
+                b.title,
+                (
+                  SELECT JSON_ARRAYAGG(
+                     JSON_OBJECT('no', bi.book_image_no, 'path', bi.book_image_path, 'imageType', bi.image_type)
+                  )
+                  FROM book_images bi
+                  WHERE bi.book_id = b.book_id
+                ) AS images,
+                b.price,
+                b.stock,
+                b.status,
+                b.publication_date as publicationDate,
+                p.publisher_name as publisher,
+                b.is_deleted as isDeleted
+            FROM books b
+            JOIN publishers p ON b.publisher_id = p.publisher_id
+            """,
+            countQuery = "SELECT count(*) FROM books",
+            nativeQuery = true)
+    Page<BookAdminProjection> getBookAdminProjection(Pageable pageable);
+
+    Long countAllByStatus(Status status);
 }

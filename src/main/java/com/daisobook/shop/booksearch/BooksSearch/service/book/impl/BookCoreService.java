@@ -4,6 +4,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
@@ -18,16 +19,14 @@ import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.daisobook.shop.booksearch.BooksSearch.service.tag.TagV2Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -134,11 +133,11 @@ public class BookCoreService {
             book.setTitle(updateCheckDTO.title());
         }
         if(updateCheckDTO.index() != null &&
-                !book.getIndex().equals(updateCheckDTO.index())){
+                !Objects.equals(book.getIndex(), updateCheckDTO.index())){
             book.setIndex(updateCheckDTO.index());
         }
         if(updateCheckDTO.description() != null &&
-                !book.getDescription().equals(updateCheckDTO.description())){
+                !Objects.equals(book.getDescription(), updateCheckDTO.description())){
             book.setDescription(updateCheckDTO.description());
         }
         if(updateCheckDTO.publicationDate() != null &&
@@ -162,7 +161,7 @@ public class BookCoreService {
             book.setStatus(updateCheckDTO.status());
         }
         if(updateCheckDTO.volumeNo() != null &&
-                !book.getVolumeNo().equals(updateCheckDTO.volumeNo())){
+                !Objects.equals(book.getVolumeNo(), updateCheckDTO.volumeNo())){
             book.setVolumeNo(updateCheckDTO.volumeNo());
         }
         if(updateCheckDTO.isDeleted() != null &&
@@ -287,5 +286,20 @@ public class BookCoreService {
     @Transactional
     public Boolean existIsbn(String isbn){
         return bookRepository.existsBookByIsbn(isbn);
+    }
+
+    @Transactional
+    public Page<BookAdminProjection> getBookAdminProjectionPage(Pageable pageable){
+        return bookRepository.getBookAdminProjection(pageable);
+    }
+
+    @Transactional
+    public Long getCountAll(){
+        return bookRepository.count();
+    }
+
+    @Transactional
+    public Long getCountByStatus(Status status){
+        return bookRepository.countAllByStatus(status);
     }
 }

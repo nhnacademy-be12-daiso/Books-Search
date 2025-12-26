@@ -25,5 +25,6 @@ public record BookUpdateView (
         List<ImageRespDTO> imageList,
         Integer volumeNo,
         List<CategoryRespDTO> categories,
-        List<TagRespDTO> tags) {
+        List<TagRespDTO> tags,
+        boolean isDeleted) {
 }

@@ -33,4 +33,5 @@ public class BookListData {
     private List<TagRespDTO> tagList;
     private Integer volumeNo;
     private Boolean isPackaging;
+    private boolean isDeleted;
 }

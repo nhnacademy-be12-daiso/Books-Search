@@ -63,8 +63,11 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
     @Transactional
     @Override
-    public Long getDiscountPrice(BookDetailProjection bookDetail) throws JsonProcessingException {
-        List<DiscountValueListData> discountPolicyList = getDiscountPolicyByData(bookDetail.getId());
+    public Long getDiscountPrice(long bookId, Long price) throws JsonProcessingException {
+        if(price == null){
+            return null;
+        }
+        List<DiscountValueListData> discountPolicyList = getDiscountPolicyByData(bookId);
 
         if(discountPolicyList == null || discountPolicyList.isEmpty()){
             return null;
@@ -80,11 +83,6 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
             }
         }
 
-        Long price = bookDetail.getPrice();
-        if(price == null){
-            log.warn("[상세 도서] 해당 도서의 가격이 존재하지 않습니다 - bookId:{}", bookDetail.getId());
-            return null;
-        }
         if(discountPercentage > 0){
             price = (long) (price * (1 - discountPercentage / 100.0));
         }

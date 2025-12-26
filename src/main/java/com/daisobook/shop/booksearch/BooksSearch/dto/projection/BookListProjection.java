@@ -19,4 +19,5 @@ public interface BookListProjection {
     String getTags();
     Integer getVolumeNo();
     boolean getIsPackaging();
+    boolean getIsDeleted();
 }

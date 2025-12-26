@@ -10,16 +10,18 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
@@ -27,12 +29,16 @@ import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.BookListT
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
+import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
 import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;
+import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +55,8 @@ public class BookFacade {
     private final BookImageServiceImpl imageService;
     private final LikeService likeService;
     private final DiscountPolicyService discountPolicyService;
+    private final ReviewService reviewService;
+    private final CategoryV2Service categoryService;
 
     private final BookMapper bookMapper;
     private final ImageMapper imageMapper;
@@ -200,7 +208,7 @@ public class BookFacade {
         Boolean likeCheck = likeService.likeCheck(detail.getId(), userId);
         Long discountPrice = null;
         try {
-            discountPrice = discountPolicyService.getDiscountPrice(detail);
+            discountPrice = discountPolicyService.getDiscountPrice(detail.getId(), detail.getPrice());
         } catch (JsonProcessingException e) {
             log.error("[도서 상세] 할인 정책 매핑을 실패했습니다");
             throw new FailObjectMapper(e.getMessage());
@@ -219,28 +227,17 @@ public class BookFacade {
 
     @Transactional(readOnly = true)
     public BookUpdateView getBookUpdateView(long bookId){
-//        BookUpdateViewProjection detail = bookCoreService.getBookUpdateView_Id(bookId);
-//
-//        Integer likeCount = likeService.likeCount(detail.getId());
-//        Boolean likeCheck = likeService.likeCheck(detail.getId(), userId);
-//        Long discountPrice = null;
-//        try {
-//            discountPrice = discountPolicyService.getDiscountPrice(detail);
-//        } catch (JsonProcessingException e) {
-//            log.error("[도서 상세] 할인 정책 매핑을 실패했습니다");
-//            throw new FailObjectMapper(e.getMessage());
-//        }
-//
-//        BookRespDTO bookRespDTO = null;
-//        try {
-//            bookRespDTO = bookMapper.toBookRespDTO(detail, likeCount, likeCheck, discountPrice);
-//        } catch (JsonProcessingException e) {
-//            log.error("[도서 상세] 도서 매핑을 실패했습니다");
-//            throw new FailObjectMapper(e.getMessage());
-//        }
-//
-//        return bookRespDTO;
-        return null;
+        BookUpdateViewProjection detail = bookCoreService.getBookUpdateView_Id(bookId);
+
+        BookUpdateView bookUpdateView = null;
+        try {
+            bookUpdateView = bookMapper.toBookUpdateView(detail);
+        } catch (JsonProcessingException e) {
+            log.error("[도서 수정 조회] 도서 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
+
+        return bookUpdateView;
     }
 
     @Transactional(readOnly = true)
@@ -335,6 +332,42 @@ public class BookFacade {
         }
 
         return existed;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BookAdminResponseDTO> findAllForAdmin(Pageable pageable){
+        Page<BookAdminProjection> adminProjectionPage = bookCoreService.getBookAdminProjectionPage(pageable);
+
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMap(adminProjectionPage);
+        Map<Long, DiscountDTO.Response> discountPriceMap = null;
+        try {
+            discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
+        } catch (JsonProcessingException e) {
+            log.error("[도서 관리 목록] 할인 정책 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
+        if(discountPriceMap == null){
+            return null;
+        }
+
+        Page<BookAdminResponseDTO> page = null;
+        try {
+            page = bookMapper.toBookAdminResopnseDTOPage(adminProjectionPage, discountPriceMap);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        return page;
+    }
+
+    @Transactional(readOnly = true)
+    public TotalDataRespDTO getTotalDate(){
+        Long countBook = bookCoreService.getCountAll();
+        Long countByStatus = bookCoreService.getCountByStatus(Status.SOLD_OUT);
+        Long countByRelease = reviewService.getCountByRelease(7);
+        Long countCategory = categoryService.getCountAll();
+
+        return new TotalDataRespDTO(countBook, countByStatus, countByRelease, countCategory);
     }
 
     public BookRespDTO getBookFromOpenApi(String isbn){

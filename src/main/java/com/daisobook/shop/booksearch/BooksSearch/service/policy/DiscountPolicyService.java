@@ -12,7 +12,7 @@ import java.util.Map;
 public interface DiscountPolicyService {
     List<DiscountValueProjection> getDiscountValueByBookIdOrCategoryIdsOrPublisherId(List<Long> categoryIds, Long publisherId, Long bookId);
     List<DiscountValueListData> getDiscountPolicyByData(Long bookId) throws JsonProcessingException;
-    Long getDiscountPrice(BookDetailProjection bookDetail) throws JsonProcessingException;
+    Long getDiscountPrice(long bookId, Long price) throws JsonProcessingException;
     Map<Long, List<DiscountValueListData>> getDiscountPolicyByDataMap(List<Long> bookIds) throws JsonProcessingException;
     Map<Long, DiscountDTO.Response> getDiscountPriceMap(Map<Long, DiscountDTO.Request> discountDTORequestMap) throws JsonProcessingException;
 }

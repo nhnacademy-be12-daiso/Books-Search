@@ -215,4 +215,9 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
 
         return categoryList;
     }
+
+    @Override
+    public Long getCountAll() {
+        return categoryRepository.count();
+    }
 }
