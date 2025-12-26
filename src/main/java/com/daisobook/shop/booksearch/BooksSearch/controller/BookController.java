@@ -1,39 +1,39 @@
-//package com.daisobook.shop.booksearch.BooksSearch.controller;
-//
-//import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
-//import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
-//import com.fasterxml.jackson.core.JsonProcessingException;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.http.MediaType;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//
-//@RestController
-//@RequiredArgsConstructor
-//@RequestMapping("/api/books")
-//public class BookController {
-//
-//    private final BookService bookService;
-//
-////    @PostMapping
-////    public ResponseEntity addBook(@RequestBody BookReqDTO bookReqDTO){
-//////        bookService.registerBook(bookReqDTO);
-////        return ResponseEntity.ok().build();
-////    }
-//
+package com.daisobook.shop.booksearch.BooksSearch.controller;
+
+import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookMetadataReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.DeleteBookReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.HomeBookListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/books")
+public class BookController {
+
+    private final BookService bookService;
+
+//    @PostMapping
+//    public ResponseEntity addBook(@RequestBody BookReqDTO bookReqDTO){
+////        bookService.registerBook(bookReqDTO);
+//        return ResponseEntity.ok().build();
+//    }
+
 //    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 //    public ResponseEntity addBook(@RequestPart BookMetadataReqDTO bookMetadataReqDTO) throws JsonProcessingException {
 //        BookGroupReqDTO bookGroupReqDTO = bookService.parsing(bookMetadataReqDTO);
@@ -110,15 +110,15 @@
 //        bookService.deleteBook(deleteBookReqDTO);
 //        return ResponseEntity.ok().build();
 //    }
-//
-//    @GetMapping("{bookId}/category")
-//    public BookCategoryResponse getBookCategory(@PathVariable Long bookId){
-//        return bookService.bookcategory(bookId);
-//
-//    }
-//
+
+    @GetMapping("{bookId}/category")
+    public BookCategoryResponse getBookCategory(@PathVariable Long bookId){
+        return bookService.bookcategory(bookId);
+
+    }
+
 //    @PostMapping("/order-service/books")
 //    public OrderBooksInfoRespDTO getOrderBookInfoList(@RequestBody BookIdListReqDTO bookIdListReqDTO){
 //        return bookService.findBooksByIdIn(bookIdListReqDTO.bookIdList());
 //    }
-//}
+}
