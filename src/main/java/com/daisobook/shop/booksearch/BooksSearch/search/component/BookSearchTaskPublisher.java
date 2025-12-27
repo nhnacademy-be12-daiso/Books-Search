@@ -49,7 +49,9 @@ public class BookSearchTaskPublisher {
                                 book.getPubDate(),
                                 book.getPrice(),
                                 book.getCategories(),
-                                book.getImageUrl()
+                                book.getImageUrl(),
+                                book.getPublisherId(),
+                                book.getCategoryId()
                         ),
                         System.currentTimeMillis(),
                         reason

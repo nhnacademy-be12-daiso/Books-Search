@@ -10,6 +10,7 @@ import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundB
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
 import com.daisobook.shop.booksearch.BooksSearch.repository.BookOfTheWeekRepository;
 import com.daisobook.shop.booksearch.BooksSearch.repository.book.BookRepository;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.BookSearchSyncPublisher;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
@@ -45,6 +46,7 @@ public class BookCoreService {
     private final BookImageServiceImpl imageService;
 
     private final BookOfTheWeekRepository bookOfTheWeekRepository;
+    private final BookSearchSyncPublisher bookSearchSyncPublisher;
 
     @Transactional(readOnly = true)
     public void validateExistsById(long bookId) {
@@ -167,6 +169,8 @@ public class BookCoreService {
         if(updateCheckDTO.isDeleted() != null &&
                 book.isDeleted() != updateCheckDTO.isDeleted()){
             book.setDeleted(updateCheckDTO.isDeleted());
+            bookSearchSyncPublisher.publishDeleteAfterCommit(book.getIsbn(), "BOOK_DELETE");
+
         }
 
         //book엔티티와 관련된 엔티티 체크
