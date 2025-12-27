@@ -29,6 +29,7 @@ import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.BookListT
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
+import com.daisobook.shop.booksearch.BooksSearch.search.component.BookSearchSyncPublisher;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
@@ -41,6 +42,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -60,6 +63,7 @@ public class BookFacade {
 
     private final BookMapper bookMapper;
     private final ImageMapper imageMapper;
+    private final BookSearchSyncPublisher bookSearchSyncPublisher;
 
     public BookGroupReqV2DTO parsing(String metadataJson, MultipartFile image0, MultipartFile image1,
                                      MultipartFile image2, MultipartFile image3, MultipartFile image4) throws JsonProcessingException {
@@ -86,6 +90,8 @@ public class BookFacade {
 
         ImagesReqDTO imagesReqDTO = imageMapper.createImagesReqDTO(book.getId(), bookReqDTO.imageMetadataReqDTOList());
         imageService.addBookImage(book, imagesReqDTO, fileMap);
+
+        bookSearchSyncPublisher.publishUpsertAfterCommit(book, "BOOK_REGISTER");
     }
 
     @Transactional
@@ -171,6 +177,8 @@ public class BookFacade {
                 imageCheck = true;
                 break;
             }
+
+            bookSearchSyncPublisher.publishUpsertAfterCommit(book, "BOOK_UPDATE");
         }
 
         if(imageCheck){
@@ -189,9 +197,13 @@ public class BookFacade {
 
         book = bookCoreService.deleteBookByData(book);
 
+        String isbn=book.getIsbn();
+
         imageService.deleteBookImageOfBook(book);
 
         bookCoreService.deleteBook(book);
+
+        bookSearchSyncPublisher.publishDeleteAfterCommit(isbn, "BOOK_DELETE");
     }
 
     @Transactional

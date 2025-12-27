@@ -53,6 +53,10 @@ public class RabbitBook {
     @JsonProperty("image_url")
     private String imageUrl;
 
+    private Long publisherId;
+
+    private Long categoryId;
+
 
     public RabbitBook(Integer id,String isbn, String title, String author, String publisher,
                       String description, List<String> categories, LocalDate pubDate,
