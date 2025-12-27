@@ -101,7 +101,7 @@ app:
     size: 1000
   ai:
     gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
-    gemini-api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
+    gemini-api-key: AIzaSyCAoVKNQt33ADPHpif2SFvKIO6qHiUtZbo
 
 eureka:
   instance:
