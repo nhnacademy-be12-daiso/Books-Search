@@ -217,7 +217,7 @@
 //                .collect(Collectors.toMap(Author::getName, author -> author));
 //
 //        Map<String, Role> roleMap = authorService.findRolesByNameIn(authorReqDTOs.stream()
-//                        .map(AuthorReqDTO::roleName)
+//                        .map(AuthorReqDTO::roleNames)
 //                        .toList()).stream()
 //                .collect(Collectors.toMap(Role::getName, role -> role));
 //
@@ -227,7 +227,7 @@
 //                author = new Author(a.authorName());
 //            }
 //
-//            Role role = roleMap.get(a.roleName());
+//            Role role = roleMap.get(a.roleNames());
 //
 //            BookAuthor newBookAuthor = new BookAuthor(book, author);
 //            book.getBookAuthors().add(newBookAuthor);
@@ -648,7 +648,7 @@
 //                ));
 //
 //        for (AuthorReqDTO a : bookReqDTO.authorReqDTOList()) {
-//            Role role = authorService.findRoleByName(a.roleName());
+//            Role role = authorService.findRoleByName(a.roleNames());
 //
 //            BookAuthor existingBookAuthor = existingBookAuthorMap.get(a.authorName());
 //

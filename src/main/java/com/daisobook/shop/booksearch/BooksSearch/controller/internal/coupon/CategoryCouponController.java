@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.controller.coupon;
+package com.daisobook.shop.booksearch.BooksSearch.controller.internal.coupon;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.coupon.CategorySimpleResponse;

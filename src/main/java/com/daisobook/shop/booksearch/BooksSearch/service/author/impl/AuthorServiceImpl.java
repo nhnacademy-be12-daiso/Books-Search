@@ -41,8 +41,8 @@
 //    @Transactional
 //    @Override
 //    public void registerRole(AuthorReqDTO authorReqDTO){
-//        if(roleRepository.existsRoleByName(authorReqDTO.roleName())){
-//            log.error("이미 존재하는 명칭입니다 - roleName:{}", authorReqDTO.roleName());
+//        if(roleRepository.existsRoleByName(authorReqDTO.roleNames())){
+//            log.error("이미 존재하는 명칭입니다 - roleNames:{}", authorReqDTO.roleNames());
 //            throw new DuplicatedRole("이미 존재하는 명칭입니다");
 //        }
 //
@@ -59,8 +59,8 @@
 //                .collect(Collectors.toSet());
 //
 //        for(AuthorReqDTO a: authorReqDTOList){
-//            if(roleNameMap.contains(a.roleName())){
-//                log.error("이미 존재하는 명칭 등록 시도 - 명칭:{}", a.roleName());
+//            if(roleNameMap.contains(a.roleNames())){
+//                log.error("이미 존재하는 명칭 등록 시도 - 명칭:{}", a.roleNames());
 //                continue;
 //            }
 //
@@ -94,12 +94,12 @@
 //            throw new NotFoundRole("해당 아이디를 가진 명칭를 찾지 못 했습니다");
 //        }
 //
-//        if(roleRepository.existsRoleByName(authorReqDTO.roleName())){
-//            log.error("변경할 명칭이 이미 존재하는 명칭입니다 - roleName:{}", authorReqDTO.roleName());
+//        if(roleRepository.existsRoleByName(authorReqDTO.roleNames())){
+//            log.error("변경할 명칭이 이미 존재하는 명칭입니다 - roleNames:{}", authorReqDTO.roleNames());
 //            throw new CannotChangedRole("변경할 이름이 이미 존재하는 이름입니다");
 //        }
 //
-//        role.setName(authorReqDTO.roleName());
+//        role.setName(authorReqDTO.roleNames());
 //    }
 //
 //    @Transactional

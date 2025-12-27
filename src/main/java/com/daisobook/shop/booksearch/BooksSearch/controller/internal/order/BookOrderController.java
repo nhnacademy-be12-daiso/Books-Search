@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.controller.order;
+package com.daisobook.shop.booksearch.BooksSearch.controller.internal.order;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
