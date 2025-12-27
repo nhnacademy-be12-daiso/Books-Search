@@ -1,2 +1,92 @@
-### 기본 검색
-GET http://localhost:8088/api/books/search?query=C언어 기초
+### =========================
+### 환경 변수 (여기만 바꿔서 사용)
+### =========================
+@baseUrl = http://localhost:8088
+@isbn = 9799999999999
+@bookId = 6372511
+
+### =========================
+### 1) CREATE - 도서 등록 (POST /api/v2/books)
+### =========================
+POST {{baseUrl}}/api/v2/books
+Content-Type: multipart/form-data; boundary=BOUNDARY
+
+--BOUNDARY
+Content-Disposition: form-data; name="metadata"
+Content-Type: application/json; charset=UTF-8
+
+{
+  "isbn": "{{isbn}}",
+  "title": "ES Sync Test Book",
+  "description": "등록 테스트 - 북쪽 → MQ → Worker → ES",
+  "publisher": "테스트출판사",
+  "publicationDate": "2025-12-26",
+  "price": 15000,
+  "stock": 10,
+  "status": "AVAILABLE",
+  "categoryId": 123,
+  "tags": [
+    { "tagName": "sync-test" },
+    { "tagName": "create" }
+  ],
+  "authorReqDTOList": [
+    { "authorName": "테스트저자", "roleName": "지은이" }
+  ],
+  "imageMetadataReqDTOList": []
+}
+--BOUNDARY--
+
+
+### =========================
+### 2) (선택) READ - 도서 상세 조회 (GET /api/v2/books/{bookId})
+### bookId를 MySQL에서 확인 후 실행
+### =========================
+GET {{baseUrl}}/api/v2/books/{{bookId}}
+X-User-Id: 1
+
+
+### =========================
+### 3) UPDATE - 도서 수정 (PATCH /api/v2/books/{bookId})
+### bookId를 MySQL에서 확인 후 실행
+### =========================
+PATCH {{baseUrl}}/api/v2/books/{{bookId}}
+Content-Type: multipart/form-data; boundary=BOUNDARY
+
+--BOUNDARY
+Content-Disposition: form-data; name="metadata"
+Content-Type: application/json; charset=UTF-8
+
+{
+  "isbn": "{{isbn}}",
+  "title": "ES Sync Test Book - UPDATED",
+  "description": "수정 테스트 - 북쪽 → MQ → Worker → ES",
+  "publisher": "테스트출판사",
+  "publicationDate": "2025-12-26",
+  "price": 15500,
+  "stock": 9,
+  "status": "AVAILABLE",
+  "categoryId": 134,
+  "tags": [
+    { "tagName": "sync-test" },
+    { "tagName": "update" }
+  ],
+  "authorReqDTOList": [
+    { "authorName": "테스트저자", "roleName": "지은이" }
+  ],
+  "imageMetadataReqDTOList": []
+}
+--BOUNDARY--
+
+
+### =========================
+### 4) DELETE - 도서 삭제 (DELETE /api/v2/books/{bookId})
+### bookId를 MySQL에서 확인 후 실행
+### =========================
+DELETE {{baseUrl}}/api/v2/books/{{bookId}}
+
+
+### =========================
+### 5) DELETE (대안) - isbn으로 삭제 (DELETE /api/v2/books/isbn/{isbn})
+### bookId 확인이 귀찮으면 이걸로 삭제 가능
+### =========================
+# DELETE {{baseUrl}}/api/v2/books/isbn/{{isbn}}
