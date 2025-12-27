@@ -80,6 +80,9 @@ public class SagaHandler {
                 }
 
                 book.setStock(stock - n);
+                if(book.getStock() == 0){
+                    book.setStatus(Status.SOLD_OUT);
+                }
             }
 
             log.error("[Book API] 재고 차감 성공 - Order : {}", event.getOrderId());
@@ -142,6 +145,9 @@ public class SagaHandler {
                 Book book = books.get(bookId);
 
                 book.setStock(book.getStock() + n);
+                if(book.getStatus().equals(Status.SOLD_OUT)){
+                    book.setStatus(Status.ON_SALE);
+                }
             }
 
             log.error("[Book API] 재고 보상 성공 - Order : {}", event.getOrderId());

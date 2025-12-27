@@ -47,9 +47,6 @@ spring:
       elasticsearch:
         repositories:
           enabled: true # 이 설정은 유지하되 DataConfig에서 범위를 제한함
-  ai:
-    gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
-    gemini-api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
 
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST}
@@ -66,6 +63,9 @@ spring:
           initial-interval: 1000ms
           multiplier: 2.0
 
+aladin:
+  ttb-key: "ttbhoban01031805001"
+  api-url: "http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx"
 
 rabbitmq:
   exchange:
@@ -99,6 +99,9 @@ rabbitmq:
 app:
   batch:
     size: 1000
+  ai:
+    gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    gemini-api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
 
 eureka:
   instance:

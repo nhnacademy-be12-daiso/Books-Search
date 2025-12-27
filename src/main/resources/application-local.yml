@@ -49,12 +49,21 @@ spring:
           multiplier: 2.0
     virtual-host: /team3_dev
 
+aladin:
+  ttb-key: "ttbhoban01031805001"
+  api-url: "http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx"
+
 rabbitmq:
   queue:
     book: team3.saga.book.queue.v2.dev
   routing:
     confirmed: order.confirmed.v2.dev
     deducted: inventory.deducted.dev
+
+app:
+  ai:
+    gemini-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    gemini-api-key: AIzaSyAmSu5Ur0hOJoD6BJQycni8x9-m614vZ3k
 
 eureka:
   instance:

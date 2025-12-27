@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.author.impl;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.RoleNameProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.RoleNameListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.author.Author;
 import com.daisobook.shop.booksearch.BooksSearch.entity.author.BookAuthor;
 import com.daisobook.shop.booksearch.BooksSearch.entity.author.Role;
@@ -142,8 +144,8 @@ public class AuthorV2ServiceImpl implements AuthorV2Service {
 //        Set<String> authorName = author.keySet();
 //        for(AuthorReqDTO ar : authorReqDTOs){
 //            if(authorName.contains(ar.authorName())){
-//                if(author.get(ar.authorName()).equals(ar.roleName()) ||
-//                        author.get(ar.authorName()).isEmpty() && ar.roleName() == null){
+//                if(author.get(ar.authorName()).equals(ar.roleNames()) ||
+//                        author.get(ar.authorName()).isEmpty() && ar.roleNames() == null){
 //                    continue;
 //                }
 //                checkAuthor = true;
@@ -260,5 +262,13 @@ public class AuthorV2ServiceImpl implements AuthorV2Service {
         book.getBookAuthors().removeAll(bookAuthors);
 
         bookAuthorRepository.deleteAll(bookAuthors);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RoleNameListRespDTO getRoleNameList(){
+        return new RoleNameListRespDTO(roleRepository.getAllRoleName().stream()
+                .map(RoleNameProjection::getRoleName)
+                .toList());
     }
 }

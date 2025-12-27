@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.controller;
+package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.like.MyLikeList;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.impl.LikeFacade;
