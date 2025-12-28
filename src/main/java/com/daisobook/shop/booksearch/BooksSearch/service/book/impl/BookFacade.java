@@ -9,6 +9,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
@@ -370,8 +371,9 @@ public class BookFacade {
         return new TotalDataRespDTO(countBook, countByStatus, countByRelease, countCategory);
     }
 
-    public BookRespDTO getBookFromOpenApi(String isbn){
-        return null;
+    @Transactional
+    public void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap){
+        Book book = bookCoreService.getBook_Id(reviewReqDTO.bookId());
+        reviewService.registerReview(reviewReqDTO, fileMap, book);
     }
-
 }
