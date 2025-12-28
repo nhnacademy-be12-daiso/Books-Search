@@ -1,2 +1,0 @@
-### 기본 검색
-GET http://localhost:8088/api/books/search?query=C언어 기초
