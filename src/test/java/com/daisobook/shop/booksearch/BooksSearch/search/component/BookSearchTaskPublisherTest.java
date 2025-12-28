@@ -3,6 +3,8 @@ package com.daisobook.shop.booksearch.BooksSearch.search.component;
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.RabbitBook;
 import com.daisobook.shop.booksearch.BooksSearch.search.message.BookDeleteMessage;
 import com.daisobook.shop.booksearch.BooksSearch.search.message.BookUpsertMessage;
+import jakarta.annotation.Resource;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -42,20 +44,18 @@ class BookSearchTaskPublisherTest {
         }
     }
 
-    /**
-     * ✅ 이 버전에서는 Mock 애노테이션/Mockito.mock() 금지 → 무조건 @MockitoBean 로만 대체
-     * (외부 RabbitMQ 연결 없이 RabbitTemplate만 대체해서 convertAndSend 호출을 검증)
-     */
     @MockitoBean(name = "bookSearchRabbitTemplate")
     RabbitTemplate rabbitTemplate;
 
-    @jakarta.annotation.Resource
+    @Resource
     BookSearchTaskPublisher publisher;
 
     @Nested
+    @DisplayName("Book Upsert 메시지 발행 테스트")
     class Upsert {
 
         @Test
+        @DisplayName("publishBookUpsert: 예상된 Exchange와 RoutingKey로, 올바른 Payload가 전송된다")
         void publishBookUpsert_shouldSendToExpectedExchangeAndRoutingKey_withCorrectPayload() {
             // given
             RabbitBook rb = new RabbitBook();
@@ -112,8 +112,10 @@ class BookSearchTaskPublisherTest {
     }
 
     @Nested
+    @DisplayName("Book Delete 메시지 발행 테스트")
     class Delete {
         @Test
+        @DisplayName("publishBookDelete: 예상된 Exchange와 RoutingKey로, 올바른 Payload가 전송된다")
         void publishBookDelete_shouldSendToExpectedExchangeAndRoutingKey_withCorrectPayload() {
             // given
             ArgumentCaptor<Object> payloadCaptor = ArgumentCaptor.forClass(Object.class);

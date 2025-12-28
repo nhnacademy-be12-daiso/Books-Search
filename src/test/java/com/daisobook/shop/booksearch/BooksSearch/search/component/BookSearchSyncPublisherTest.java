@@ -2,7 +2,9 @@ package com.daisobook.shop.booksearch.BooksSearch.search.component;
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.RabbitBook;
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +38,7 @@ class BookSearchSyncPublisherTest {
     @MockitoBean
     BookSearchPayloadMapper payloadMapper;
 
-    @jakarta.annotation.Resource
+    @Resource
     BookSearchSyncPublisher syncPublisher;
 
     @AfterEach
@@ -49,9 +51,11 @@ class BookSearchSyncPublisherTest {
     }
 
     @Nested
+    @DisplayName("트랜잭션 활성화 시 동작 테스트")
     class WhenTransactionIsActive {
 
         @Test
+        @DisplayName("publishDeleteAfterCommit: registerSynchronization 되고, 커밋 후에만 실행된다")
         void publishDeleteAfterCommit_shouldRegisterSynchronization_andRunAfterCommitOnly() {
             // given
             TransactionSynchronizationManager.initSynchronization();
@@ -77,6 +81,7 @@ class BookSearchSyncPublisherTest {
         }
 
         @Test
+        @DisplayName("publishUpsertAfterCommit: registerSynchronization 되고, 커밋 후에만 실행된다")
         void publishUpsertAfterCommit_shouldRegisterSynchronization_andRunAfterCommitOnly() {
             // given
             TransactionSynchronizationManager.initSynchronization();
@@ -107,9 +112,11 @@ class BookSearchSyncPublisherTest {
     }
 
     @Nested
+    @DisplayName("트랜잭션 비활성화 시 동작 테스트")
     class WhenNoTransaction {
 
         @Test
+        @DisplayName("publishDeleteAfterCommit: 즉시 실행된다")
         void publishDeleteAfterCommit_shouldRunImmediately() {
             // given: 동기화/트랜잭션 비활성 상태
 
@@ -122,6 +129,7 @@ class BookSearchSyncPublisherTest {
         }
 
         @Test
+        @DisplayName("publishUpsertAfterCommit: 즉시 실행된다")
         void publishUpsertAfterCommit_shouldRunImmediately() {
             // given
             RabbitBook rb = new RabbitBook();

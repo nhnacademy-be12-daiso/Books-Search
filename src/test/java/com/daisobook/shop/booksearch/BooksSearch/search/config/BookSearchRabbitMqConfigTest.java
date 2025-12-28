@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.search.config;
 
 import com.daisobook.shop.booksearch.BooksSearch.search.message.BookUpsertMessage;
+import jakarta.annotation.Resource;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -29,13 +31,14 @@ class BookSearchRabbitMqConfigTest {
     @MockitoBean
     ConnectionFactory connectionFactory;
 
-    @jakarta.annotation.Resource
+    @Resource
     DirectExchange bookSearchExchange;
 
-    @jakarta.annotation.Resource(name = "bookSearchRabbitTemplate")
+    @Resource(name = "bookSearchRabbitTemplate")
     RabbitTemplate bookSearchRabbitTemplate;
 
     @Test
+    @DisplayName("@Value로 주입된 exchange 이름이 그대로 사용되는지 테스트")
     void bookSearchExchange_shouldUseConfiguredName() {
         assertThat(bookSearchExchange.getName())
                 .as("@Value로 주입된 exchange 이름이 그대로 사용되어야 함")
@@ -43,6 +46,7 @@ class BookSearchRabbitMqConfigTest {
     }
 
     @Test
+    @DisplayName("RabbitTemplate이 Jackson2JsonMessageConverter를 사용하며, JavaTimeModule이 설정되어 있는지 테스트")
     void rabbitTemplate_shouldUseJacksonConverter_withJavaTimeModuleConfigured() {
         assertThat(bookSearchRabbitTemplate.getMessageConverter())
                 .as("RabbitTemplate의 messageConverter는 Jackson2JsonMessageConverter여야 함")
