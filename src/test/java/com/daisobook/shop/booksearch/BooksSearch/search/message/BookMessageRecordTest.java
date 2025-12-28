@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.search.message;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class BookMessageRecordTest {
 
     @Test
+    @DisplayName("BookDeleteMessage 모든 필드 보존 테스트")
     void bookDeleteMessage_shouldKeepAllFields() {
         BookDeleteMessage msg = new BookDeleteMessage("rid", "isbn", 1L, "reason");
 
@@ -20,6 +22,7 @@ class BookMessageRecordTest {
     }
 
     @Test
+    @DisplayName("BookUpsertMessage 모든 필드 보존 테스트")
     void bookUpsertMessage_shouldKeepAllFields() {
         BookUpsertMessage.BookPayload payload = new BookUpsertMessage.BookPayload(
                 "isbn",
