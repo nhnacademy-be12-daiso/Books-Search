@@ -73,4 +73,13 @@ public interface DiscountPolicyRepository extends JpaRepository<DiscountPolicy, 
             nativeQuery = true
     )
     List<DiscountValueListProjection> getDiscountValue(@Param("bookIds") List<Long> bookIds);
+
+    @Query(value= """
+        select *
+        from discount_policies dp
+        where dp.is_active=1
+        and dp.start_date<=current_timestamp 
+        and (dp.end_date is null or dp.end_date>=current_timestamp )
+        """, nativeQuery = true)
+    List<DiscountPolicy> findAllActivePolicies();
 }

@@ -6,10 +6,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.saga.BookOutbox;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.BookOutOfStockException;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.FailedSerializationException;
 import com.daisobook.shop.booksearch.BooksSearch.repository.saga.BookOutboxRepository;
-import com.daisobook.shop.booksearch.BooksSearch.saga.event.OrderCompensateEvent;
-import com.daisobook.shop.booksearch.BooksSearch.saga.event.OrderConfirmedEvent;
-import com.daisobook.shop.booksearch.BooksSearch.saga.event.SagaEvent;
-import com.daisobook.shop.booksearch.BooksSearch.saga.event.SagaReply;
+import com.daisobook.shop.booksearch.BooksSearch.saga.event.*;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookCoreService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +30,7 @@ public class SagaHandler {
     private final BookCoreService bookCoreService;
 
     @Transactional
-    public void handleEvent(OrderConfirmedEvent event) {
+    public void handleEvent(SagaEvent event) {
 
         boolean isSuccess = true; // 성공 여부
         String reason = null; // 실패시 사유
@@ -50,42 +47,62 @@ public class SagaHandler {
              *
              *  더 좋은 로직 있다면 추천 가능
              */
-            Map<Long, Integer> bookIntMap = event.getBookList();
-            List<Long> bookIdList = bookIntMap.keySet().stream().toList();
-            Map<Long, Book> books = bookCoreService.getBookByIdIn(bookIdList).stream()
-                    .collect(Collectors.toMap(Book::getId, book -> book));
+            if(event instanceof OrderConfirmedEvent confirmedEvent) {
+                Map<Long, Integer> bookIntMap = confirmedEvent.getBookList();
+                List<Long> bookIdList = bookIntMap.keySet().stream().toList();
+                Map<Long, Book> books = bookCoreService.getBookByIdIn(bookIdList).stream()
+                        .collect(Collectors.toMap(Book::getId, book -> book));
 
-            for(Long bookId: bookIdList){
-                Integer n = bookIntMap.get(bookId);
-                if(n <= 0){
-                    log.error("[주문 saga:재고 감소] 수량이 정보 오류");
-                    throw new BookOutOfStockException("[주문 saga:재고 감소] 수량이 정보 오류");
-                }
+                for (Long bookId : bookIdList) {
+                    Integer n = bookIntMap.get(bookId);
+                    if (n <= 0) {
+                        log.error("[주문 saga:재고 감소] 수량이 정보 오류");
+                        throw new BookOutOfStockException("[주문 saga:재고 감소] 수량이 정보 오류");
+                    }
 
-                if(!books.containsKey(bookId)){
-                    log.error("[주문 saga:재고 감소] 해당하는 도서를 찾지 못했습니다 - 도서ID:{}", bookId);
-                    throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서를 찾지 못했습니다");
-                }
+                    if (!books.containsKey(bookId)) {
+                        log.error("[주문 saga:재고 감소] 해당하는 도서를 찾지 못했습니다 - 도서ID:{}", bookId);
+                        throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서를 찾지 못했습니다");
+                    }
 
-                Book book = books.get(bookId);
-                if(!book.getStatus().equals(Status.ON_SALE)){
-                    log.error("[주문 saga:재고 감소] 해당하는 도서가 판매 중이 아닙니다 - 도서ID:{}, 도서상태:{}", book.getId(), book.getStatus());
-                    throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서가 판매 중이 아닙니다");
-                }
+                    Book book = books.get(bookId);
+                    if (!book.getStatus().equals(Status.ON_SALE)) {
+                        log.error("[주문 saga:재고 감소] 해당하는 도서가 판매 중이 아닙니다 - 도서ID:{}, 도서상태:{}", book.getId(), book.getStatus());
+                        throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서가 판매 중이 아닙니다");
+                    }
 
-                int stock = book.getStock();
-                if(stock < n){
-                    log.error("[주문 saga:재고 감소] 해당하는 도서 재고가 부족합니다 - 도서ID:{}, 도서 재고:{}, 주무 수량:{}", bookId, stock, n);
-                    throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서 재고가 부족합니다");
-                }
+                    int stock = book.getStock();
+                    if (stock < n) {
+                        log.error("[주문 saga:재고 감소] 해당하는 도서 재고가 부족합니다 - 도서ID:{}, 도서 재고:{}, 주무 수량:{}", bookId, stock, n);
+                        throw new BookOutOfStockException("[주문 saga:재고 감소] 해당하는 도서 재고가 부족합니다");
+                    }
 
-                book.setStock(stock - n);
-                if(book.getStock() == 0){
-                    book.setStatus(Status.SOLD_OUT);
+                    book.setStock(stock - n);
+                    if (book.getStock() == 0) {
+                        book.setStatus(Status.SOLD_OUT);
+                    }
                 }
             }
 
             log.error("[Book API] 재고 차감 성공 - Order : {}", event.getOrderId());
+
+            if(event instanceof OrderRefundEvent refundEvent) {
+                /** TODO 반품 시 원상 복구 로직 작성
+                 * OrderRefundEvent 확인하셔서 다시 재고 채워주는 로직 작성해주시면 됩니다.
+                 */
+                if(refundEvent.getQuantity() <= 0){
+                    log.error("[주문 saga:반품] 수량 정보 오류 - 수량:{}", refundEvent.getQuantity());
+                    throw new BookOutOfStockException("[주문 saga:반품] 수량 정보 오류");
+                }
+
+                Book book = bookCoreService.getBook_Id(refundEvent.getBookId());
+                if(book == null){
+                    log.error("[주문 saga:반품] 해당하는 도서를 찾을 수 없습니다 - 도서ID:{}", refundEvent.getBookId());
+                    throw new BookOutOfStockException("[주문 saga:반품] 해당하는 도서를 찾을 수 없습니다");
+                }
+
+                book.setStock(book.getStock() + refundEvent.getQuantity().intValue());
+            }
 
         } catch(BookOutOfStockException e) { // 재고 부족 비즈니스 예외
             log.error("[Book API] 재고 부족으로 인한 차감 실패 - Order : {}", event.getOrderId());
@@ -100,6 +117,7 @@ public class SagaHandler {
         }
         // 이렇게 예외 범위를 넓게 해놔야 무슨 에러가 터져도 finally 문이 실행됨
         finally {
+
             // 성공했든 실패했든 답장은 해야함
             SagaReply reply = new SagaReply(
                     event.getOrderId(),
@@ -125,28 +143,32 @@ public class SagaHandler {
              * 여기서는 '뭔가 잘못돼서 다시 원복시키는 롤백'의 과정입니다.
              * 그니까 아까 차감했던 재고를 다시 원복시키는 로직을 구현하시면 됩니다.
              */
-            Map<Long, Integer> bookIntMap = event.getBookList();
-            List<Long> bookIdList = bookIntMap.keySet().stream().toList();
-            Map<Long, Book> books = bookCoreService.getBookByIdIn(bookIdList).stream()
-                    .collect(Collectors.toMap(Book::getId, book -> book));
 
-            for(Long bookId: bookIdList){
-                Integer n = bookIntMap.get(bookId);
-                if(n <= 0){
-                    log.error("[주문 saga:재고 복구] 수량이 정보 오류");
-                    throw new BookOutOfStockException("[주문 saga:재고 복구] 수량이 정보 오류");
-                }
+            // 주문에 대한 보상 이벤트일 경우에
+            if(event instanceof OrderCompensateEvent compensateEvent) {
+                Map<Long, Integer> bookIntMap = compensateEvent.getBookList();
+                List<Long> bookIdList = bookIntMap.keySet().stream().toList();
+                Map<Long, Book> books = bookCoreService.getBookByIdIn(bookIdList).stream()
+                        .collect(Collectors.toMap(Book::getId, book -> book));
 
-                if(!books.containsKey(bookId)){
-                    log.error("[주문 saga:재고 복구] 해당하는 도서를 찾지 못했습니다 - 도서ID:{}", bookId);
-                    throw new BookOutOfStockException("[주문 saga:재고 복구] 해당하는 도서를 찾지 못했습니다");
-                }
+                for (Long bookId : bookIdList) {
+                    Integer n = bookIntMap.get(bookId);
+                    if (n <= 0) {
+                        log.error("[주문 saga:재고 복구] 수량이 정보 오류");
+                        throw new BookOutOfStockException("[주문 saga:재고 복구] 수량이 정보 오류");
+                    }
 
-                Book book = books.get(bookId);
+                    if (!books.containsKey(bookId)) {
+                        log.error("[주문 saga:재고 복구] 해당하는 도서를 찾지 못했습니다 - 도서ID:{}", bookId);
+                        throw new BookOutOfStockException("[주문 saga:재고 복구] 해당하는 도서를 찾지 못했습니다");
+                    }
 
-                book.setStock(book.getStock() + n);
-                if(book.getStatus().equals(Status.SOLD_OUT)){
-                    book.setStatus(Status.ON_SALE);
+                    Book book = books.get(bookId);
+
+                    book.setStock(book.getStock() + n);
+                    if (book.getStatus().equals(Status.SOLD_OUT)) {
+                        book.setStatus(Status.ON_SALE);
+                    }
                 }
             }
 
