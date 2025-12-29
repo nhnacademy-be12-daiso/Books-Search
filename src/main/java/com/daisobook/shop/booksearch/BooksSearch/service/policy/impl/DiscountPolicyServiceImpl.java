@@ -5,6 +5,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueProjection;
+import com.daisobook.shop.booksearch.BooksSearch.entity.policy.DiscountPolicy;
 import com.daisobook.shop.booksearch.BooksSearch.entity.policy.DiscountType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.policy.TargetType;
 import com.daisobook.shop.booksearch.BooksSearch.repository.policy.DiscountPolicyRepository;
@@ -159,6 +160,12 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
         }
 
         return discountPriceMap;
+    }
+
+    @Transactional
+    @Override
+    public List<DiscountPolicy> getAllActiveDiscountPolicies() {
+        return discountPolicyRepository.findAllActivePolicies();
     }
 
 }
