@@ -117,6 +117,7 @@ public class SagaHandler {
         }
         // 이렇게 예외 범위를 넓게 해놔야 무슨 에러가 터져도 finally 문이 실행됨
         finally {
+
             // 성공했든 실패했든 답장은 해야함
             SagaReply reply = new SagaReply(
                     event.getOrderId(),
