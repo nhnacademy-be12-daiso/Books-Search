@@ -36,7 +36,7 @@ public class Review {
     private long userId;
 
     @Setter
-    @Column(name = "oder_detail_id")
+    @Column(name = "order_detail_id")
     private long oderDetailId;
 
     @Setter
