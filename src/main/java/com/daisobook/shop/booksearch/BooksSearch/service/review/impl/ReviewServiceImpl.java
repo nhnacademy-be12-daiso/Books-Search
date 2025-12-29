@@ -107,7 +107,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
-    public void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap, Book book){
+    public Review registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap, Book book){
         if(reviewRepository.existsReviewByBook_IdAndUserIdAndOderDetailId(reviewReqDTO.bookId(), reviewReqDTO.userId(), reviewReqDTO.orderDetailId())){
             log.error("이미 존재하는 리뷰 생성 요청입니다-  bookId:{}, userId:{}, oderDetailId:{}",
                     reviewReqDTO.bookId(), reviewReqDTO.userId(), reviewReqDTO.orderDetailId());
@@ -128,6 +128,8 @@ public class ReviewServiceImpl implements ReviewService {
         newReview.setReviewImages(reviewImages);
         reviewImages.forEach(ri -> ri.setReview(newReview));
         book.getReviews().add(newReview);
+
+        return newReview;
     }
 
     @Transactional

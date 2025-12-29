@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.point.PointPolicyType;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
@@ -23,6 +24,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
+import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
@@ -34,6 +36,7 @@ import com.daisobook.shop.booksearch.BooksSearch.search.component.BookSearchSync
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
+import com.daisobook.shop.booksearch.BooksSearch.service.point.PointService;
 import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -384,8 +387,10 @@ public class BookFacade {
     }
 
     @Transactional
-    public void registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap){
+    public PointPolicyType registerReview(ReviewReqDTO reviewReqDTO, Map<String, MultipartFile> fileMap){
         Book book = bookCoreService.getBook_Id(reviewReqDTO.bookId());
-        reviewService.registerReview(reviewReqDTO, fileMap, book);
+        Review review = reviewService.registerReview(reviewReqDTO, fileMap, book);
+        PointPolicyType type = review.getReviewImages() != null && !review.getReviewImages().isEmpty() ? PointPolicyType.REVIEW_PHOTO : PointPolicyType.REVIEW_TEXT;
+        return type;
     }
 }
