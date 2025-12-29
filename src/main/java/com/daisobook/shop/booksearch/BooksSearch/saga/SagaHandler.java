@@ -90,6 +90,18 @@ public class SagaHandler {
                 /** TODO 반품 시 원상 복구 로직 작성
                  * OrderRefundEvent 확인하셔서 다시 재고 채워주는 로직 작성해주시면 됩니다.
                  */
+                if(refundEvent.getQuantity() <= 0){
+                    log.error("[주문 saga:반품] 수량 정보 오류 - 수량:{}", refundEvent.getQuantity());
+                    throw new BookOutOfStockException("[주문 saga:반품] 수량 정보 오류");
+                }
+
+                Book book = bookCoreService.getBook_Id(refundEvent.getBookId());
+                if(book == null){
+                    log.error("[주문 saga:반품] 해당하는 도서를 찾을 수 없습니다 - 도서ID:{}", refundEvent.getBookId());
+                    throw new BookOutOfStockException("[주문 saga:반품] 해당하는 도서를 찾을 수 없습니다");
+                }
+
+                book.setStock(book.getStock() + refundEvent.getQuantity().intValue());
             }
 
         } catch(BookOutOfStockException e) { // 재고 부족 비즈니스 예외
