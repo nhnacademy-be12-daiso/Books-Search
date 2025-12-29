@@ -1,10 +1,12 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.point.PointPolicyType;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
 //import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
+import com.daisobook.shop.booksearch.BooksSearch.service.point.PointService;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 //    private final BookService bookService;
     private final BookFacade bookFacade;
+    private final PointService pointService;
 
 //    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 //    public ResponseEntity addReview(@RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO) throws JsonProcessingException {
@@ -39,7 +42,8 @@ public class ReviewController {
                                     @RequestPart(value = "image2", required = false) MultipartFile image2) throws JsonProcessingException {
         ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing2(metadataJson, image0, image1, image2);
 //        bookService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
-        bookFacade.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
+        PointPolicyType type = bookFacade.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
+        pointService.requestReviewPoint(reviewGroupReqDTO.reviewReqDTO().userId(), type);
         return ResponseEntity.ok().build();
     }
 
