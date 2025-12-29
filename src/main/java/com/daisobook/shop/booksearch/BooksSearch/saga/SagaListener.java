@@ -4,6 +4,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.saga.BookDeduplicationLo
 import com.daisobook.shop.booksearch.BooksSearch.repository.saga.BookDeduplicationRepository;
 import com.daisobook.shop.booksearch.BooksSearch.saga.event.OrderCompensateEvent;
 import com.daisobook.shop.booksearch.BooksSearch.saga.event.OrderConfirmedEvent;
+import com.daisobook.shop.booksearch.BooksSearch.saga.event.SagaEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -18,7 +19,7 @@ public class SagaListener {
     private final SagaHandler sagaHandler;
 
     @RabbitListener(queues = SagaTopic.BOOK_QUEUE)
-    public void onEvent(OrderConfirmedEvent event) {
+    public void onEvent(SagaEvent event) {
 
         // 중복 검사
         if(deduplicationRepository.existsByMessageId(String.valueOf(event.getOrderId()))) {
@@ -32,12 +33,12 @@ public class SagaListener {
         deduplicationRepository.save(new BookDeduplicationLog(event.getOrderId().toString()));
 
         // 실제 작업은 핸들러가
-        sagaHandler.handleEvent(event);
+        sagaHandler.onMessage(event);
     }
 
     // 보상 로직
     @RabbitListener(queues = SagaTopic.BOOK_COMPENSATION_QUEUE)
-    public void onCompensateEvent(OrderCompensateEvent event) {
+    public void onCompensateEvent(SagaEvent event) {
 
         String dedupeKey = event.getOrderId() + "_BOOK_COMP";
 
@@ -53,6 +54,6 @@ public class SagaListener {
         deduplicationRepository.save(new BookDeduplicationLog(dedupeKey));
 
         // 실제 작업은 핸들러가
-        sagaHandler.handleRollbackEvent(event);
+        sagaHandler.onMessage(event);
     }
 }

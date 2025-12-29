@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.saga.event;
 
 
+import com.daisobook.shop.booksearch.BooksSearch.saga.SagaHandler;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,4 +27,9 @@ public class OrderConfirmedEvent implements SagaEvent {
     private Long usedPoint; // 사용 포인트
     private Long savedPoint; // 적립 포인트
     private List<Long> usedCouponIds;
+
+    @Override
+    public void accept(SagaHandler handler) {
+        handler.handleEvent(this);
+    }
 }
