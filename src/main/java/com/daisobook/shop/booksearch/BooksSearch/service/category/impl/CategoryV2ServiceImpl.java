@@ -39,6 +39,10 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         return categoryRepository.existsCategoryById(id);
     }
 
+    /**
+     * 카테고리 등록
+     * @param reqDTO
+     */
     @Override
     @Transactional
     public void registerCategory(CategoryRegisterReqDTO reqDTO) {
@@ -68,6 +72,11 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         categoryRepository.save(category);
     }
 
+    /**
+     * 카테고리 수정
+     * @param categoryId
+     * @param reqDTO
+     */
     @Override
     @Transactional
     public void modifyCategory(long categoryId, CategoryModifyReqDTO reqDTO) {
@@ -92,172 +101,121 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         }
     }
 
+    /**
+     * 도서에 카테고리 할당
+     * @param book
+     * @param categoryId
+     */
     @Override
     @Transactional
     public void assignCategoriesToBook(Book book, Long categoryId) {
+        // 카테고리 ID가 null인 경우 처리
         if(categoryId == null){
             log.error("[도서 등록] category Id가 null입니다 - 해당 도서 ISBN: {}", book.getIsbn());
             return;
         }
+        // 카테고리 엔티티 조회
+        Category finalCategory = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundCategoryId("[도서 등록] 해당 카테고리를 찾지 못했습니다."));
 
-        List<CategoryPathProjection> findCategoryIds = categoryRepository.findAncestorsPathByFinalCategoryId(categoryId);
-        if(findCategoryIds == null || findCategoryIds.isEmpty()){
-            log.error("[도서 등록] 해당 카테고리를 찾지 못했습니다 - category ID: {}", categoryId);
-            throw new NotFoundCategoryId("[도서 등록] 해당 카테고리를 찾지 못했습니다.");
+        // 도서에 카테고리 할당
+        BookCategory bc=book.getBookCategory();
+        if(bc==null) {  // 처음 할당하는 경우
+            bc=new BookCategory(book, finalCategory);
+            book.setBookCategory(bc);
+        } else {  // 이미 할당된 카테고리가 있는 경우 업데이트
+            bc.setCategory(finalCategory);
         }
-
-        List<Category> categoryList = categoryRepository.findAllByIdIn(findCategoryIds.stream()
-                .map(CategoryPathProjection::getId)
-                .toList());
-
-        List<BookCategory> bookCategories = new ArrayList<>();
-        for(Category c: categoryList) {
-            BookCategory newBookCategory = new BookCategory(book, c);
-
-            c.getBookCategories().add(newBookCategory);
-            book.getBookCategories().add(newBookCategory);
-            log.debug("[도서 등록] 해당 카테고리 관계 생성 - 도서 ID:{}, category ID:{}", book.getId(), c.getId());
-
-            bookCategories.add(newBookCategory);
-        }
-
-        bookCategoryRepository.saveAll(bookCategories);
     }
 
+    /**
+     * 여러 도서에 카테고리 할당
+     * @param bookMap
+     * @param categoryIdMap
+     */
     @Override
     @Transactional
     public void assignCategoriesToBooks(Map<String, Book> bookMap, Map<String, Long> categoryIdMap) {
-        Map<Long, CategoryPathProjection> findCategoryIds = categoryRepository.findAncestorsPathByFinalCategoryIdIn(
-                new HashSet<>(categoryIdMap.values()).stream()
-                        .toList()).stream()
-                .collect(Collectors.toMap(CategoryPathProjection::getId, c -> c));
+        Set<Long> categoryIdSet = new HashSet<>(categoryIdMap.values());
+        Map<Long, Category> categoryMap=categoryRepository.findAllByIdIn(new ArrayList<>(categoryIdSet))
+                .stream().collect(Collectors.toMap(Category::getId, c->c));
 
-        Map<Long, Category> categoryMap = categoryRepository.findAllByIdIn(findCategoryIds.values().stream()
-                        .map(CategoryPathProjection::getId)
-                        .toList()).stream()
-                .collect(Collectors.toMap(Category::getId, category -> category));
+        List<BookCategory> toSave=new ArrayList<>();
 
-        List<BookCategory> bookCategories = new ArrayList<>();
-        for(Book book: bookMap.values()){
-            Long finalCategoryId = categoryIdMap.get(book.getIsbn());
-            if(finalCategoryId == null || !categoryMap.containsKey(finalCategoryId)){
-                log.error("[여러 도서 등록] 해당 카테고리를 찾지 못했습니다 - 해당 도서 ISBN: {} category ID: {}", book.getIsbn(), finalCategoryId);
+        for(Book book:bookMap.values()) {
+            Long categoryId=categoryIdMap.get(book.getIsbn());
+            if(categoryId==null) {
+                log.error("[여러 도서 등록] category Id가 null입니다 - 해당 도서 ISBN: {}", book.getIsbn());
                 continue;
             }
 
-            Long currentId = finalCategoryId;
-            while(currentId != null && currentId != 0) {
-                CategoryPathProjection path = findCategoryIds.get(currentId);
-                if (path == null) break;
-
-                Category c = categoryMap.get(currentId);
-                BookCategory newBookCategory = new BookCategory(book, c);
-
-                book.getBookCategories().add(newBookCategory);
-                c.getBookCategories().add(newBookCategory);
-
-                bookCategories.add(newBookCategory);
-
-                currentId = path.getPreCategoryId();
+            Category category=categoryMap.get(categoryId);
+            if(category==null) {
+                log.error("[여러 도서 등록] 해당 카테고리를 찾지 못했습니다 - 해당 도서 ISBN: {} category ID: {}", book.getIsbn(), categoryIdMap.get(book.getIsbn()));
+                continue;
             }
+
+            BookCategory bc=book.getBookCategory();
+            if(bc==null) {  // 처음 할당하는 경우
+                bc=new BookCategory(book, category);
+                book.setBookCategory(bc);
+            } else {  // 이미 할당된 카테고리가 있는 경우 업데이트
+                bc.setCategory(category);
+            }
+            toSave.add(bc);
+
         }
-        bookCategoryRepository.saveAll(bookCategories);
+
+        bookCategoryRepository.saveAll(toSave);
+
     }
 
+    /**
+     * 도서 카테고리 수정
+     * @param book
+     * @param categoryId
+     * 단일 카테고리로 변경 하면서 BookCategory 등록 메서드와 동일하게 변경
+     */
     @Override
     @Transactional
     public void updateCategoryOfBook(Book book, Long categoryId) {
-        List<BookCategory> preBookCategories = book.getBookCategories();
-
-        Set<Long> categoryIdSet = preBookCategories.stream()
-                .map(bc -> bc.getCategory().getId())
-                .collect(Collectors.toSet());
-
-        if(categoryIdSet.contains(categoryId)){
-            log.debug("변경사항 없음");
+        // 카테고리 ID가 null인 경우 처리
+        if(categoryId == null){
+            log.error("[도서 등록] category Id가 null입니다 - 해당 도서 ISBN: {}", book.getIsbn());
             return;
         }
+        // 카테고리 엔티티 조회
+        Category finalCategory = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundCategoryId("[도서 등록] 해당 카테고리를 찾지 못했습니다."));
 
-        List<CategoryPathProjection> pathProjections = categoryRepository.findAncestorsPathByFinalCategoryId(categoryId);
-        if(pathProjections == null || pathProjections.isEmpty()){
-            log.error("[도서 수정] 해당 카테고리를 찾지 못했습니다 - category ID: {}", categoryId);
-            throw new NotFoundCategoryId("[도서 수정] 해당 카테고리를 찾지 못했습니다.");
-        }
-
-        Map<Integer, BookCategory> preBookCategoryMap = preBookCategories.stream()
-                .collect(Collectors.toMap(bc -> bc.getCategory().getDeep(), bookCategory -> bookCategory));
-
-        Map<Integer, Category> updateCategoryMap = categoryRepository.findAllByIdIn(pathProjections.stream()
-                    .map(CategoryPathProjection::getId)
-                    .toList()).stream()
-                .collect(Collectors.toMap(Category::getDeep, category -> category));
-
-        Map<Integer, Category> preCategoryMap = preBookCategories.stream()
-                    .map(BookCategory::getCategory)
-                    .toList().stream()
-                .collect(Collectors.toMap(Category::getDeep, category -> category));
-
-        int size = Math.max(updateCategoryMap.size(), preBookCategories.size());
-
-        List<BookCategory> saveBookCategoryList = new ArrayList<>();
-        List<Long> deleteBookCategoryIdList = new ArrayList<>();
-        for(int i = 1; i <= size; i++){
-            Category uc = updateCategoryMap.getOrDefault(i, null);
-            Category pc = preCategoryMap.getOrDefault(i, null);
-            BookCategory bookCategory = preBookCategoryMap.getOrDefault(i, null);
-
-            if(uc != null && pc != null){
-                if(uc.getId() == pc.getId()){
-                    continue;
-                }
-                pc.getBookCategories().remove(bookCategory);
-                uc.getBookCategories().add(bookCategory);
-                bookCategory.setCategory(uc);
-
-                log.debug("[도서 수정] 변경사항 - 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory().getName());
-                log.debug("[도서 수정] 변경사항 - 변경 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory().getName());
-
-            } else if(uc != null || pc != null) {
-                if(pc == null){
-                    BookCategory newBookCategory = new BookCategory(book, uc);
-
-                    uc.getBookCategories().add(newBookCategory);
-                    book.getBookCategories().add(newBookCategory);
-
-                    saveBookCategoryList.add(newBookCategory);
-                    log.debug("[도서 수정] 새로운 카테고리 추가 - 추가 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory().getName());
-
-                } else {
-                    pc.getBookCategories().remove(bookCategory);
-                    book.getBookCategories().remove(bookCategory);
-
-                    deleteBookCategoryIdList.add(bookCategory.getId());
-                    log.debug("[도서 수정] 이전 카테고리 삭제- 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory().getName());
-
-                }
-            }
-        }
-        if(!deleteBookCategoryIdList.isEmpty()) {
-            bookCategoryRepository.removeAllByIdIn(deleteBookCategoryIdList);
-        }
-        if(!saveBookCategoryList.isEmpty()) {
-            bookCategoryRepository.saveAll(saveBookCategoryList);
+        // 도서에 카테고리 할당
+        BookCategory bc=book.getBookCategory();
+        if(bc==null) {  // 처음 할당하는 경우
+            bc=new BookCategory(book, finalCategory);
+            book.setBookCategory(bc);
+        } else {  // 이미 할당된 카테고리가 있는 경우 업데이트
+            bc.setCategory(finalCategory);
         }
     }
 
+    /**
+     * 도서 카테고리 삭제
+     * @param book
+     */
     @Override
     public void deleteCategoryOfBook(Book book) {
-        List<BookCategory> bookCategories = book.getBookCategories();
-        List<Category> categories = bookCategories.stream().map(BookCategory::getCategory).toList();
-
-        if(!categories.isEmpty()){
-            categories.forEach(c -> c.getBookCategories().removeAll(bookCategories));
+        // 단일 카테고리로 변경하면서 BookCategory 등록 메서드와 동일하게 변경
+        BookCategory bc=book.getBookCategory();
+        if(bc != null){
+            bookCategoryRepository.delete(bc);
+            book.setBookCategory(null);
         }
-        book.getBookCategories().removeAll(bookCategories);
-
-        bookCategoryRepository.deleteAll(bookCategories);
     }
 
+    /**
+     * 카테고리 리스트 조회
+     * @return
+     */
     @Override
     public CategoryList getCategoryList() {
         Map<Long, CategoryListProjection> categoryRepositoryAll = categoryRepository.getAll().stream()
@@ -280,6 +238,10 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         return categoryList;
     }
 
+    /**
+     * 전체 카테고리 개수 조회
+     * @return
+     */
     @Override
     public Long getCountAll() {
         return categoryRepository.count();
@@ -293,53 +255,46 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         return new CategoryTreeListRespDTO(categoryTreeList);
     }
 
-    @Transactional
+
+    /**
+     * 도서 카테고리 조회 (쿠폰 정책용)
+     * @param bookId
+     * @return
+     */
+    @Transactional(readOnly = true)
     @Override
     public BookCategoryResponse bookCategory(Long bookId) {
-        // 1. 책에 연결된 카테고리 정보 조회
-        List<BookCategory> allByBookId = bookCategoryRepository.findAllByBook_Id(bookId);
 
-        if (allByBookId.isEmpty()) {
+        BookCategory bc = bookCategoryRepository.findByBook_Id(bookId).orElse(null);
+
+        if (bc == null || bc.getCategory() == null) {
             return new BookCategoryResponse(bookId, null, null);
         }
 
-        // 변수 초기화
-        Long firstCategoryId = null;  // 1단계 (10% 쿠폰용)
-        Long secondCategoryId = null; // 2단계 (15% 쿠폰용)
+        Category leaf = bc.getCategory();
 
-        // 2. 조회된 리스트를 순회
-        for (BookCategory bc : allByBookId) {
-            Category category = bc.getCategory();
-            if (category == null) continue;
+        Long firstCategoryId = null;
+        Long secondCategoryId = null;
 
-            int deep = category.getDeep(); // 단계 확인
+        if (leaf.getDeep() == 1) {
+            // 1단계인 경우
+            firstCategoryId = leaf.getId();
+        } else if (leaf.getDeep() == 2) {
+            // 2단계인 경우 -> 본인은 2단계, 부모는 1단계
+            secondCategoryId = leaf.getId();
+            if (leaf.getPreCategory() != null) firstCategoryId = leaf.getPreCategory().getId();
+        } else if (leaf.getDeep() == 3) {
+            // 3단계인 경우 -> 부모가 2단계, 조부모가 1단계
+            // 3단계 카테고리 자체는 쿠폰 정책이 없으므로 ID 저장 안 함(혹은 필요하면 저장)
 
-            if (deep == 1) {
-                // 1단계인 경우
-                firstCategoryId = category.getId();
+            // 1. 부모(2단계) 찾기
+            Category parent = leaf.getPreCategory();
+            if (parent != null) {
+                secondCategoryId = parent.getId();
 
-            } else if (deep == 2) {
-                // 2단계인 경우 -> 본인은 2단계, 부모는 1단계
-                secondCategoryId = category.getId();
-                if (firstCategoryId == null && category.getPreCategory() != null) {
-                    firstCategoryId = category.getPreCategory().getId();
-                }
-
-            } else if (deep == 3) {
-                // 3단계인 경우 -> 부모가 2단계, 조부모가 1단계
-                // 3단계 카테고리 자체는 쿠폰 정책이 없으므로 ID 저장 안 함(혹은 필요하면 저장)
-
-                // 1. 부모(2단계) 찾기
-                Category parent = category.getPreCategory();
-                if (parent != null) {
-                    secondCategoryId = parent.getId(); // 2단계 ID 확보
-
-                    // 2. 조부모(1단계) 찾기
-                    Category grandParent = parent.getPreCategory();
-                    if (firstCategoryId == null && grandParent != null) {
-                        firstCategoryId = grandParent.getId(); // 1단계 ID 확보
-                    }
-                }
+                // 2. 조부모(1단계) 찾기
+                Category grand = parent.getPreCategory();
+                if (grand != null) firstCategoryId = grand.getId(); // 1단계 ID 확보
             }
         }
 
@@ -350,4 +305,5 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
 
         return new BookCategoryResponse(bookId, firstCategoryId, secondCategoryId);
     }
+
 }

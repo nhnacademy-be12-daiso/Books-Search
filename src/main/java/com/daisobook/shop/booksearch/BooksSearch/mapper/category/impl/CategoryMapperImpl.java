@@ -24,6 +24,9 @@ import java.util.stream.Collectors;
 public class CategoryMapperImpl implements CategoryMapper {
     private final ObjectMapper objectMapper;
 
+    /**
+     * BookCategory 리스트를 CategoryRespDTO 리스트로 변환
+     */
     @Override
     public List<CategoryRespDTO> toCategoryRespDTOList(List<BookCategory> bookCategories) {
         return bookCategories.stream()
@@ -34,6 +37,9 @@ public class CategoryMapperImpl implements CategoryMapper {
                 .toList();
     }
 
+    /**
+     * JSON 문자열을 CategoryRespDTO 리스트로 변환
+     */
     @Override
     public List<CategoryRespDTO> toCategoryRespDTOList(String categoryData) throws JsonProcessingException {
         if(categoryData == null || categoryData.isBlank()){
@@ -43,6 +49,12 @@ public class CategoryMapperImpl implements CategoryMapper {
         return objectMapper.readValue(categoryData, new TypeReference<List<CategoryRespDTO>>() {});
     }
 
+    /**
+     * Map<Long, String>을 Map<Long, List<CategoryRespDTO>>로 변환
+     * @param categoryDataMap
+     * @return
+     * @throws JsonProcessingException
+     */
     @Override
     public Map<Long, List<CategoryRespDTO>> toCategoryRespDTOMap(Map<Long, String> categoryDataMap) throws JsonProcessingException {
         Set<Long> keySet = categoryDataMap.keySet();
@@ -59,6 +71,9 @@ public class CategoryMapperImpl implements CategoryMapper {
         return listMap;
     }
 
+    /**
+     * 카테고리 트리 구조를 CategoryList로 변환
+     */
     @Override
     public CategoryList toCategoryList(Map<Long, CategoryListProjection> categoryListProjectionMap, List<CategoryListProjection> categoryLeafList) {
         List<CategoryPath> categoryPathList = new ArrayList<>();

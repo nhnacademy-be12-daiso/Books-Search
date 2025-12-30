@@ -22,14 +22,15 @@ public class BookSearchPayloadMapper {
                 .orElse(""));
         rb.setPublisher(book.getPublisher() != null ? book.getPublisher().getName() : "");
         rb.setDescription(book.getDescription());
-        rb.setCategories(book.getBookCategories().stream()
-                .map(bc -> bc.getCategory().getName())
-                .toList());
+//        rb.setCategories(book.getBookCategories().stream()
+//                .map(bc -> bc.getCategory().getName())
+//                .toList());
         rb.setPubDate(book.getPublicationDate() != null ? LocalDate.parse(book.getPublicationDate().toString()) : null);
         rb.setPrice(Math.toIntExact(book.getPrice()));
         rb.setImageUrl(book.getBookImages().isEmpty() ? "" : book.getBookImages().get(0).getPath());
         rb.setPublisherId(book.getPublisher() != null ? book.getPublisher().getId() : null);
-        rb.setCategoryId(book.getBookCategories().getLast().getCategory().getId());
+//        rb.setCategoryId(book.getBookCategories().getLast().getCategory().getId());
+        rb.setCategoryId(book.getBookCategory().getCategory().getId());
 
 
         return rb;

@@ -146,7 +146,7 @@ class BookSearchPayloadMapperTest {
             book.setStatus(Status.ON_SALE);
 
             book.setBookAuthors(List.of());
-            book.setBookCategories(new ArrayList<>()); // mapper에서 getLast() 호출 -> 예외 기대
+//            book.setBookCategories(new ArrayList<>()); // mapper에서 getLast() 호출 -> 예외 기대
             book.setBookImages(new ArrayList<>());
 
             // when / then

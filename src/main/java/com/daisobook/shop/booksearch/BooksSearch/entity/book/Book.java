@@ -104,7 +104,7 @@ public class Book {
 //        this.imageUrl = imageUrl;
         this.volumeNo = volumeNo;
 
-        this.bookCategories = new ArrayList<>();
+        this.bookCategory= null;
         this.bookTags = new ArrayList<>();
         this.bookAuthors = new ArrayList<>();
         this.bookImages = new ArrayList<>();
@@ -118,10 +118,13 @@ public class Book {
         return newBook;
     }
 
+//    @Setter
+//    @OneToMany(mappedBy = "book")
+//    @BatchSize(size = 100)
+//    private List<BookCategory> bookCategories;
     @Setter
-    @OneToMany(mappedBy = "book")
-    @BatchSize(size = 100)
-    private List<BookCategory> bookCategories;
+    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private BookCategory bookCategory;
 
     @Setter
     @OneToMany(mappedBy = "book")

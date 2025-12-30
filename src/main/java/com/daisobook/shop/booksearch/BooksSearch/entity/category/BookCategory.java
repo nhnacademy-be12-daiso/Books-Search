@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Getter
-@Table(name = "book_categories", uniqueConstraints = {@UniqueConstraint(columnNames = {"book_id", "category_id"})})
+@Table(name = "book_categories", uniqueConstraints = @UniqueConstraint(columnNames = {"book_id"}))
 public class BookCategory {
     @Id
     @Column(name = "book_category_id")
@@ -20,8 +20,8 @@ public class BookCategory {
 //    @Column(name = "book_id")
 //    private long bookId;
     @Setter
-    @ManyToOne
-    @JoinColumn(name = "book_id")
+    @OneToOne
+    @JoinColumn(name = "book_id", nullable = false, unique = true)
     private Book book;
 
 //    @Setter

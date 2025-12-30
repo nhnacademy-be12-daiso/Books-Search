@@ -29,7 +29,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findAllByIsbnIn(Collection<String> isbns);
 
     @Query("SELECT b FROM Book b " +
-            "JOIN FETCH b.bookCategories bc " +
+            "JOIN FETCH b.bookCategory bc " +
             "JOIN FETCH bc.category c " +
             "WHERE c.name = ?1")
     List<Book> findBooksByCategoryName(String categoryName);
@@ -60,7 +60,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     LEFT JOIN FETCH b.bookAuthors ba
     LEFT JOIN FETCH ba.author
     LEFT JOIN FETCH ba.role
-    LEFT JOIN FETCH b.bookCategories bc
+    LEFT JOIN FETCH b.bookCategory bc
     LEFT JOIN FETCH bc.category
     LEFT JOIN FETCH b.bookTags bt
     LEFT JOIN FETCH bt.tag
