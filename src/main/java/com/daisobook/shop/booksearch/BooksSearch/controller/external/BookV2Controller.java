@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.BookV2ControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.api.BookInfoDataView;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/books")
-public class BookV2Controller {
+public class BookV2Controller implements BookV2ControllerDocs {
     private final BookFacade bookFacade;
     private final BookRefineService bookRefineService;
 

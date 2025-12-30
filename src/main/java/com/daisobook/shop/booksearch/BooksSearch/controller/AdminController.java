@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.controller.external;
+package com.daisobook.shop.booksearch.BooksSearch.controller;
 
 import com.daisobook.shop.booksearch.BooksSearch.service.ImageMigrationService;
 import lombok.RequiredArgsConstructor;

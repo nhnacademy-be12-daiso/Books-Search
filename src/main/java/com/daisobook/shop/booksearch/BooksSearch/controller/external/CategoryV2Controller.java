@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.CategoryV2ControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryModifyReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryRegisterReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/books")
-public class CategoryV2Controller {
+public class CategoryV2Controller implements CategoryV2ControllerDocs {
     private final CategoryV2Service categoryService;
 
     @GetMapping("/categories/all")
