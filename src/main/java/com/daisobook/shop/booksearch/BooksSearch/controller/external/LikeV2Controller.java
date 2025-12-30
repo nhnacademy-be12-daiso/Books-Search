@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.LikeV2ControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.like.MyLikeList;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.impl.LikeFacade;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-public class LikeV2Controller {
+public class LikeV2Controller implements LikeV2ControllerDocs {
     private final LikeFacade likeFacade;
 
     @PostMapping("/api/v2/books/{bookId}/likes")

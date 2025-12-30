@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.BookManagementControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.AdminBookMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.FindIsbnMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.ModifyBookMetaData;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class BookManagementController {
+public class BookManagementController implements BookManagementControllerDocs {
 
     private final MetadataService metadataService;
 
