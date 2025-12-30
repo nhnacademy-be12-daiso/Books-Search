@@ -1,4 +1,4 @@
-package com.daisobook.shop.booksearch.BooksSearch.dto.request;
+package com.daisobook.shop.booksearch.BooksSearch.dto.request.category;
 
 public record CategoryReqDTO(
         String categoryName,
