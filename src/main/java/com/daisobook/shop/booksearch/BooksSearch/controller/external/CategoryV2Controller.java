@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,11 @@ public class CategoryV2Controller {
     @GetMapping("/categories/all")
     public CategoryList getAllCategoryList(){
         return categoryService.getCategoryList();
+    }
+
+    @GetMapping("/categories/tree")
+    public CategoryTreeListRespDTO getCategoryTreeList(){
+        return categoryService.getCategoryTreeList();
     }
 
 }

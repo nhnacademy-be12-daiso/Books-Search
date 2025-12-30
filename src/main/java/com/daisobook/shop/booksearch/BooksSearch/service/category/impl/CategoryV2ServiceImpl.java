@@ -4,6 +4,8 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategor
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryPathProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTree;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
@@ -220,6 +222,14 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
     @Override
     public Long getCountAll() {
         return categoryRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public CategoryTreeListRespDTO getCategoryTreeList() {
+        List<CategoryListProjection> all = categoryRepository.getAll();
+        List<CategoryTree> categoryTreeList = categoryMapper.toCategoryTreeList(all);
+        return new CategoryTreeListRespDTO(categoryTreeList);
     }
 
     @Transactional

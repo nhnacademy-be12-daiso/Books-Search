@@ -2,8 +2,11 @@ package com.daisobook.shop.booksearch.BooksSearch.service.category;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTree;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 
+import java.util.List;
 import java.util.Map;
 
 public interface CategoryV2Service {
@@ -14,5 +17,6 @@ public interface CategoryV2Service {
     void deleteCategoryOfBook(Book book);
     CategoryList getCategoryList();
     Long getCountAll();
+    CategoryTreeListRespDTO getCategoryTreeList();
     BookCategoryResponse bookCategory(Long bookId);
 }
