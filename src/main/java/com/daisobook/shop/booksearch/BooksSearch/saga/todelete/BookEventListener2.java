@@ -19,6 +19,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -88,7 +90,7 @@ public class BookEventListener2 {
             log.error("[Book API] ===== 재고 부족으로 인한 보상 트랜잭션 시작 =====");
             log.error("[Book API] Order ID : {}", event.getOrderId());
 
-            OrderCompensateEvent orderCompensateEvent = new OrderCompensateEvent(event, "BOOK_FAILED");
+            OrderCompensateEvent orderCompensateEvent = new OrderCompensateEvent(UUID.randomUUID().toString(), event, "BOOK_FAILED");
 
             compensationOutboxService.saveCompensationEvent(
                     event.getOrderId(),
