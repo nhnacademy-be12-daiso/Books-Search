@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.saga.event;
 
 import com.daisobook.shop.booksearch.BooksSearch.saga.SagaHandler;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = OrderCompensateEvent.class, name = "COMPENSATE")
 })
 public interface SagaEvent {
+    @JsonProperty("eventId")
     String getEventId();
     Long getOrderId();
     void accept(SagaHandler handler);

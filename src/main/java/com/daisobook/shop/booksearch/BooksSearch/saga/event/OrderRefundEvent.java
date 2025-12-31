@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.saga.event;
 
 import com.daisobook.shop.booksearch.BooksSearch.saga.SagaHandler;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderRefundEvent implements SagaEvent {
 
+    @JsonProperty("eventId")
     private String eventId;
     private Long orderId; // orderDetail이여도 됨
     private Long userId;

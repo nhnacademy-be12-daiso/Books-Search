@@ -19,9 +19,11 @@ public class SagaListener {
     private final BookDeduplicationRepository deduplicationRepository;
     private final SagaHandler sagaHandler;
 
-    @Transactional
+//    @Transactional
     @RabbitListener(queues = SagaTopic.BOOK_QUEUE)
     public void onEvent(SagaEvent event) {
+
+        log.info("[Saga] 데이터 확인 - EventID: {}, OrderID: {}", event.getEventId(), event.getOrderId());
 
         // 중복 검사
         if(deduplicationRepository.existsByMessageId(String.valueOf(event.getEventId()))) {
