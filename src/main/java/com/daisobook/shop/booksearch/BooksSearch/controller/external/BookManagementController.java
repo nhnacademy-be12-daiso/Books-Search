@@ -12,29 +12,43 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v2/books")
 public class BookManagementController implements BookManagementControllerDocs {
 
     private final MetadataService metadataService;
 
-    @GetMapping("/api/v2/books/book-admin-page")
+    /**
+     * 관리자 도서 목록 관리 페이지 메타데이터
+     */
+    @GetMapping("/admin")
     public AdminBookMetaData getBookAdminPageInfo(@PageableDefault(size = 15, sort = "publication_date", direction = Sort.Direction.DESC) Pageable pageable){
         return metadataService.getAdminBookMataData(pageable);
     }
 
-    @GetMapping("/api/v2/books/register-page")
+    /**
+     * 도서 등록을 위한 기초 데이터 조회
+     */
+    @GetMapping("/metadata/registration")
     public RegisterBookMetaData getBookRegisterPageInfo(){
         return metadataService.getRegisterBookMataDataFromAdmin();
     }
 
-    @GetMapping("/api/v2/books/{bookId}/modify-page")
+    /**
+     * 특정 도서 수정을 위한 상세 메타데이터 조회
+     */
+    @GetMapping("/{bookId}/metadata/modification")
     public ModifyBookMetaData getBookModifyPageInfo(@PathVariable("bookId") long bookId){
         return metadataService.getModifyBookMataDataFromAdmin(bookId);
     }
 
+    /**
+     * ISBN 검색을 통한 등록 정보 조회
+     */
     @GetMapping("/api/v2/books/{isbn}/register-page")
     public FindIsbnMetaData getBookRegisterRedirectSearchInfo(@PathVariable("isbn") String isbn){
         return metadataService.getFindIsbnMataDataFromAdmin(isbn);
