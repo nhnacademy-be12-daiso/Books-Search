@@ -13,6 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class OrderCompensateEvent implements SagaEvent {
 
+    private String eventId;
     private SagaEvent originalEvent; // ----> 이렇게 해야 어떤 이벤트든 담을 수 있음
     private String failureReason; // 실패 사유
 

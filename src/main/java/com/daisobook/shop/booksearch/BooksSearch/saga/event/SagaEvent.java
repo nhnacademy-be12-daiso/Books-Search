@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = OrderCompensateEvent.class, name = "COMPENSATE")
 })
 public interface SagaEvent {
+    String getEventId();
     Long getOrderId();
     void accept(SagaHandler handler);
 }

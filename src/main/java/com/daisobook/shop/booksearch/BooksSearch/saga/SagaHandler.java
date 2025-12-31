@@ -98,6 +98,7 @@ public class SagaHandler {
 
             // 성공했든 실패했든 답장은 해야함
             SagaReply reply = new SagaReply(
+                    event.getEventId(),
                     event.getOrderId(),
                     "BOOK",
                     isSuccess,
@@ -147,6 +148,7 @@ public class SagaHandler {
 
             // 성공했든 실패했든 답장은 해야함
             SagaReply reply = new SagaReply(
+                    event.getEventId(),
                     event.getOrderId(),
                     "BOOK",
                     isSuccess,
@@ -213,6 +215,7 @@ public class SagaHandler {
         finally {
             // 성공했든 실패했든 답장은 해야함
             SagaReply reply = new SagaReply(
+                    event.getEventId(),
                     event.getOrderId(),
                     "BOOK",
                     isSuccess,
