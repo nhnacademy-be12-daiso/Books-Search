@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.review;
 
-public class DuplicatedReview extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.DuplicateResourceException;
+
+public class DuplicatedReview extends DuplicateResourceException {
     public DuplicatedReview(String message) {
         super(message);
     }

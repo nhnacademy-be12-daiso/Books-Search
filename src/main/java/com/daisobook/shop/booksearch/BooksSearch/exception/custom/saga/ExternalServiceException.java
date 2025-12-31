@@ -1,7 +1,10 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga;
 
-public class ExternalServiceException extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.BusinessException;
+import org.springframework.http.HttpStatus;
+
+public class ExternalServiceException extends BusinessException {
     public ExternalServiceException(String message) {
-        super(message);
+        super(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

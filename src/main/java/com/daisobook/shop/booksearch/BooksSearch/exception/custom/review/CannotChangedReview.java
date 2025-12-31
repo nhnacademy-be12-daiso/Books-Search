@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.review;
 
-public class CannotChangedReview extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.InvalidRequestException;
+
+public class CannotChangedReview extends InvalidRequestException {
     public CannotChangedReview(String message) {
         super(message);
     }

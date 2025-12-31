@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.author;
 
-public class DuplicatedRole extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.DuplicateResourceException;
+
+public class DuplicatedRole extends DuplicateResourceException {
     public DuplicatedRole(String message) {
         super(message);
     }

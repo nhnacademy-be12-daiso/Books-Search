@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.publisher;
 
-public class NotFoundPublisherId extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.EntityNotFoundException;
+
+public class NotFoundPublisherId extends EntityNotFoundException {
     public NotFoundPublisherId(String message) {
         super(message);
     }

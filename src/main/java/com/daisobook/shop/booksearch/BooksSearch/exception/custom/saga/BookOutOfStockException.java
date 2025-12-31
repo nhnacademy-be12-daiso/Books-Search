@@ -1,7 +1,10 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga;
 
-public class BookOutOfStockException extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.BusinessException;
+import org.springframework.http.HttpStatus;
+
+public class BookOutOfStockException extends BusinessException {
     public BookOutOfStockException(String message) {
-        super(message);
+        super(message, HttpStatus.BAD_REQUEST);
     }
 }

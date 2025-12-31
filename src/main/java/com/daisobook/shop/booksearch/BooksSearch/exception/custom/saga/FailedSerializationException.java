@@ -1,7 +1,10 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga;
 
-public class FailedSerializationException extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.BusinessException;
+import org.springframework.http.HttpStatus;
+
+public class FailedSerializationException extends BusinessException {
     public FailedSerializationException(String message) {
-        super(message);
+        super(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
