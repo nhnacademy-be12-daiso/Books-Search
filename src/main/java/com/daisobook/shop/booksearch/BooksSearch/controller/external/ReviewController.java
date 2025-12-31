@@ -1,8 +1,8 @@
-package com.daisobook.shop.booksearch.BooksSearch.controller;
+package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.ReviewControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.point.PointPolicyType;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewGroupReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
 //import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
@@ -10,6 +10,7 @@ import com.daisobook.shop.booksearch.BooksSearch.service.point.PointService;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/reviews")
-public class ReviewController {
+public class ReviewController implements ReviewControllerDocs {
 
     private final ReviewService reviewService;
 //    private final BookService bookService;
@@ -36,7 +37,7 @@ public class ReviewController {
 //    }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity addReview(@RequestPart("metadata") String metadataJson,
+    public ResponseEntity<Void> addReview(@RequestPart("metadata") String metadataJson,
                                     @RequestPart(value = "image0", required = false) MultipartFile image0,
                                     @RequestPart(value = "image1", required = false) MultipartFile image1,
                                     @RequestPart(value = "image2", required = false) MultipartFile image2) throws JsonProcessingException {
@@ -44,7 +45,7 @@ public class ReviewController {
 //        bookService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
         PointPolicyType type = bookFacade.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
         pointService.requestReviewPoint(reviewGroupReqDTO.reviewReqDTO().userId(), type);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/me")
@@ -72,19 +73,13 @@ public class ReviewController {
 //    }
 
     @PutMapping(value = "/{reviewId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity updateReviewById(@RequestParam("reviewId") long reviewId,
+    public ResponseEntity<Void> updateReviewById(@RequestParam("reviewId") long reviewId,
                                            @RequestPart("metadata") String metadataJson,
                                            @RequestPart(value = "image0", required = false) MultipartFile image0,
                                            @RequestPart(value = "image1", required = false) MultipartFile image1,
                                            @RequestPart(value = "image2", required = false) MultipartFile image2) throws JsonProcessingException {
         ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing2(metadataJson, image0, image1, image2);
         reviewService.updateReview(reviewId, reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
-        return ResponseEntity.ok().build();
-    }
-
-    //TODO 해당 리뷰 창을 요청하는 거에 대해 권한이 있는지 확인(해당 도서의 주문 디테일이 있는 사용자이며 요청을 보내는 자가 해당 사용자인지 검증이 필요)
-    boolean check(long userId, long bookId, long oderDetailId){
-        //주문에 보내서 체크하기
-        return false;
+        return ResponseEntity.noContent().build();
     }
 }

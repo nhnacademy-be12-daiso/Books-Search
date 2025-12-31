@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.internal.order;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.BookOrderControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
@@ -19,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/books/order-service")
-public class BookOrderController {
+public class BookOrderController implements BookOrderControllerDocs {
     private final BookFacade bookFacade;
     private final ReviewService reviewService;
 

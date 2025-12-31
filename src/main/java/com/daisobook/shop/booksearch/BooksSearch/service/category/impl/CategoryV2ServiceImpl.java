@@ -8,6 +8,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryRe
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTree;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.coupon.CategorySimpleResponse;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
@@ -395,5 +396,18 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         }
 
         return new BookCategoryResponse(bookId, firstCategoryId, secondCategoryId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategorySimpleResponse> findByIdIn(List<Long> categoryIds) {
+        List<Category> categories = categoryRepository.findByIdIn(categoryIds);
+
+        return categories.stream()
+                .map(cat -> new CategorySimpleResponse(
+                        cat.getId(),
+                        cat.getName()   // Category 엔티티의 필드명에 맞게
+                ))
+                .toList();
     }
 }

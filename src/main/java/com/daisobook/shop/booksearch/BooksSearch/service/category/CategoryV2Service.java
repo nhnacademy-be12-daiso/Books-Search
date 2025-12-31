@@ -5,8 +5,10 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryMo
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryRegisterReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.coupon.CategorySimpleResponse;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 
+import java.util.List;
 import java.util.Map;
 
 public interface CategoryV2Service {
@@ -22,4 +24,6 @@ public interface CategoryV2Service {
     Long getCountAll();
     CategoryTreeListRespDTO getCategoryTreeList();
     BookCategoryResponse bookCategory(Long bookId);
+    //쿠폰 용
+    List<CategorySimpleResponse> findByIdIn(List<Long> categoryIds);
 }
