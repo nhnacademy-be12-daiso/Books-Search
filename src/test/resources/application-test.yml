@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: team3-booksearch-test
+
+  datasource:
+    # H2를 MySQL 모드로 실행하여 IDENTITY 및 MySQL 문법 지원
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        # MySQL 방언을 지정해야 Native Query의 MySQL 문법이 에러나지 않습니다.
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        show_sql: true
+        # 물리 네이밍 전략 (로컬 설정과 일치시킴)
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+
+  # 테스트 시 불필요한 인프라(Redis, RabbitMQ 등) 연결로 인한 속도 저하 방지
+  data:
+    redis:
+      repositories:
+        enabled: false
+  rabbitmq:
+    listener:
+      enabled: false
+
+# 로컬 설정에서 사용하던 사용자 정의 속성들의 최소값 정의
+aladin:
+  ttb-key: "test-key"
+  api-url: "http://localhost"

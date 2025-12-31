@@ -9,13 +9,13 @@ import java.util.Collection;
 import java.util.List;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
-    boolean existsRoleByName(String name);
-
-    Role findRoleByName(String name);
+//    boolean existsRoleByName(String name);
+//
+//    Role findRoleByName(String name);
 
     List<Role> findAllByNameIn(Collection<String> names);
 
-    Role findRoleById(long id);
+//    Role findRoleById(long id);
 
     @Query(value = """
             SELECT
