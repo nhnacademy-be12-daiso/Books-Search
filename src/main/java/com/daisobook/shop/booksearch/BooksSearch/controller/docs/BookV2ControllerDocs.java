@@ -60,6 +60,6 @@ public interface BookV2ControllerDocs {
     @Operation(summary = "ISBN 중복 체크", description = "AI 도서 등록 전, 해당 ISBN이 이미 등록되어 있는지 확인합니다.")
     boolean getBookRegisterInfoByIsbn(String isbn);
 
-    @Operation(summary = "ISBN 기반 도서 정보 정제 조회", description = "ISBN 정보를 바탕으로 외부 API 등에서 정제된 도서 정보를 가져옵니다.")
-    BookInfoDataView postBookRegisterInfoByIsbn(String isbn);
+//    @Operation(summary = "ISBN 기반 도서 정보 정제 조회", description = "ISBN 정보를 바탕으로 외부 API 등에서 정제된 도서 정보를 가져옵니다.")
+//    BookInfoDataView postBookRegisterInfoByIsbn(String isbn);
 }

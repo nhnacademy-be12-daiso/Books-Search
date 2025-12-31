@@ -7,6 +7,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryL
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class CategoryV2Controller implements CategoryV2ControllerDocs {
     private final CategoryV2Service categoryService;
 
-    @GetMapping("/categories/all")
+    @GetMapping("/categories")
     public CategoryList getAllCategoryList(){
         return categoryService.getCategoryList();
     }
@@ -27,22 +28,22 @@ public class CategoryV2Controller implements CategoryV2ControllerDocs {
     }
 
     @PostMapping("/categories")
-    public ResponseEntity postCategory(@RequestBody CategoryRegisterReqDTO categoryRegisterReqDTO) {
+    public ResponseEntity<Void> postCategory(@RequestBody CategoryRegisterReqDTO categoryRegisterReqDTO) {
         categoryService.registerCategory(categoryRegisterReqDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/categories/{categoryId}")
-    public ResponseEntity modifyCategory(@PathVariable("categoryId") long categoryId,
+    public ResponseEntity<Void> modifyCategory(@PathVariable("categoryId") long categoryId,
                                          @RequestBody CategoryModifyReqDTO categoryModifyReqDTO){
         categoryService.modifyCategory(categoryId, categoryModifyReqDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/categories/{categoryId}")
-    public ResponseEntity deleteCategory(@PathVariable("categoryId") long categoryId){
+    public ResponseEntity<Void> deleteCategory(@PathVariable("categoryId") long categoryId){
         categoryService.deleteCategory(categoryId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 }
