@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.author;
 
-public class NotFoundRole extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.EntityNotFoundException;
+
+public class NotFoundRole extends EntityNotFoundException {
     public NotFoundRole(String message) {
         super(message);
     }

@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.category;
 
-public class ExistedCategory extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.DuplicateResourceException;
+
+public class ExistedCategory extends DuplicateResourceException {
     public ExistedCategory(String message) {
         super(message);
     }

@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.like;
 
-public class ExistedLike extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.DuplicateResourceException;
+
+public class ExistedLike extends DuplicateResourceException {
     public ExistedLike(String message) {
         super(message);
     }

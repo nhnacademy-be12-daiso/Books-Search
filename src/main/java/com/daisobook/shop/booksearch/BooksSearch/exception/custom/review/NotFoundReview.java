@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.review;
 
-public class NotFoundReview extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.EntityNotFoundException;
+
+public class NotFoundReview extends EntityNotFoundException {
     public NotFoundReview(String message) {
         super(message);
     }

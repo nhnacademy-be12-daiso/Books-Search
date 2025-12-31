@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.category;
 
-public class NotFoundCategoryId extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.EntityNotFoundException;
+
+public class NotFoundCategoryId extends EntityNotFoundException {
     public NotFoundCategoryId(String message) {
         super(message);
     }

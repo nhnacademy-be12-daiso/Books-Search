@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.tag;
 
-public class NotFoundTagName extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.EntityNotFoundException;
+
+public class NotFoundTagName extends EntityNotFoundException {
     public NotFoundTagName(String message) {
         super(message);
     }

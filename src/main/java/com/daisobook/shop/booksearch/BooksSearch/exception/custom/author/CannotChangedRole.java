@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.author;
 
-public class CannotChangedRole extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.InvalidRequestException;
+
+public class CannotChangedRole extends InvalidRequestException {
     public CannotChangedRole(String message) {
         super(message);
     }

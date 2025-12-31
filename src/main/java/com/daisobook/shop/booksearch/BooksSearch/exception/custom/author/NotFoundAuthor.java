@@ -1,6 +1,8 @@
 package com.daisobook.shop.booksearch.BooksSearch.exception.custom.author;
 
-public class NotFoundAuthor extends RuntimeException {
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.EntityNotFoundException;
+
+public class NotFoundAuthor extends EntityNotFoundException {
     public NotFoundAuthor(String message) {
         super(message);
     }

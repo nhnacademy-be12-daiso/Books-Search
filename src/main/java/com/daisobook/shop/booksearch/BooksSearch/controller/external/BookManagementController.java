@@ -49,7 +49,7 @@ public class BookManagementController implements BookManagementControllerDocs {
     /**
      * ISBN 검색을 통한 등록 정보 조회
      */
-    @GetMapping("/api/v2/books/{isbn}/register-page")
+    @GetMapping("{isbn}/register-page")
     public FindIsbnMetaData getBookRegisterRedirectSearchInfo(@PathVariable("isbn") String isbn){
         return metadataService.getFindIsbnMataDataFromAdmin(isbn);
     }
