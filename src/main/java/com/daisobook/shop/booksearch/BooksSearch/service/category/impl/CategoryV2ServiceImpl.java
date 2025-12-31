@@ -11,6 +11,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryT
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.DuplicatedCategory;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.ExistedCategory;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.InvalidCategoryDepthException;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
@@ -90,6 +91,51 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
             }
             category.setDeep(reqDTO.deep());
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(long categoryId) {
+        if(!existCategory(categoryId)){
+            log.error("[카테고리 삭제] 존재하지 않는 카테고리 삭제입니다 - 카테고리ID:{}", categoryId);
+            throw new ExistedCategory("[카테고리 삭제] 존재하지 않는 카테고리 삭제입니다");
+        }
+
+        if(categoryRepository.existsCategoriesByPreCategory_Id(categoryId)){
+            log.error("[카데고리 삭제] 해당 카테고리의 하위 카테고리가 존재합니다 - 카테고리Id:{}", categoryId);
+            throw new DuplicatedCategory("[카데고리 삭제] 해당 카테고리의 하위 카테고리가 존재합니다");
+        }
+
+        List<BookCategory> targetLinks = bookCategoryRepository.findAllByCategoryIdWithBook(categoryId);
+
+        if(targetLinks != null && !targetLinks.isEmpty()) {
+            List<BookCategory> saveBookCategory = new ArrayList<>();
+            Category tempCategory = categoryRepository.findCategoryByName("임시 카테고리");
+
+            targetLinks.forEach(link -> {
+                Book book = link.getBook();
+
+                if (book != null) {
+
+                    book.getBookCategories().remove(link);
+
+                    boolean alreadyHasTemp = book.getBookCategories().stream()
+                            .anyMatch(bc -> bc.getCategory().getName().equals("임시 카테고리"));
+
+                    if (!alreadyHasTemp) {
+                        BookCategory newLink = new BookCategory(book, tempCategory);
+                        book.getBookCategories().add(newLink);
+                        saveBookCategory.add(newLink);
+                    }
+                }
+            });
+
+            if(!saveBookCategory.isEmpty()) {
+                bookCategoryRepository.saveAll(saveBookCategory);
+            }
+            bookCategoryRepository.deleteAllInBatch(targetLinks);
+        }
+        categoryRepository.deleteById(categoryId);
     }
 
     @Override
