@@ -41,6 +41,7 @@ public class CategoryV2Controller implements CategoryV2ControllerDocs {
 
     @DeleteMapping("/categories/{categoryId}")
     public ResponseEntity deleteCategory(@PathVariable("categoryId") long categoryId){
+        categoryService.deleteCategory(categoryId);
         return ResponseEntity.ok().build();
     }
 
