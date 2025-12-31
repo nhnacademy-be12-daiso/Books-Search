@@ -157,7 +157,7 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
                 .map(CategoryPathProjection::getId)
                 .toList());
 
-        List<BookCategory> bookCategories = new ArrayList<>();
+//        List<BookCategory> bookCategories = new ArrayList<>();
         for(Category c: categoryList) {
             BookCategory newBookCategory = new BookCategory(book, c);
 
@@ -165,10 +165,10 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
             book.getBookCategories().add(newBookCategory);
             log.debug("[도서 등록] 해당 카테고리 관계 생성 - 도서 ID:{}, category ID:{}", book.getId(), c.getId());
 
-            bookCategories.add(newBookCategory);
+//            bookCategories.add(newBookCategory);
         }
 
-        bookCategoryRepository.saveAll(bookCategories);
+//        bookCategoryRepository.saveAll(bookCategories);
     }
 
     @Override
