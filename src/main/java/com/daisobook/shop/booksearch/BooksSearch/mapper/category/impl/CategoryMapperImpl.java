@@ -4,16 +4,21 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProj
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryPath;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTree;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.category.CategoryMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class CategoryMapperImpl implements CategoryMapper {
@@ -72,5 +77,28 @@ public class CategoryMapperImpl implements CategoryMapper {
         }
 
         return new CategoryList(categoryPathList);
+    }
+
+    @Override
+    public List<CategoryTree> toCategoryTreeList(List<CategoryListProjection> categoryProjections) {
+        Map<Long, CategoryTree> categoryTreeRespDTOMap = categoryProjections.stream()
+                .map(CategoryTree::of)
+                .collect(Collectors.toMap(CategoryTree::categoryId, categoryTreeRespDTO -> categoryTreeRespDTO));
+
+        List<CategoryTree> treeCategory = new ArrayList<>();
+        for(CategoryTree ct : categoryTreeRespDTOMap.values()){
+            if(ct.preCategoryId() != null){
+                if(!categoryTreeRespDTOMap.containsKey(ct.preCategoryId())){
+                    log.error("[카테고리 트리] 해당 카테고리의 상위 카테고리가 관계 불일치 - 카테고리ID:{}, 연결하고자 하는 상위 카테고리ID:{}", ct.categoryId(), ct.preCategoryId());
+                    throw new NotFoundCategoryId("[카테고리 트리] 해당 카테고리의 상위 카테고리가 관계 불일치");
+                }
+                CategoryTree pre = categoryTreeRespDTOMap.get(ct.preCategoryId());
+                pre.children().add(ct);
+            } else {
+                treeCategory.add(ct);
+            }
+        }
+
+        return treeCategory;
     }
 }

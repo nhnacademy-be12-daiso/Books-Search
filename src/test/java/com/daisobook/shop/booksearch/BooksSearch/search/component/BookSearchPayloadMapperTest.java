@@ -57,14 +57,14 @@ class BookSearchPayloadMapperTest {
             BookAuthor ba2 = new BookAuthor(book, a2);
             book.setBookAuthors(List.of(ba1, ba2));
 
-            Category c1 = new Category("카테고리1", 2);
-            Category c2 = new Category("카테고리2", 2);
-            setId(c1, 10L);
-            setId(c2, 20L);
+//            Category c1 = new Category("카테고리1", 2);
+//            Category c2 = new Category("카테고리2", 2);
+//            setId(c1, 10L);
+//            setId(c2, 20L);
 
-            BookCategory bc1 = new BookCategory(book, c1);
-            BookCategory bc2 = new BookCategory(book, c2);
-            book.setBookCategories(new ArrayList<>(List.of(bc1, bc2)));
+//            BookCategory bc1 = new BookCategory(book, c1);
+//            BookCategory bc2 = new BookCategory(book, c2);
+//            book.setBookCategories(new ArrayList<>(List.of(bc1, bc2)));
 
             BookImage img = new BookImage(0, "https://img/cover.jpg", ImageType.COVER);
             book.setBookImages(new ArrayList<>(List.of(img)));
@@ -117,9 +117,9 @@ class BookSearchPayloadMapperTest {
             book.setBookAuthors(List.of()); // empty -> author should be ""
             book.setBookImages(new ArrayList<>()); // empty -> imageUrl should be ""
 
-            Category c = new Category("C", 2);
-            setId(c, 9L);
-            book.setBookCategories(new ArrayList<>(List.of(new BookCategory(book, c))));
+//            Category c = new Category("C", 2);
+//            setId(c, 9L);
+//            book.setBookCategories(new ArrayList<>(List.of(new BookCategory(book, c))));
 
             // when
             RabbitBook rb = mapper.toRabbitBook(book);
@@ -168,9 +168,9 @@ class BookSearchPayloadMapperTest {
             book.setPrice((long) Integer.MAX_VALUE + 1L);
             book.setStatus(Status.ON_SALE);
 
-            Category c = new Category("C", 2);
-            setId(c, 9L);
-            book.setBookCategories(new ArrayList<>(List.of(new BookCategory(book, c))));
+//            Category c = new Category("C", 2);
+//            setId(c, 9L);
+//            book.setBookCategories(new ArrayList<>(List.of(new BookCategory(book, c))));
             book.setBookAuthors(List.of());
             book.setBookImages(new ArrayList<>());
 

@@ -3,10 +3,18 @@ package com.daisobook.shop.booksearch.BooksSearch.service.category.impl;
 import com.daisobook.shop.booksearch.BooksSearch.dto.coupon.response.BookCategoryResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryPathProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryModifyReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryRegisterReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTree;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTreeListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.coupon.CategorySimpleResponse;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.DuplicatedCategory;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.ExistedCategory;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.InvalidCategoryDepthException;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.category.CategoryMapper;
 import com.daisobook.shop.booksearch.BooksSearch.repository.category.BookCategoryRepository;
@@ -28,6 +36,108 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
     private final CategoryRepository categoryRepository;
     private final BookCategoryRepository bookCategoryRepository;
     private final CategoryMapper categoryMapper;
+
+    private boolean existCategory(long id){
+        return categoryRepository.existsCategoryById(id);
+    }
+
+    @Override
+    @Transactional
+    public void registerCategory(CategoryRegisterReqDTO reqDTO) {
+        if(existCategory(reqDTO.categoryId())){
+            log.error("[카테고리 등록] 이미 존재하는 카테고리 아이디 등록입니다 - 카테고리ID:{}", reqDTO.categoryId());
+            throw new ExistedCategory("[카테고리 등록] 이미 존재하는 카테고리 아이디 등록입니다");
+        }
+
+        Category category = new Category(reqDTO.categoryId(), reqDTO.name(), reqDTO.deep());
+        if(reqDTO.preCategoryId() != null) {
+            Category preCategory = categoryRepository.findCategoryById(reqDTO.preCategoryId());
+            if(preCategory == null){
+                log.error("[카테고리 등록] 해당 카테고리랑 연결할 상위 카테고리를 찾지 못하였습니다 - 등록 카테고리 ID:{}, 등록 카테고리 name:{}, 상위 카테고리 ID:{}", reqDTO.categoryId(), reqDTO.name(), reqDTO.preCategoryId());
+                throw new NotFoundCategoryId("[카테고리 등록] 해당 카테고리랑 연결할 상위 카테고리를 찾지 못하였습니다");
+            }
+            if(preCategory.getDeep() >= category.getDeep()){
+                log.error("[카테고리 등록] 해당 카테고리에 연결한 상위 카테고리와의 단계가 맞지 않습니다 - 등록 카테고리 단계:{}, 상위 카테고리 단계:{}", category.getDeep(), preCategory.getDeep());
+                throw new InvalidCategoryDepthException("[카테고리 등록] 해당 카테고리에 연결한 상위 카테고리와의 단계가 맞지 않습니다");
+            }
+            category.setPreCategory(preCategory);
+        } else {
+            if(category.getDeep() != 1){
+                log.error("[카테고리 등록] 해당 카테고리 단계가 최상위에 맞지 않는 단계입니다 - 등록 카테고리 단계:{}", category.getDeep());
+                throw new InvalidCategoryDepthException("[카테고리 등록] 해당 카테고리 단계가 최상위에 맞지 않는 단계입니다");
+            }
+        }
+        categoryRepository.save(category);
+    }
+
+    @Override
+    @Transactional
+    public void modifyCategory(long categoryId, CategoryModifyReqDTO reqDTO) {
+        if(!existCategory(categoryId)){
+            log.error("[카테고리 수정] 존재하지 않는 카테고리 수정입니다 - 카테고리ID:{}", categoryId);
+            throw new ExistedCategory("[카테고리 등록] 존재하지 않는 카테고리 수정입니다");
+        }
+
+        Category category = categoryRepository.findCategoryById(categoryId);
+
+        if(reqDTO.name() != null && !reqDTO.name().isBlank()
+                && !category.getName().equals(reqDTO.name())){
+            category.setName(reqDTO.name());
+        }
+        if(reqDTO.deep() != category.getDeep()){
+            Category preCategory = category.getPreCategory();
+            if(preCategory != null && category.getPreCategory().getDeep() >= reqDTO.deep()) {
+                log.error("[카테고리 수정] 해당 카테고리에 연결한 상위 카테고리와의 단계가 맞지 않습니다 - 수정 카테고리 단계:{}, 상위 카테고리 단계:{}", category.getDeep(), preCategory.getDeep());
+                throw new InvalidCategoryDepthException("[카테고리 수정] 해당 카테고리에 연결한 상위 카테고리와의 단계가 맞지 않습니다");
+            }
+            category.setDeep(reqDTO.deep());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(long categoryId) {
+        if(!existCategory(categoryId)){
+            log.error("[카테고리 삭제] 존재하지 않는 카테고리 삭제입니다 - 카테고리ID:{}", categoryId);
+            throw new ExistedCategory("[카테고리 삭제] 존재하지 않는 카테고리 삭제입니다");
+        }
+
+        if(categoryRepository.existsCategoriesByPreCategory_Id(categoryId)){
+            log.error("[카데고리 삭제] 해당 카테고리의 하위 카테고리가 존재합니다 - 카테고리Id:{}", categoryId);
+            throw new DuplicatedCategory("[카데고리 삭제] 해당 카테고리의 하위 카테고리가 존재합니다");
+        }
+
+        List<BookCategory> targetLinks = bookCategoryRepository.findAllByCategoryIdWithBook(categoryId);
+
+        if(targetLinks != null && !targetLinks.isEmpty()) {
+            List<BookCategory> saveBookCategory = new ArrayList<>();
+            Category tempCategory = categoryRepository.findCategoryByName("임시 카테고리");
+
+            targetLinks.forEach(link -> {
+                Book book = link.getBook();
+
+                if (book != null) {
+
+                    book.getBookCategories().remove(link);
+
+                    boolean alreadyHasTemp = book.getBookCategories().stream()
+                            .anyMatch(bc -> bc.getCategory().getName().equals("임시 카테고리"));
+
+                    if (!alreadyHasTemp) {
+                        BookCategory newLink = new BookCategory(book, tempCategory);
+                        book.getBookCategories().add(newLink);
+                        saveBookCategory.add(newLink);
+                    }
+                }
+            });
+
+            if(!saveBookCategory.isEmpty()) {
+                bookCategoryRepository.saveAll(saveBookCategory);
+            }
+            bookCategoryRepository.deleteAllInBatch(targetLinks);
+        }
+        categoryRepository.deleteById(categoryId);
+    }
 
     @Override
     @Transactional
@@ -222,6 +332,14 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         return categoryRepository.count();
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public CategoryTreeListRespDTO getCategoryTreeList() {
+        List<CategoryListProjection> all = categoryRepository.getAll();
+        List<CategoryTree> categoryTreeList = categoryMapper.toCategoryTreeList(all);
+        return new CategoryTreeListRespDTO(categoryTreeList);
+    }
+
     @Transactional
     @Override
     public BookCategoryResponse bookCategory(Long bookId) {
@@ -278,5 +396,18 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
         }
 
         return new BookCategoryResponse(bookId, firstCategoryId, secondCategoryId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategorySimpleResponse> findByIdIn(List<Long> categoryIds) {
+        List<Category> categories = categoryRepository.findByIdIn(categoryIds);
+
+        return categories.stream()
+                .map(cat -> new CategorySimpleResponse(
+                        cat.getId(),
+                        cat.getName()   // Category 엔티티의 필드명에 맞게
+                ))
+                .toList();
     }
 }

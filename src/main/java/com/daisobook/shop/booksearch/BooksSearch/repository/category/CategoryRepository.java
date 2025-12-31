@@ -91,4 +91,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             """,
             nativeQuery = true)
     List<CategoryListProjection> getAll();
+
+    boolean existsCategoriesByPreCategory_Id(long preCategoryId);
 }

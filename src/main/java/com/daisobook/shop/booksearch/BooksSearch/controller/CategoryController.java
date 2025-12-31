@@ -1,6 +1,6 @@
 //package com.daisobook.shop.booksearch.BooksSearch.controller;
 //
-//import com.daisobook.shop.booksearch.BooksSearch.dto.request.CategoryReqDTO;
+//import com.daisobook.shop.booksearch.BooksSearch.dto.request.category.CategoryReqDTO;
 //import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 //import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryService;
 //import lombok.RequiredArgsConstructor;
