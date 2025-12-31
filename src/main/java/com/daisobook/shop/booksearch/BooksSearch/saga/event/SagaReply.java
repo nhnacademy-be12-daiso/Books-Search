@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SagaReply {
+
+    private String eventId;
     private Long orderId;
     private String serviceName; // 어떤 서비스에서 왔는지?
     private boolean success; // 성공했는지
