@@ -157,7 +157,7 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
                 .map(CategoryPathProjection::getId)
                 .toList());
 
-//        List<BookCategory> bookCategories = new ArrayList<>();
+        List<BookCategory> bookCategories = new ArrayList<>();
         for(Category c: categoryList) {
             BookCategory newBookCategory = new BookCategory(book, c);
 
@@ -165,10 +165,10 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
             book.getBookCategories().add(newBookCategory);
             log.debug("[도서 등록] 해당 카테고리 관계 생성 - 도서 ID:{}, category ID:{}", book.getId(), c.getId());
 
-//            bookCategories.add(newBookCategory);
+            bookCategories.add(newBookCategory);
         }
 
-//        bookCategoryRepository.saveAll(bookCategories);
+        bookCategoryRepository.saveAll(bookCategories);
     }
 
     @Override
@@ -261,8 +261,8 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
                 uc.getBookCategories().add(bookCategory);
                 bookCategory.setCategory(uc);
 
-                log.debug("[도서 수정] 변경사항 - 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory().getName());
-                log.debug("[도서 수정] 변경사항 - 변경 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory().getName());
+                log.debug("[도서 수정] 변경사항 - 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory() != null ? pc.getPreCategory().getName() : null);
+                log.debug("[도서 수정] 변경사항 - 변경 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory() != null ? pc.getPreCategory().getName() : null);
 
             } else if(uc != null || pc != null) {
                 if(pc == null){
@@ -272,14 +272,14 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
                     book.getBookCategories().add(newBookCategory);
 
                     saveBookCategoryList.add(newBookCategory);
-                    log.debug("[도서 수정] 새로운 카테고리 추가 - 추가 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory().getName());
+                    log.debug("[도서 수정] 새로운 카테고리 추가 - 추가 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", uc.getId(), uc.getName(), uc.getDeep(), uc.getPreCategory() != null ? uc.getPreCategory().getName() : null);
 
                 } else {
                     pc.getBookCategories().remove(bookCategory);
                     book.getBookCategories().remove(bookCategory);
 
                     deleteBookCategoryIdList.add(bookCategory.getId());
-                    log.debug("[도서 수정] 이전 카테고리 삭제- 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory().getName());
+                    log.debug("[도서 수정] 이전 카테고리 삭제- 이전 카테고리 - ID: {}, Name: {}, Deep: {}, preCategory: {}", pc.getId(), pc.getName(), pc.getDeep(), pc.getPreCategory() != null ? pc.getPreCategory().getName() : null);
 
                 }
             }
