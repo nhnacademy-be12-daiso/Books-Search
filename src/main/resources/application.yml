@@ -16,7 +16,9 @@ spring:
       pool-name: Book-Service-Pool
       maximum-pool-size: 20       # 기본 10개에서 20개로 상향
       minimum-idle: 20            # 미리 20개를 다 만들어 두어(Warm-up) 첫 요청 지연 방지
-      connection-timeout: 3000     # 커넥션 획득 대기 시간을 3초로 제한
+      connection-timeout: 10000     # 커넥션 획득 대기 시간을 3초로 제한
+      keepalive-time: 30000
+      validation-timeout: 5000
       idle-timeout: 600000
       max-lifetime: 1800000        # 커넥션 최대 수명 (30분)
   jpa:
