@@ -219,7 +219,7 @@ public class BookCoreService {
         BookDetailProjection detail = bookRepository.getBookDetailById(bookId, false);
         if(detail == null){
             log.error("[도서 조회] 해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
-            return null;
+            throw new NotFoundBookId("[도서 조회] 해당하는 도서를 찾지 못하였습니다");
         }
 
         return detail;
@@ -230,7 +230,7 @@ public class BookCoreService {
         BookUpdateViewProjection updateView = bookRepository.getBookUpdateView(bookId);
         if(updateView == null){
             log.error("[수정 도서 조회] 해당하는 도서를 찾지 못하였습니다 - 도서ID: {}", bookId);
-            return null;
+            throw new NotFoundBookId("[수정 도서 조회] 해당하는 도서를 찾지 못하였습니다");
         }
 
         return updateView;
