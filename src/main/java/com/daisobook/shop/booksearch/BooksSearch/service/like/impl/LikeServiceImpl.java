@@ -115,7 +115,7 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public void deleteLike(long userId, Book book) {
         if(book == null){
-            log.error("존재하지 않은 도서 좋아요 취소 - 도서Id:{}", book.getId());
+            log.error("존재하지 않은 도서 좋아요 취소 - book is null, userId: {}", userId);
             throw new NotFoundBook("존재하지 않는 도서의 좋아요 취소입니다.");
         }
 
