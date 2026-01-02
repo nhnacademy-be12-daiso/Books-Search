@@ -93,4 +93,24 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<CategoryListProjection> getAll();
 
     boolean existsCategoriesByPreCategory_Id(long preCategoryId);
+
+    @Query(
+            value = """
+            WITH RECURSIVE CategoryPath (id, pre_category_id, deep) AS (
+                SELECT c.category_id, c.pre_category_id, c.deep
+                FROM categories c
+                WHERE c.category_id = ?1
+            
+                UNION ALL
+            
+                SELECT c.category_id, c.pre_category_id, c.deep
+                FROM categories c
+                JOIN CategoryPath cp ON c.pre_category_id = cp.id
+            )
+            -- 💡 DTO에 맞게 컬럼명 선택
+            SELECT id FROM CategoryPath
+            """,
+            nativeQuery = true
+    )
+    List<Long> getLowCategoryId(long categoryId);
 }

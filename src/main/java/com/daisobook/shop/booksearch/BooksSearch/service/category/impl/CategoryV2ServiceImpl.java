@@ -399,6 +399,11 @@ public class CategoryV2ServiceImpl implements CategoryV2Service {
     }
 
     @Override
+    public List<Long> getLowCategoryIdList(long categoryId) {
+        return categoryRepository.getLowCategoryId(categoryId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<CategorySimpleResponse> findByIdIn(List<Long> categoryIds) {
         List<Category> categories = categoryRepository.findByIdIn(categoryIds);

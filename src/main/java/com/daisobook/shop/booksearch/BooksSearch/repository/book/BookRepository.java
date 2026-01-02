@@ -363,4 +363,75 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
     Page<BookAdminProjection> getBookAdminProjection(Pageable pageable);
 
     Long countAllByStatus(Status status);
+
+    @Query(value = """
+            SELECT
+                b.book_id as bookId,
+                b.isbn,
+                b.title,
+                b.description,
+                (
+                  SELECT JSON_ARRAYAGG(
+                     JSON_OBJECT('authorId', a.author_id, 'authorName', a.author_name, 'roleId', r.role_id, 'roleName', r.role_name)
+                  )
+                  FROM book_authors ba
+                      LEFT JOIN authors a ON ba.author_id = a.author_id
+                      LEFT JOIN roles r ON ba.role_id = r.role_id
+                  WHERE ba.book_id = b.book_id
+                ) AS authors,
+                p.publisher_name as publisher,
+                b.publication_date as publicationDate,
+                b.price,
+                b.status,
+                (
+                  SELECT JSON_ARRAYAGG(
+                     JSON_OBJECT('no', bi.book_image_no, 'path', bi.book_image_path, 'imageType', bi.image_type)
+                  )
+                  FROM book_images bi
+                  WHERE bi.book_id = b.book_id
+                ) AS images,
+                (
+                  SELECT JSON_ARRAYAGG(
+                     JSON_OBJECT('categoryId', c.category_id, 'CategoryName', c.category_name, 'deep', c.deep, 'preCategoryId', pc.category_id, 'preCategoryName', pc.category_name)
+                  )
+                  FROM book_categories bc
+                      LEFT JOIN categories c ON bc.category_id = c.category_id
+                      LEFT JOIN categories pc ON c.pre_category_id = pc.category_id
+                  WHERE bc.book_id = b.book_id
+                ) AS categories,
+                (
+                  SELECT JSON_ARRAYAGG(
+                     JSON_OBJECT('tagId', t.tag_id, 'tagName', t.tag_name)
+                  )
+                  FROM book_tags bt
+                      LEFT JOIN tags t ON bt.tag_id = t.tag_id
+                  WHERE bt.book_id = b.book_id
+                ) AS tags,
+                b.volume_no as volumeNO,
+                b.is_packaging as isPackaging,
+                b.is_deleted as isDeleted
+            FROM books b
+            JOIN publishers p ON b.publisher_id = p.publisher_id
+            WHERE (
+                        :includeDeleted = TRUE
+                        OR b.is_deleted = 0
+                    )
+                    AND
+                    EXISTS(
+                            SELECT 1
+                            FROM book_categories bc
+                            WHERE bc.book_id = b.book_id
+                                AND bc.category_id IN (:categoryIds)
+                        )
+            """,
+            countQuery = """
+                SELECT count(*) FROM books b
+                WHERE (:includeDeleted = TRUE OR b.is_deleted = 0)
+                AND EXISTS (
+                SELECT 1 FROM book_categories bc
+                WHERE bc.book_id = b.book_id AND bc.category_id IN (:categoryIds)
+                )
+            """,
+            nativeQuery = true)
+    Page<BookListProjection> getBookByCategoryIdIn(Pageable pageable, @Param("categoryIds") List<Long> categoryIds, @Param("includeDeleted") boolean includeDeleted);
 }

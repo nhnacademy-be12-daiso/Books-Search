@@ -320,7 +320,7 @@ class BookFacadeTest {
         @DisplayName("getBookList: NEW_RELEASES 정상 흐름")
         void getBookList_newReleases_success() throws JsonProcessingException {
             // id list
-            when(bookCoreService.getBookIdsOfNewReleases(any(), eq(10))).thenReturn(List.of(11L));
+            when(bookCoreService.getBookIdsOfNewReleases(any(), any(), eq(10))).thenReturn(List.of(11L));
 
             // projections
             var proj = mock(com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection.class);
@@ -337,7 +337,7 @@ class BookFacadeTest {
 
             // discount mapping
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Request> dtoMap = Map.of();
-            when(bookMapper.toDiscountDTOMap(dataMap)).thenReturn(dtoMap);
+            when(bookMapper.toDiscountDTOMapByBookListData(dataMap)).thenReturn(dtoMap);
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Response> discountMap = Map.of();
             when(discountPolicyService.getDiscountPriceMap(dtoMap)).thenReturn(discountMap);
 
@@ -345,7 +345,7 @@ class BookFacadeTest {
             var resp = mock(com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO.class);
             when(bookMapper.toBookRespDTOList(dataMap, discountMap, Set.of(11L))).thenReturn(List.of(resp));
 
-            var result = bookFacade.getBookList(com.daisobook.shop.booksearch.BooksSearch.entity.BookListType.NEW_RELEASES, 1L);
+            var result = bookFacade.getBookList(null, com.daisobook.shop.booksearch.BooksSearch.entity.BookListType.NEW_RELEASES, 1L);
             assertThat(result).isNotNull();
             assertThat(result.bookListRespDTOS()).hasSize(1);
         }
@@ -358,7 +358,7 @@ class BookFacadeTest {
             when(bookCoreService.getBookInfoListByInd(List.of(2L), false)).thenReturn(List.of(proj));
 
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Request> dtoMap = Map.of();
-            when(bookMapper.toDiscountDTOMap(List.of(proj))).thenReturn(dtoMap);
+            when(bookMapper.toDiscountDTOMapByBookInfoListProjection(List.of(proj))).thenReturn(dtoMap);
 
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Response> discountMap = Map.of();
             when(discountPolicyService.getDiscountPriceMap(dtoMap)).thenReturn(discountMap);
@@ -393,7 +393,7 @@ class BookFacadeTest {
             when(bookCoreService.getBookAdminProjectionPage(pageable)).thenReturn(adminPage);
 
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Request> dtoMap = Map.of();
-            when(bookMapper.toDiscountDTOMap(adminPage)).thenReturn(dtoMap);
+            when(bookMapper.toDiscountDTOMapByBookAdminProjection(adminPage)).thenReturn(dtoMap);
 
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Response> discountMap = Map.of();
             when(discountPolicyService.getDiscountPriceMap(dtoMap)).thenReturn(discountMap);
@@ -414,14 +414,14 @@ class BookFacadeTest {
             when(bookCoreService.getBookAdminProjectionPage(pageable)).thenReturn(adminPage);
 
             Map<Long, com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO.Request> dtoMap = Map.of();
-            when(bookMapper.toDiscountDTOMap(adminPage)).thenReturn(dtoMap);
+            when(bookMapper.toDiscountDTOMapByBookAdminProjection(adminPage)).thenReturn(dtoMap);
 
             when(discountPolicyService.getDiscountPriceMap(dtoMap)).thenThrow(new JsonProcessingException("bad") {});
 
             assertThatThrownBy(() -> bookFacade.findAllForAdmin(pageable))
                     .isInstanceOf(FailObjectMapper.class);
             verify(bookCoreService).getBookAdminProjectionPage(pageable);
-            verify(bookMapper).toDiscountDTOMap(adminPage);
+            verify(bookMapper).toDiscountDTOMapByBookAdminProjection(adminPage);
         }
 
     }

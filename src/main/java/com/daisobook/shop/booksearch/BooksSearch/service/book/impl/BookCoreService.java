@@ -237,12 +237,14 @@ public class BookCoreService {
     }
 
     @Transactional(readOnly = true)
-    public List<Long> getBookIdsFromBookOfTheWeek(Integer limit){
+    public List<Long> getBookIdsFromBookOfTheWeek(Pageable pageable, Integer limit){
         if(limit == null) {
             limit = 10;
         }
 
-        Pageable pageable = PageRequest.of(0, limit);
+        if(pageable == null) {
+            pageable = PageRequest.of(0, limit);
+        }
         List<BookIdProjection> bookId = bookOfTheWeekRepository.getBookId(pageable);
 
         return bookId.stream()
@@ -251,7 +253,7 @@ public class BookCoreService {
     }
 
     @Transactional(readOnly = true)
-    public List<Long> getBookIdsOfNewReleases(LocalDate startDate, Integer limit){
+    public List<Long> getBookIdsOfNewReleases(Pageable pageable, LocalDate startDate, Integer limit){
         if(startDate == null){
             startDate = LocalDate.now().minusMonths(6);
         }
@@ -259,7 +261,9 @@ public class BookCoreService {
             limit = 10;
         }
 
-        Pageable pageable = PageRequest.of(0, limit);
+        if(pageable == null) {
+            pageable = PageRequest.of(0, limit);
+        }
         List<BookIdProjection> bookId = bookRepository.getBookIdByNewReleases(startDate, pageable);
 
         return bookId.stream()
@@ -305,5 +309,10 @@ public class BookCoreService {
     @Transactional
     public Long getCountByStatus(Status status){
         return bookRepository.countAllByStatus(status);
+    }
+
+    @Transactional
+    public Page<BookListProjection> getBookByCategoryIdList(Pageable pageable, List<Long> categoryIds){
+        return bookRepository.getBookByCategoryIdIn(pageable, categoryIds, false);
     }
 }

@@ -154,7 +154,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
             BigDecimal i = discountRequest.price() != null ? BigDecimal.valueOf((1.0 - (double) discountPrice / discountRequest.price()) * 100.0): null;
 
-            discountResponse = new DiscountDTO.Response(bookId, price, i != null ? i.setScale(2, RoundingMode.DOWN) : null, discountPrice);
+            discountResponse = new DiscountDTO.Response(bookId, discountRequest.price(), i != null ? i.setScale(2, RoundingMode.DOWN) : null, discountPrice);
             
             discountPriceMap.put(bookId, discountResponse);
         }

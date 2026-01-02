@@ -30,10 +30,13 @@ public interface BookMapper {
     OrderBooksInfoRespDTO toOrderBookInfoRespDTOList(Map<Long, DiscountDTO.Response> discountDTOMap, List<BookInfoListProjection> bookInfoListProjections);
     BookRespDTO toBookRespDTO(BookDetailProjection bookDetail, Integer likeCount, Boolean likeCheck, Long discountPrice) throws JsonProcessingException;
     List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Map<Long, DiscountDTO.Response> discountPriceMap, Set<Long> likeSetBookId);
+    Page<BookListRespDTO> toBookRespDTOPage(Page<BookListData> bookListDataPage, Map<Long, DiscountDTO.Response> discountPriceMap, Set<Long> likeSetBookId);
     Map<Long, BookListData> toBookListDataMap(List<BookListProjection> bookListProjectionList) throws JsonProcessingException;
-    Map<Long, DiscountDTO.Request> toDiscountDTOMap(Map<Long, BookListData> bookListDataMap);
-    Map<Long, DiscountDTO.Request> toDiscountDTOMap(List<BookInfoListProjection> bookInfoListDataMap);
-    Map<Long, DiscountDTO.Request> toDiscountDTOMap(Page<BookAdminProjection> bookAdminProjectionPage);
+    Page<BookListData> toBookListDataPage(Page<BookListProjection> bookListProjectionPage) throws JsonProcessingException;
+    Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookListData(Map<Long, BookListData> bookListDataMap);
+    Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookListData(Page<BookListData> bookListDataPage);
+    Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookInfoListProjection(List<BookInfoListProjection> bookInfoListDataMap);
+    Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookAdminProjection(Page<BookAdminProjection> bookAdminProjectionPage);
     List<OrderBookSummeryDTO> toOrderBookSummeryDTOList(List<BookSummeryProjection> bookSummeryProjections);
     BookUpdateView toBookUpdateView(BookUpdateViewProjection detail) throws JsonProcessingException;
     Page<BookAdminResponseDTO> toBookAdminResopnseDTOPage(Page<BookAdminProjection> adminProjectionPage, Map<Long, DiscountDTO.Response> discountPriceMap) throws JsonProcessingException;

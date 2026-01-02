@@ -206,7 +206,7 @@ class BookCoreServiceTest {
         when(p.getId()).thenReturn(7L);
         when(bookRepository.getBookIdByNewReleases(any(), any())).thenReturn(List.of(p));
 
-        var ids = sut.getBookIdsOfNewReleases(null, 5);
+        var ids = sut.getBookIdsOfNewReleases(null, null, 5);
         assertThat(ids).containsExactly(7L);
     }
 
@@ -217,7 +217,7 @@ class BookCoreServiceTest {
         when(p.getId()).thenReturn(9L);
         when(bookOfTheWeekRepository.getBookId(any())).thenReturn(List.of(p));
 
-        var ids = sut.getBookIdsFromBookOfTheWeek(3);
+        var ids = sut.getBookIdsFromBookOfTheWeek(null,3);
         assertThat(ids).containsExactly(9L);
     }
 

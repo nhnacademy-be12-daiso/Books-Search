@@ -24,6 +24,7 @@ import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.publisher.PublisherMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.review.ReviewMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.tag.TagMapper;
+import com.daisobook.shop.booksearch.BooksSearch.util.MarkdownUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -137,13 +138,25 @@ public class BookMapperImpl implements BookMapper {
     public List<BookListRespDTO> toBookRespDTOList(Map<Long, BookListData> bookListDataMap, Map<Long, DiscountDTO.Response> discountPriceMap, Set<Long> likeSetBookId) {
         return bookListDataMap.values().stream()
                 .map(bl ->
-                        new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getDescription(), bl.getAuthorList(), bl.getPublisher().name(),
+                        new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), MarkdownUtils.extractPlainText(bl.getDescription()), bl.getAuthorList(), bl.getPublisher().name(),
                                 bl.getPublicationDate(), discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).price() : null,
                                 discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPercentage() : null,
                                 discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPrice() : null, bl.getStatus(),
                                 bl.getImageList(), bl.getCategoryList(), bl.getTagList(), bl.getVolumeNo(), bl.getIsPackaging(),
                                 likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null, bl.isDeleted()))
                 .toList();
+    }
+
+    @Override
+    public Page<BookListRespDTO> toBookRespDTOPage(Page<BookListData> bookListDataPage, Map<Long, DiscountDTO.Response> discountPriceMap, Set<Long> likeSetBookId) {
+        return bookListDataPage
+                .map(bl ->
+                        new BookListRespDTO(bl.getId(), bl.getIsbn(), bl.getTitle(), MarkdownUtils.extractPlainText(bl.getDescription()), bl.getAuthorList(), bl.getPublisher().name(),
+                                bl.getPublicationDate(), discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).price() : null,
+                                discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPercentage() : null,
+                                discountPriceMap.containsKey(bl.getId()) ? discountPriceMap.get(bl.getId()).discountPrice() : null, bl.getStatus(),
+                                bl.getImageList(), bl.getCategoryList(), bl.getTagList(), bl.getVolumeNo(), bl.getIsPackaging(),
+                                likeSetBookId != null ? likeSetBookId.contains(bl.getId()) : null, bl.isDeleted()));
     }
 
     @Override
@@ -192,21 +205,73 @@ public class BookMapperImpl implements BookMapper {
     }
 
     @Override
-    public Map<Long, DiscountDTO.Request> toDiscountDTOMap(Map<Long, BookListData> bookListDataMap) {
+    public Page<BookListData> toBookListDataPage(Page<BookListProjection> bookListProjectionPage) throws JsonProcessingException {
+        Map<Long, List<AuthorRespDTO>> authorRespDTOMap = authorMapper.toAuthorRespDTOMap(bookListProjectionPage.stream()
+                .filter(bl -> bl.getAuthors() != null)
+                .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getAuthors)));
+
+        Set<Long> authorKeySet = authorRespDTOMap.keySet();
+
+        Map<Long, PublisherRespDTO> publisherRespDTOMap = publisherMapper.toPublisherRespDTOMap(bookListProjectionPage.stream()
+                .filter(bl -> bl.getPublisher() != null)
+                .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getPublisher)));
+
+        Set<Long> publishserKeySet = publisherRespDTOMap.keySet();
+
+        Map<Long, List<ImageRespDTO>> imageRespDTOMap = imageMapper.toIageRespDTOMap(bookListProjectionPage.stream()
+                .filter(bl -> bl.getImages() != null)
+                .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getImages)));
+
+        Set<Long> imageKeySet = imageRespDTOMap.keySet();
+
+        Map<Long, List<CategoryRespDTO>> categoryRespDTOMap = categoryMapper.toCategoryRespDTOMap(bookListProjectionPage.stream()
+                .filter(bl -> bl.getCategories() != null)
+                .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getCategories)));
+
+        Set<Long> categoryKeySet = categoryRespDTOMap.keySet();
+
+        Map<Long, List<TagRespDTO>> tagRespDTOMap = tagMapper.toTagRespDTOMap(bookListProjectionPage.stream()
+                .filter(bl -> bl.getTags() != null)
+                .collect(Collectors.toMap(BookListProjection::getId, BookListProjection::getTags)));
+
+        Set<Long> tagKeySet = tagRespDTOMap.keySet();
+
+        return bookListProjectionPage
+                .map(bl ->
+                        new BookListData(bl.getId(), bl.getIsbn(), bl.getTitle(), bl.getDescription(),
+                                authorKeySet.contains(bl.getId()) ? authorRespDTOMap.get(bl.getId()) : null,
+                                publishserKeySet.contains(bl.getId()) ? publisherRespDTOMap.get(bl.getId()) : null,
+                                bl.getPublicationDate(), bl.getPrice(), null,
+                                null, bl.getStatus(),
+                                imageKeySet.contains(bl.getId()) ? imageRespDTOMap.get(bl.getId()) : null,
+                                categoryKeySet.contains(bl.getId()) ? categoryRespDTOMap.get(bl.getId()) : null,
+                                tagKeySet.contains(bl.getId()) ? tagRespDTOMap.get(bl.getId()) : null,
+                                bl.getVolumeNo(), bl.getIsPackaging(), bl.getIsDeleted()));
+    }
+
+    @Override
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookListData(Map<Long, BookListData> bookListDataMap) {
         return bookListDataMap.values().stream()
                 .map(bl -> new DiscountDTO.Request(bl.getId(), bl.getPrice()))
                 .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
     }
 
     @Override
-    public Map<Long, DiscountDTO.Request> toDiscountDTOMap(List<BookInfoListProjection> bookInfoListDataMap) {
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookListData(Page<BookListData> bookListDataPage) {
+        return bookListDataPage.stream()
+                .map(bl -> new DiscountDTO.Request(bl.getId(), bl.getPrice()))
+                .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
+    }
+
+    @Override
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookInfoListProjection(List<BookInfoListProjection> bookInfoListDataMap) {
         return bookInfoListDataMap.stream()
                 .map(bi -> new DiscountDTO.Request(bi.getBookId(), bi.getPrice()))
                 .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
     }
 
     @Override
-    public Map<Long, DiscountDTO.Request> toDiscountDTOMap(Page<BookAdminProjection> bookAdminProjectionPage) {
+    public Map<Long, DiscountDTO.Request> toDiscountDTOMapByBookAdminProjection(Page<BookAdminProjection> bookAdminProjectionPage) {
         return bookAdminProjectionPage.stream()
                 .map(ba -> new DiscountDTO.Request(ba.getBookId(), ba.getPrice()))
                 .collect(Collectors.toMap(DiscountDTO.Request::bookId, request -> request));
