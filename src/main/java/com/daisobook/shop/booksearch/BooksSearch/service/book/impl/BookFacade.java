@@ -10,6 +10,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.OrderCancelRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
@@ -436,5 +437,15 @@ public class BookFacade {
         Page<BookListRespDTO> bookRespDTOList = bookMapper.toBookRespDTOPage(bookListDataPage, discountPriceMap, likeSetBookId);
 
         return new BookListByCategoryRespDTO(bookRespDTOList);
+    }
+
+    @Transactional
+    public void orderCancel(OrderCancelRequest request){
+        Book book = bookCoreService.getBook_Id(request.bookId());
+        if(book == null){
+            log.warn("[주문 취소] 해당 도서를 찾지 못하였습니다 - 도서ID:{}", request.bookId());
+            throw new NotFoundBookId("[주문 취소] 해당 도서를 찾지 못하였습니다");
+        }
+        book.setStock(book.getStock() + request.quantity());
     }
 }
