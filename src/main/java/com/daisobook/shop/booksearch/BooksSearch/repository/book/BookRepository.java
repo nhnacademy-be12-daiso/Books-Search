@@ -366,7 +366,7 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
 
     @Query(value = """
             SELECT
-                b.book_id as bookId,
+                b.book_id as id,
                 b.isbn,
                 b.title,
                 b.description,
@@ -379,7 +379,11 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                       LEFT JOIN roles r ON ba.role_id = r.role_id
                   WHERE ba.book_id = b.book_id
                 ) AS authors,
-                p.publisher_name as publisher,
+                (
+                  SELECT JSON_OBJECT('id', p.publisher_id, 'name', p.publisher_name)
+                  FROM publishers p
+                  WHERE b.publisher_id = p.publisher_id
+                ) AS publisher,
                 b.publication_date as publicationDate,
                 b.price,
                 b.status,
@@ -411,7 +415,6 @@ BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("inc
                 b.is_packaging as isPackaging,
                 b.is_deleted as isDeleted
             FROM books b
-            JOIN publishers p ON b.publisher_id = p.publisher_id
             WHERE (
                         :includeDeleted = TRUE
                         OR b.is_deleted = 0
