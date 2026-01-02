@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.BooksSearch.controller.internal.order;
 import com.daisobook.shop.booksearch.BooksSearch.controller.docs.BookOrderControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.BookIdListReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.BookReviewRequest;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.OrderCancelRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.BookReviewResponse;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
@@ -10,6 +11,8 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksIn
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,5 +43,11 @@ public class BookOrderController implements BookOrderControllerDocs {
     @PostMapping("/list/book-review")
     public List<BookReviewResponse> getBookReviewList(@RequestBody BookReviewRequest bookReviewRequest){
         return reviewService.findBookReviewList(bookReviewRequest.userId(), bookReviewRequest.bookOrderDetailRequests());
+    }
+
+    @PostMapping("/order-cancel")
+    public ResponseEntity<Void> orderCancel(@RequestBody OrderCancelRequest orderCancelRequest){
+        bookFacade.orderCancel(orderCancelRequest);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
