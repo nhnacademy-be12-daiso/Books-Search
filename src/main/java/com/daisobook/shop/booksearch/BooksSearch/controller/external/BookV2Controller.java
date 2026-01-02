@@ -6,6 +6,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListByCategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
@@ -83,9 +84,10 @@ public class BookV2Controller implements BookV2ControllerDocs {
 
     //GET: /api/v2/books?list-type="" 해당 도서 리스트 조회 (예: 베스트 셀러, 신간도서 등)
     @GetMapping
-    public SortBookListRespDTO getBookListBySort(@RequestParam("type") BookListType listType,
-                                  @RequestHeader(value = "X-User-Id", required = false)Long userId){
-        return bookFacade.getBookList(listType, userId);
+    public SortBookListRespDTO getBookListBySort(@PageableDefault(size = 15) Pageable pageable,
+                                                 @RequestParam("type") BookListType listType,
+                                                 @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return bookFacade.getBookList(pageable, listType, userId);
     }
 
     //GET: /api/v2/books/{bookId} 해당 도서 조회
@@ -124,4 +126,11 @@ public class BookV2Controller implements BookV2ControllerDocs {
 //    public BookInfoDataView postBookRegisterInfoByIsbn(@PathVariable("isbn") String isbn){
 //        return bookRefineService.getRefinedBook(isbn);
 //    }
+
+    @GetMapping("/categories/{categoryId}")
+    public BookListByCategoryRespDTO getBookListByCategoryId(@PageableDefault(size = 15, sort = "publication_date", direction = Sort.Direction.DESC) Pageable pageable,
+                                                             @PathVariable("categoryId") long categoryId,
+                                                             @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return  bookFacade.getBookListByCategoryId(pageable, categoryId, userId);
+    }
 }

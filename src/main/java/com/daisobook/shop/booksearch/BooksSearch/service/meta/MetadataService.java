@@ -2,14 +2,17 @@ package com.daisobook.shop.booksearch.BooksSearch.service.meta;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.api.BookInfoDataView;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.RoleNameListRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.MainPageBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.AdminBookMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.FindIsbnMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.ModifyBookMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.RegisterBookMetaData;
+import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.daisobook.shop.booksearch.BooksSearch.service.api.BookRefineService;
 import com.daisobook.shop.booksearch.BooksSearch.service.author.AuthorV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
@@ -17,6 +20,7 @@ import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Serv
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
@@ -57,5 +61,14 @@ public class MetadataService {
         RoleNameListRespDTO roleNameList = authorService.getRoleNameList();
 
         return new FindIsbnMetaData(refinedBook, categoryList, roleNameList);
+    }
+
+    public MainPageBookListRespDTO getMainPageBookList(Pageable pageable, Long userId){
+        if(pageable == null) {
+            pageable = PageRequest.of(0, 15);
+        }
+        SortBookListRespDTO list1 = bookFacade.getBookList(pageable, BookListType.BOOK_OF_THE_WEEK, userId);
+        SortBookListRespDTO list2 = bookFacade.getBookList(pageable, BookListType.NEW_RELEASES, userId);
+        return new MainPageBookListRespDTO(list1, list2);
     }
 }

@@ -24,6 +24,7 @@ public interface CategoryV2Service {
     Long getCountAll();
     CategoryTreeListRespDTO getCategoryTreeList();
     BookCategoryResponse bookCategory(Long bookId);
+    List<Long> getLowCategoryIdList(long categoryId);
     //쿠폰 용
     List<CategorySimpleResponse> findByIdIn(List<Long> categoryIds);
 }

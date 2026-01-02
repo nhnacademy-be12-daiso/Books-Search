@@ -13,10 +13,7 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
@@ -25,10 +22,11 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.BookListTypeNull;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.BookListTypeNull;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
@@ -36,7 +34,6 @@ import com.daisobook.shop.booksearch.BooksSearch.search.component.BookSearchSync
 import com.daisobook.shop.booksearch.BooksSearch.service.category.CategoryV2Service;
 import com.daisobook.shop.booksearch.BooksSearch.service.image.impl.BookImageServiceImpl;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
-import com.daisobook.shop.booksearch.BooksSearch.service.point.PointService;
 import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,12 +43,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -257,7 +255,7 @@ public class BookFacade {
     }
 
     @Transactional(readOnly = true)
-    public SortBookListRespDTO getBookList(BookListType listType, Long userId){
+    public SortBookListRespDTO getBookList(Pageable page, BookListType listType, Long userId){
         if(listType == null){
             log.error("[도서 목록] book list type가 null입니다");
             throw new BookListTypeNull("[도서 목록] book list type가 null입니다");
@@ -266,9 +264,9 @@ public class BookFacade {
         List<Long> bookIds = null;
         if(listType.equals(BookListType.NEW_RELEASES)){
             LocalDate startDate = LocalDate.now().minusMonths(60);
-            bookIds = bookCoreService.getBookIdsOfNewReleases(startDate, 10);
+            bookIds = bookCoreService.getBookIdsOfNewReleases(page, startDate, 10);
         } else if(listType.equals(BookListType.BOOK_OF_THE_WEEK)){
-            bookIds = bookCoreService.getBookIdsFromBookOfTheWeek(10);
+            bookIds = bookCoreService.getBookIdsFromBookOfTheWeek(page, 10);
         }
 
         if(bookIds == null){
@@ -293,7 +291,7 @@ public class BookFacade {
                         .map(BookListProjection::getId)
                         .toList());
 
-        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMap(bookListDataMap);
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMapByBookListData(bookListDataMap);
         Map<Long, DiscountDTO.Response> discountPriceMap = null;
         try {
             discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
@@ -317,7 +315,7 @@ public class BookFacade {
             return null;
         }
 
-        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMap(bookListProjections);
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMapByBookInfoListProjection(bookListProjections);
         Map<Long, DiscountDTO.Response> discountPriceMap = null;
         try {
             discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
@@ -354,7 +352,7 @@ public class BookFacade {
     public Page<BookAdminResponseDTO> findAllForAdmin(Pageable pageable){
         Page<BookAdminProjection> adminProjectionPage = bookCoreService.getBookAdminProjectionPage(pageable);
 
-        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMap(adminProjectionPage);
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMapByBookAdminProjection(adminProjectionPage);
         Map<Long, DiscountDTO.Response> discountPriceMap = null;
         try {
             discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
@@ -392,5 +390,51 @@ public class BookFacade {
         Review review = reviewService.registerReview(reviewReqDTO, fileMap, book);
         PointPolicyType type = review.getReviewImages() != null && !review.getReviewImages().isEmpty() ? PointPolicyType.REVIEW_PHOTO : PointPolicyType.REVIEW_TEXT;
         return type;
+    }
+
+    @Transactional(readOnly = true)
+    public BookListByCategoryRespDTO getBookListByCategoryId(Pageable pageable, long categoryId, Long userId){
+        List<Long> lowCategoryIdList = categoryService.getLowCategoryIdList(categoryId);
+        if(lowCategoryIdList == null || lowCategoryIdList.isEmpty()){
+            log.warn("[카테고리 도서 조회] 해당 카테고리가 존재하지 않습니다 - 카테고리Id:{}", categoryId);
+            throw new NotFoundCategoryId("[카테고리 도서 조회] 해당 카테고리가 존재하지 않습니다");
+        }
+
+        Page<BookListProjection> bookList = bookCoreService.getBookByCategoryIdList(pageable, lowCategoryIdList);
+        if(bookList == null || bookList.isEmpty()){
+            log.info("[카테고리 도서 조회] 해당 카테고리에 속한 도서가 존재하지 않습니다 - 카테고리Id:{}", categoryId);
+            return null;
+        }
+
+        Page<BookListData> bookListDataPage = null;
+        try {
+            bookListDataPage = bookMapper.toBookListDataPage(bookList);
+        } catch (JsonProcessingException e) {
+            log.error("[카테고리 도서 조회] 도서 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
+        if(bookListDataPage == null){
+            return null;
+        }
+
+        Set<Long> likeSetBookId = likeService.getLikeByUserIdAndBookIds(userId,
+                bookList.map(BookListProjection::getId)
+                        .toList());
+
+        Map<Long, DiscountDTO.Request> discountDTOMap = bookMapper.toDiscountDTOMapByBookListData(bookListDataPage);
+        Map<Long, DiscountDTO.Response> discountPriceMap = null;
+        try {
+            discountPriceMap = discountPolicyService.getDiscountPriceMap(discountDTOMap);
+        } catch (JsonProcessingException e) {
+            log.error("[카테고리 도서 조회] 할인 정책 매핑을 실패했습니다");
+            throw new FailObjectMapper(e.getMessage());
+        }
+        if(discountPriceMap == null){
+            return null;
+        }
+
+        Page<BookListRespDTO> bookRespDTOList = bookMapper.toBookRespDTOPage(bookListDataPage, discountPriceMap, likeSetBookId);
+
+        return new BookListByCategoryRespDTO(bookRespDTOList);
     }
 }

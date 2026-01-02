@@ -1,6 +1,7 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
 import com.daisobook.shop.booksearch.BooksSearch.controller.docs.BookManagementControllerDocs;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.MainPageBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.AdminBookMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.FindIsbnMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.ModifyBookMetaData;
@@ -10,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,6 +50,12 @@ public class BookManagementController implements BookManagementControllerDocs {
     @GetMapping("{isbn}/register-page")
     public FindIsbnMetaData getBookRegisterRedirectSearchInfo(@PathVariable("isbn") String isbn){
         return metadataService.getFindIsbnMataDataFromAdmin(isbn);
+    }
+
+    @GetMapping("/main-page")
+    public MainPageBookListRespDTO getMainPageBookList(@PageableDefault(size = 15) Pageable pageable,
+                                                       @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return metadataService.getMainPageBookList(pageable, userId);
     }
 
 }

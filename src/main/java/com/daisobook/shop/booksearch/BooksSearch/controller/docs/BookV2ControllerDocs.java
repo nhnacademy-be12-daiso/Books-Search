@@ -41,7 +41,7 @@ public interface BookV2ControllerDocs {
     ResponseEntity<Void> deleteBookByIsbn(String isbn);
 
     @Operation(summary = "리스트 타입별 도서 조회", description = "베스트셀러, 신간 등 타입별 도서 목록을 가져옵니다.")
-    SortBookListRespDTO getBookListBySort(BookListType listType, Long userId);
+    SortBookListRespDTO getBookListBySort(Pageable pageable, BookListType listType, Long userId);
 
     @Operation(summary = "도서 상세 정보 조회")
     BookRespDTO getBookDetail(long bookId, Long userId);
