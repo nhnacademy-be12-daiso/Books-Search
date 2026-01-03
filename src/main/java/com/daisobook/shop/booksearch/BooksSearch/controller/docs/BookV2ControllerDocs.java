@@ -3,11 +3,13 @@ package com.daisobook.shop.booksearch.BooksSearch.controller.docs;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListByCategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
@@ -60,4 +62,7 @@ public interface BookV2ControllerDocs {
 
     //    @Operation(summary = "ISBN 기반 도서 정보 정제 조회", description = "ISBN 정보를 바탕으로 외부 API 등에서 정제된 도서 정보를 가져옵니다.")
     //    BookInfoDataView postBookRegisterInfoByIsbn(String isbn);
+
+    @Operation(summary = "카테고리별 도서 목록 조회", description = "특정 카테고리에 속한 도서 목록을 조회합니다.")
+    BookListByCategoryRespDTO getBookListByCategoryId(Pageable pageable, long categoryId, Long userId);
 }
