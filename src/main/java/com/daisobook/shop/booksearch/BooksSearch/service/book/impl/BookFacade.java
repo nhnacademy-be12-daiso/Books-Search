@@ -23,10 +23,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.BookListTypeNull;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.*;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
@@ -446,6 +443,27 @@ public class BookFacade {
             log.warn("[주문 취소] 해당 도서를 찾지 못하였습니다 - 도서ID:{}", request.bookId());
             throw new NotFoundBookId("[주문 취소] 해당 도서를 찾지 못하였습니다");
         }
-        book.setStock(book.getStock() + request.quantity());
+
+        int quantity = request.quantity();
+        int stock = book.getStock();
+        if(quantity > 0){
+            if(book.getStatus().equals(Status.SOLD_OUT)){
+                book.setStatus(Status.ON_SALE);
+            }
+            book.setStock(stock + quantity);
+        } else if(quantity < 0){
+            int resultStock = stock + quantity;
+            if(resultStock < 0){
+                log.warn("[주문 취소] 해당 수량이 재고량 차감이 불가한 수치입니다 - 재고량:{}, 차감 수량:{}", stock, quantity);
+                throw new DuplicatedBook("[주문 취소] 해당 수량이 재고량 차감이 불가한 수치입니다");
+            }
+
+            if(resultStock == 0 && book.getStatus().equals(Status.ON_SALE)){
+                book.setStatus(Status.SOLD_OUT);
+            }
+            book.setStock(resultStock);
+        } else {
+            log.info("[주문 취소] 수량이 0이라서 재고 변경이 없습니다");
+        }
     }
 }
