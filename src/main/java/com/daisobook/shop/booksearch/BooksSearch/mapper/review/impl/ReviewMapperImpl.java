@@ -27,6 +27,10 @@ public class ReviewMapperImpl implements ReviewMapper {
 
     @Override
     public List<ReviewRespDTO> toReviewRespDTOList(List<Review> reviews) {
+        if(reviews == null || reviews.isEmpty()){
+            return null;
+        }
+
         Map<Long, List<ImageRespDTO>> imagesRespDTOList = imageMapper.toImagesRespDTOListMap(reviews);
         Set<Long> keySet = imagesRespDTOList.keySet();
 

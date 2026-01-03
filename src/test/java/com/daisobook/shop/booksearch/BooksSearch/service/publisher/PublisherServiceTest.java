@@ -101,7 +101,7 @@ class PublisherServiceTest {
         List savedList = captor.getValue();
         assertEquals(1, savedList.size());
         Object maybePub = savedList.get(0);
-        assertTrue(maybePub instanceof Publisher);
+        assertInstanceOf(Publisher.class, maybePub);
         Publisher newPub = (Publisher) maybePub;
         assertEquals("NewPub", newPub.getName());
         assertTrue(newPub.getBookList().contains(b2));

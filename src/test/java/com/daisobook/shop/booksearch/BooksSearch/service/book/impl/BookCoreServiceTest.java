@@ -102,9 +102,9 @@ class BookCoreServiceTest {
         BookIdProjection p = mock(BookIdProjection.class);
         // lenient로 불필요한 스텁 경고 회피 + 제네릭 추론 회피
         lenient().doReturn(Collections.singletonList(p))
-                .when(bookRepository).findBooksByIsbnIn(Arrays.asList("B"));
+                .when(bookRepository).findBooksByIsbnIn(List.of("B"));
 
-        var set = sut.getExistsByIsbn(Arrays.asList("B"));
+        var set = sut.getExistsByIsbn(List.of("B"));
         assertThat(set).isNotNull();
     }
 

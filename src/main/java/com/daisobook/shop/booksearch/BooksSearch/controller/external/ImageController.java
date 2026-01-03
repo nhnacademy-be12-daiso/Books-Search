@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
+import com.daisobook.shop.booksearch.BooksSearch.controller.docs.ImageControllerDocs;
 import com.daisobook.shop.booksearch.BooksSearch.service.MinIOService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -10,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @RestController
-public class ImageController {
+public class ImageController implements ImageControllerDocs {
 
     private final MinIOService minIOService;
 

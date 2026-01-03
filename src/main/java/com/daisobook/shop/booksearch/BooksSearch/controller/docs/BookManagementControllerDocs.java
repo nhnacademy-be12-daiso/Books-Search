@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.docs;
 
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.MainPageBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.AdminBookMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.FindIsbnMetaData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.meta.ModifyBookMetaData;
@@ -40,4 +41,13 @@ public interface BookManagementControllerDocs {
             @ApiResponse(responseCode = "404", description = "해당 ISBN으로 검색된 도서 정보가 없음")
     })
     FindIsbnMetaData getBookRegisterRedirectSearchInfo(String isbn);
+
+    @Operation(summary = "메인 페이지 도서 목록 조회", description = "사용자 메인 화면에 노출될 도서 목록을 조회합니다. 사용자 ID 전달 시 개인화된 정보를 포함할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    MainPageBookListRespDTO getMainPageBookList(
+            @Parameter(description = "페이지 번호, 크기, 정렬 정보") Pageable pageable,
+            @Parameter(description = "사용자 식별 ID (선택 사항)", example = "1") Long userId
+    );
 }

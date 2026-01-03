@@ -21,6 +21,10 @@ public class AuthorMapperImpl implements AuthorMapper {
 
     @Override
     public List<AuthorRespDTO> toAuthorRespDTOList(List<BookAuthor> bookAuthors) {
+        if(bookAuthors == null || bookAuthors.isEmpty()){
+            return null;
+        }
+
         return bookAuthors.stream()
                 .map(ba ->
                         new AuthorRespDTO(ba.getAuthor() != null ? ba.getAuthor().getId() : null,

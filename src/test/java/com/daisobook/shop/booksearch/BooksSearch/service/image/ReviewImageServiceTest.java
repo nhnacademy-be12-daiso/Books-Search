@@ -119,7 +119,7 @@ class ReviewImageServiceTest {
         when(req.imageMetadata()).thenReturn(List.of(a,b,c,d));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.addReviewImage(req, null));
-        assertTrue(ex.getMessage().contains("최대") || ex.getMessage().length() > 0, "예외 메시지 존재 확인");
+        assertTrue(ex.getMessage().contains("최대") || !ex.getMessage().isEmpty(), "예외 메시지 존재 확인");
     }
 
     @Test

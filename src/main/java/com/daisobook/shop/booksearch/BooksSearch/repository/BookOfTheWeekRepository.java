@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface BookOfTheWeekRepository extends JpaRepository<BookOfTheWeek, Long> {
-    List<BookOfTheWeek> findAllByIsActiveOrderByAppliedDateDesc(boolean isActive, Sort sort, Limit limit);
+//    List<BookOfTheWeek> findAllByIsActiveOrderByAppliedDateDesc(boolean isActive, Sort sort, Limit limit);
 
     @Query(value = """
         SELECT b.book_id as id

@@ -54,12 +54,12 @@ public class ReviewController implements ReviewControllerDocs {
     }
 
     @GetMapping("/books/{bookId}")
-    public List<ReviewRespDTO> getReviewByBookId(@RequestParam("bookId") long bookId){
+    public List<ReviewRespDTO> getReviewByBookId(@PathVariable("bookId") long bookId){
         return reviewService.getReviewsByBookId(bookId);
     }
 
     @GetMapping("/{reviewId}")
-    public ReviewRespDTO getReviewById(@RequestParam("reviewId") long reviewId){
+    public ReviewRespDTO getReviewById(@PathVariable("reviewId") long reviewId){
         return reviewService.getReviewById(reviewId);
     }
 
@@ -73,7 +73,7 @@ public class ReviewController implements ReviewControllerDocs {
 //    }
 
     @PutMapping(value = "/{reviewId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Void> updateReviewById(@RequestParam("reviewId") long reviewId,
+    public ResponseEntity<Void> updateReviewById(@PathVariable("reviewId") long reviewId,
                                            @RequestPart("metadata") String metadataJson,
                                            @RequestPart(value = "image0", required = false) MultipartFile image0,
                                            @RequestPart(value = "image1", required = false) MultipartFile image1,
