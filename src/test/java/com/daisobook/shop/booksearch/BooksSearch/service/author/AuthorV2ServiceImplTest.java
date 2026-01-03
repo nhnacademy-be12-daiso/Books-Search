@@ -112,7 +112,7 @@ class AuthorV2ServiceImplTest {
         verify(bookAuthorRepository, times(1)).saveAll(anyList());
 
         assertThat(book.getBookAuthors()).hasSize(1);
-        BookAuthor ba = book.getBookAuthors().get(0);
+        BookAuthor ba = book.getBookAuthors().getFirst();
         assertThat(ba.getAuthor().getName()).isEqualTo("Alice");
         assertThat(ba.getRole()).isNotNull();
         assertThat(ba.getRole().getName()).isEqualTo("WRITER");
@@ -135,7 +135,7 @@ class AuthorV2ServiceImplTest {
         verify(bookAuthorRepository, times(1)).saveAll(anyList());
 
         assertThat(book.getBookAuthors()).hasSize(1);
-        BookAuthor ba = book.getBookAuthors().get(0);
+        BookAuthor ba = book.getBookAuthors().getFirst();
         assertThat(ba.getAuthor().getName()).isEqualTo("NewGuy");
         assertThat(ba.getRole()).isNull();
     }
@@ -195,7 +195,7 @@ class AuthorV2ServiceImplTest {
 
         verify(bookAuthorRepository, times(1)).deleteAllById(anyList());
         assertThat(book.getBookAuthors()).hasSize(1);
-        assertThat(book.getBookAuthors().get(0).getAuthor().getName()).isEqualTo("Alice");
+        assertThat(book.getBookAuthors().getFirst().getAuthor().getName()).isEqualTo("Alice");
         assertThat(a2.getBookAuthors()).doesNotContain(ba2);
     }
 
@@ -259,7 +259,7 @@ class AuthorV2ServiceImplTest {
         verify(bookAuthorRepository, times(1)).saveAll(anyList());
 
         assertThat(book.getBookAuthors()).hasSize(1);
-        assertThat(book.getBookAuthors().get(0).getAuthor().getName()).isEqualTo("NewGuy");
+        assertThat(book.getBookAuthors().getFirst().getAuthor().getName()).isEqualTo("NewGuy");
     }
 
     @Test

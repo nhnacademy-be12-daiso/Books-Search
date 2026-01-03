@@ -50,4 +50,16 @@ public class DiscountPolicy {
     @Setter
     @Column(name = "is_active")
     private boolean isActive;
+
+    public DiscountPolicy(String policyName, DiscountType discountType, double discountValue, TargetType targetType,
+                          Long targetId, ZonedDateTime startDate, ZonedDateTime endDate, boolean isActive){
+        this.policyName = policyName;
+        this.discountType = discountType;
+        this.discountValue = discountValue;
+        this.targetType = targetType;
+        this.targetId = targetId;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isActive = isActive;
+    }
 }

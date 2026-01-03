@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface PublisherRepository extends JpaRepository<Publisher, Long> {
-    boolean existsPublisherByName(String name);
+//    boolean existsPublisherByName(String name);
 
     Publisher findPublisherByName(String name);
 
-    Publisher findPublisherById(long id);
+//    Publisher findPublisherById(long id);
 
     List<Publisher> findAllByNameIn(Collection<String> names);
 }

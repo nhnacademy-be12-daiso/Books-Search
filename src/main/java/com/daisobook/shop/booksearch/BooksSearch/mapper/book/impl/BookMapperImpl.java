@@ -100,7 +100,10 @@ public class BookMapperImpl implements BookMapper {
                 .map(b ->
                         new OrderBookInfoRespDTO(b.getId(), b.getTitle(), b.getPrice(), b.getStock(), b.getStatus(),
                                 discountPriceMap.containsKey(b.getId()) ? BigDecimal.valueOf((double) discountPriceMap.get(b.getId()) / b.getPrice() * 100.0) : null,
-                                discountPriceMap.getOrDefault(b.getId(), null), b.getBookImages() != null ? b.getBookImages().getFirst() != null ? b.getBookImages().getFirst().getPath() : null : null,
+                                discountPriceMap.getOrDefault(b.getId(), null),
+                                b.getBookImages() != null && !b.getBookImages().isEmpty() && b.getBookImages().getFirst() != null
+                                        && b.getBookImages().getFirst().getPath() != null
+                                        ? b.getBookImages().getFirst().getPath() : null,
                                 b.getVolumeNo(), b.isPackaging()))
                 .toList());
     }

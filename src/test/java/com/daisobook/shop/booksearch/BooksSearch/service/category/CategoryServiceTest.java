@@ -168,7 +168,7 @@ public class CategoryServiceTest {
         when(c1.getId()).thenReturn(11L);
         when(bc.getCategory()).thenReturn(c1);
 
-        when(bookCategoryRepository.findAllByBook_Id(bookId)).thenReturn(Arrays.asList(bc));
+        when(bookCategoryRepository.findAllByBook_Id(bookId)).thenReturn(List.of(bc));
 
         var resp = categoryService.bookCategory(bookId);
 
@@ -199,7 +199,7 @@ public class CategoryServiceTest {
         BookCategory bc = mock(BookCategory.class);
         when(bc.getCategory()).thenReturn(child);
 
-        when(bookCategoryRepository.findAllByBook_Id(bookId)).thenReturn(Arrays.asList(bc));
+        when(bookCategoryRepository.findAllByBook_Id(bookId)).thenReturn(List.of(bc));
 
         var resp = categoryService.bookCategory(bookId);
 
@@ -236,7 +236,7 @@ public class CategoryServiceTest {
         when(link.getBook()).thenReturn(book);
         // when(link.getCategory()).thenReturn(null); // 제거: 사용되지 않음
 
-        List<BookCategory> targetLinks = Arrays.asList(link);
+        List<BookCategory> targetLinks = List.of(link);
         when(bookCategoryRepository.findAllByCategoryIdWithBook(categoryId)).thenReturn(targetLinks);
 
         Category tempCategory = mock(Category.class);
@@ -407,7 +407,7 @@ public class CategoryServiceTest {
 
         verify(bookCategoryRepository, times(1)).saveAll(anyList());
         // 하나의 새 BookCategory가 추가되어야 함
-        assertTrue(book.getBookCategories().size() >= 1);
+        assertFalse(book.getBookCategories().isEmpty());
     }
 
 
@@ -476,10 +476,10 @@ public class CategoryServiceTest {
     @DisplayName("getCategoryTreeList: 트리 매퍼 결과 래핑")
     void getCategoryTreeList_ReturnsTreeDto() {
         CategoryListProjection p = mock(CategoryListProjection.class);
-        when(categoryRepository.getAll()).thenReturn(Arrays.asList(p));
+        when(categoryRepository.getAll()).thenReturn(Collections.singletonList(p));
 
         CategoryTree tree = mock(CategoryTree.class);
-        when(categoryMapper.toCategoryTreeList(anyList())).thenReturn(Arrays.asList(tree));
+        when(categoryMapper.toCategoryTreeList(anyList())).thenReturn(Collections.singletonList(tree));
 
         CategoryTreeListRespDTO resp = categoryService.getCategoryTreeList();
         assertNotNull(resp);
@@ -500,8 +500,8 @@ public class CategoryServiceTest {
 
         List<CategorySimpleResponse> resp = categoryService.findByIdIn(Arrays.asList(11L, 22L));
         assertEquals(2, resp.size());
-        assertEquals(11L, resp.get(0).categoryId());
-        assertEquals("C1", resp.get(0).categoryName());
+        assertEquals(11L, resp.getFirst().categoryId());
+        assertEquals("C1", resp.getFirst().categoryName());
     }
 
 }

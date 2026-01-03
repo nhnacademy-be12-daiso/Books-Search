@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
-class LikeMapperImpl implements LikeMapper {
+public class LikeMapperImpl implements LikeMapper {
     private final AuthorMapper authorMapper;
 
     @Override

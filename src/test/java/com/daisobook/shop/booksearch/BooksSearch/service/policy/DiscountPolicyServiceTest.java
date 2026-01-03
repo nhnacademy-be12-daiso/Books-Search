@@ -127,7 +127,7 @@ class DiscountPolicyServiceTest {
     @Test
     @DisplayName("getDiscountPrice: 가격이 null일 때 null 반환")
     void getDiscountPrice_withNullPrice_returnsNull() throws Exception {
-        Long bookId = 8L;
+        long bookId = 8L;
         Long res = discountPolicyService.getDiscountPrice(bookId, null);
         assertNull(res);
     }

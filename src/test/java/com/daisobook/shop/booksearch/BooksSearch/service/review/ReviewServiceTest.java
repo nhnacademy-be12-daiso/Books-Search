@@ -224,13 +224,13 @@ class ReviewServiceTest {
 
         assertNotNull(byUser);
         assertEquals(1, byUser.size());
-        ReviewRespDTO dtoUser = byUser.get(0);
+        ReviewRespDTO dtoUser = byUser.getFirst();
         assertEquals(101L, dtoUser.id());
         assertEquals(11L, dtoUser.bookId());
 
         assertNotNull(byBook);
         assertEquals(1, byBook.size());
-        ReviewRespDTO dtoBook = byBook.get(0);
+        ReviewRespDTO dtoBook = byBook.getFirst();
         assertEquals(202L, dtoBook.id());
         assertEquals(22L, dtoBook.bookId());
     }
