@@ -7,7 +7,7 @@ import com.daisobook.shop.booksearch.BooksSearch.exception.custom.saga.ExternalS
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@RestController("handlerTestController")
 public class TestController {
     @GetMapping("/test/not-found")
     public void throwNotFound() { throw new EntityNotFoundException("대상 없음"); }

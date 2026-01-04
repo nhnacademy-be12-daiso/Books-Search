@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RequiredArgsConstructor
-@RestController
+@RestController("apiTestController")
 public class TestController implements DevToolControllerDocs {
     private final TestService testService;
     private final ObjectMapper objectMapper;
