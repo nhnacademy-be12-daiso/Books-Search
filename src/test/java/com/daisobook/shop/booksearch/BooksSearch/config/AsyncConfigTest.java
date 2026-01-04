@@ -11,8 +11,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest(classes = AsyncConfig.class) // 설정 파일만 로드하여 테스트 최적화
 class AsyncConfigTest {
@@ -50,7 +52,7 @@ class AsyncConfigTest {
             latch.countDown();
         });
 
-        boolean await = latch.await(2, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
 
         // Then
         assertThat(threadName[0]).startsWith("CustomTaskExecutor-");
@@ -59,34 +61,41 @@ class AsyncConfigTest {
     @Test
     @DisplayName("스레드 풀 용량을 초과하는 부하 상황에서 CallerRunsPolicy에 의해 메인 스레드가 작업을 수행하는지 확인")
     void callerRunsPolicy_Test() throws InterruptedException {
-        ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
-        
-        // 큐를 꽉 채우고 스레드 풀도 다 쓰게 만들기 위해 대기 작업 제출
-        // Core(2) + Queue(20) + Max(2) = 총 24개 작업 이후 25번째부터는 Caller가 실행
-        int totalTasks = 30; 
-        CountDownLatch latch = new CountDownLatch(totalTasks);
-        String mainThreadName = Thread.currentThread().getName();
-        final boolean[] mainThreadRanTask = {false};
+        // 1. Thread.sleep() 대신 작업 지연을 위한 비즈니스 로직 시뮬레이션 (CountDownLatch 활용)
+        int totalTasks = 30;
+        CountDownLatch taskLatch = new CountDownLatch(totalTasks);
+        CountDownLatch blockLatch = new CountDownLatch(1); // 큐를 꽉 채우기 위해 스레드를 붙잡아두는 용도
 
+        String mainThreadName = Thread.currentThread().getName();
+        final AtomicBoolean mainThreadRanTask = new AtomicBoolean(false);
+
+        // 2. 여러 작업을 실행하여 스레드 풀과 큐를 가득 채움
         for (int i = 0; i < totalTasks; i++) {
             executor.execute(() -> {
                 try {
-                    // 메인 스레드가 이 로직을 실행하는지 체크
+                    // 현재 실행 중인 스레드가 메인 스레드인지 확인
                     if (Thread.currentThread().getName().equals(mainThreadName)) {
-                        mainThreadRanTask[0] = true;
+                        mainThreadRanTask.set(true);
+                    } else {
+                        // 메인 스레드가 아닌 풀 스레드들은 blockLatch가 열릴 때까지 대기하여 큐를 채움
+                        blockLatch.await(500, TimeUnit.MILLISECONDS);
                     }
-                    Thread.sleep(100); // 작업을 지연시켜 큐를 채움
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } finally {
-                    latch.countDown();
+                    taskLatch.countDown();
                 }
             });
         }
 
-        boolean await = latch.await(5, TimeUnit.SECONDS);
+        // 3. 작업이 처리되도록 대기 (blockLatch를 열어 묶여있던 스레드들 해제)
+        blockLatch.countDown();
 
-        // Then: 작업량이 많아 스레드가 거절당했을 때 메인 스레드가 대신 실행했어야 함
-        assertThat(mainThreadRanTask[0]).isTrue();
+        // 4. Awaitility를 사용하여 메인 스레드 실행 여부 검증 (Thread.sleep 제거)
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilTrue(mainThreadRanTask);
+
+        // 5. 최종 상태 검증
+        assertThat(mainThreadRanTask.get()).as("메인 스레드가 작업을 직접 수행해야 함").isTrue();
     }
 }

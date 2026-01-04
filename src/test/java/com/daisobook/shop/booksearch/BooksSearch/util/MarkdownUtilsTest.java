@@ -21,9 +21,7 @@ class MarkdownUtilsTest {
         // Then
         // flexmark의 기본 파싱 방식에 따라 '제목'과 '내용' 사이의 공백 처리가 달라질 수 있으나 
         // 핵심은 특수문자(#, *)가 사라지는 것
-        assertThat(result).contains("제목");
-        assertThat(result).contains("이것은 굵은 글씨와 기울임입니다.");
-        assertThat(result).doesNotContain("#", "*", "**");
+        assertThat(result).contains("제목").contains("이것은 굵은 글씨와 기울임입니다.").doesNotContain("#", "*", "**");
     }
 
     @ParameterizedTest
@@ -48,11 +46,7 @@ class MarkdownUtilsTest {
     @DisplayName("입력값이 null이거나 빈 문자열일 경우에 대해 안전하게 처리하는지 확인한다")
     void extractPlainText_EdgeCase_Test() {
         // 빈 문자열 테스트
-        assertThat(MarkdownUtils.extractPlainText("")).isEqualTo("");
-        
-        // null의 경우 (현재 구현상 NPE가 발생할 수 있으므로 동작 확인용)
-        // 만약 로직에서 null 처리가 안되어 있다면 이 테스트는 실패하며, 
-        // 로직에 if (markdown == null) return ""; 추가가 필요함을 알려줍니다.
+        assertThat(MarkdownUtils.extractPlainText("")).isEmpty();
     }
 
     @Test

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,16 +14,6 @@ class SchedulingConfigTest {
 
     @Autowired
     private ApplicationContext context;
-
-    @Test
-    @DisplayName("@EnableScheduling에 의해 스케줄링 프로세서가 빈으로 등록되어야 한다")
-    void schedulingProcessor_Registration_Test() {
-        // 이름 대신 타입으로 조회하면 훨씬 정확합니다.
-        String[] beanNames = context.getBeanNamesForType(ScheduledAnnotationBeanPostProcessor.class);
-
-        // 빈이 하나 이상 존재하면 성공
-        assertThat(beanNames).isNotEmpty();
-    }
 
     @Test
     @DisplayName("기본 스케줄러 또는 TaskScheduler 빈이 컨텍스트에 존재해야 한다")

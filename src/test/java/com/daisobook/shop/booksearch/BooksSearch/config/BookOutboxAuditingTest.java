@@ -43,9 +43,6 @@ class BookOutboxAuditingTest {
             new BookOutbox(1L, "BOOK", "book-exchange", "book.created", "{}")
         );
         LocalDateTime firstUpdateTime = outbox.getUpdatedAt();
-        
-        // 시간 차이를 위해 잠시 대기
-        Thread.sleep(10);
 
         // when: 상태 변경 (PENDING -> PUBLISHED)
         outbox.markAsPublished();

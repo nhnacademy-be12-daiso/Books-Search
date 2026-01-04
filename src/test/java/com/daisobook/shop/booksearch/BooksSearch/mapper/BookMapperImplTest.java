@@ -17,7 +17,6 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateVie
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.ImageType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.author.AuthorMapper;
@@ -46,9 +45,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BookMapperImplTest {
@@ -77,7 +76,7 @@ class BookMapperImplTest {
         assertThat(result.bookReqDTO().title()).isEqualTo("테스트도서");
         assertThat(result.fileMap()).containsKey("image1");
         // 현재 코드 로직: image3이 들어오면 내부적으로 image1 변수를 할당함
-        assertThat(result.fileMap().get("image3")).isEqualTo(img1);
+        assertThat(result.fileMap()).containsEntry("image3", img1);
     }
 
     @Test

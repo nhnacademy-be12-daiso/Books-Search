@@ -51,9 +51,9 @@ class CategoryMapperImplTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).categoryName()).isEqualTo("소분류");
-        assertThat(result.get(0).preCategoryId()).isEqualTo(1L);
-        assertThat(result.get(0).preCategoryName()).isEqualTo("대분류");
+        assertThat(result.getFirst().categoryName()).isEqualTo("소분류");
+        assertThat(result.getFirst().preCategoryId()).isEqualTo(1L);
+        assertThat(result.getFirst().preCategoryName()).isEqualTo("대분류");
     }
 
     // --- 2. JSON String / Map Mapping ---
@@ -77,7 +77,7 @@ class CategoryMapperImplTest {
 
         // Then
         assertThat(result).containsKey(100L);
-        assertThat(result.get(100L).get(0).categoryName()).isEqualTo("IT");
+        assertThat(result.get(100L).getFirst().categoryName()).isEqualTo("IT");
     }
 
     // --- 3. Path & Tree Logic (정밀 검증) ---
@@ -99,7 +99,7 @@ class CategoryMapperImplTest {
         // Then
         // 기대값 포맷: "> 1:국내 > 2:소설 > 3:판타지"
         String expectedPath = "> 1:국내 > 2:소설 > 3:판타지";
-        assertThat(result.categoryPathList().get(0).path()).isEqualTo(expectedPath);
+        assertThat(result.categoryPathList().getFirst().path()).isEqualTo(expectedPath);
     }
 
     @Test
@@ -117,7 +117,7 @@ class CategoryMapperImplTest {
         assertThat(result).hasSize(2); // ROOT1, ROOT2
         CategoryTree root1 = result.stream().filter(t -> t.categoryId() == 1L).findFirst().get();
         assertThat(root1.children()).hasSize(1);
-        assertThat(root1.children().get(0).categoryId()).isEqualTo(3L);
+        assertThat(root1.children().getFirst().categoryId()).isEqualTo(3L);
     }
 
     @Test
@@ -125,9 +125,10 @@ class CategoryMapperImplTest {
     void toCategoryTreeList_Exception_Detail_Test() {
         // Given: 부모 999는 존재하지 않음
         CategoryListProjection child = createMockProjection(10L, "에러노드", 999L);
+        List<CategoryListProjection> projections = List.of(child);
 
         // When & Then
-        assertThatThrownBy(() -> categoryMapper.toCategoryTreeList(List.of(child)))
+        assertThatThrownBy(() -> categoryMapper.toCategoryTreeList(projections))
                 .isInstanceOf(NotFoundCategoryId.class)
                 .hasMessageContaining("관계 불일치");
     }

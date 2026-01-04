@@ -70,8 +70,8 @@ class RabbitMqConfigTest {
         Queue inventoryQueue = context.getBean("bookInventoryQueue", Queue.class);
         
         assertThat(inventoryQueue.isDurable()).isTrue();
-        assertThat(inventoryQueue.getArguments().get("x-dead-letter-exchange")).isEqualTo("team3.book.dlx");
-        assertThat(inventoryQueue.getArguments().get("x-dead-letter-routing-key")).isEqualTo("fail.book");
+        assertThat(inventoryQueue.getArguments()).containsEntry("x-dead-letter-exchange", "team3.book.dlx");
+        assertThat(inventoryQueue.getArguments()).containsEntry("x-dead-letter-routing-key", "fail.book");
     }
 
     @Test
@@ -81,9 +81,6 @@ class RabbitMqConfigTest {
         RabbitTemplate rabbitTemplate = context.getBean(RabbitTemplate.class);
         assertThat(rabbitTemplate.getMessageConverter()).isInstanceOf(SimpleMessageConverter.class);
 
-        // ListenerContainerFactory & 수신 컨버터 (JSON)
-        SimpleRabbitListenerContainerFactory factory = context.getBean(SimpleRabbitListenerContainerFactory.class);
-        
         // 리스너 팩토리의 컨버터를 확인하기 위해 필드 접근이 필요할 수 있으나, 빈 존재 여부로 우선 확인
         MessageConverter jsonConverter = context.getBean("jsonMessageConverter", MessageConverter.class);
         assertThat(jsonConverter).isInstanceOf(Jackson2JsonMessageConverter.class);
