@@ -2,10 +2,12 @@ package com.daisobook.shop.booksearch.BooksSearch.search.component;
 
 
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.BooksSearch.search.domain.RabbitBook;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Component
 public class BookSearchPayloadMapper {
@@ -29,8 +31,18 @@ public class BookSearchPayloadMapper {
         rb.setPrice(Math.toIntExact(book.getPrice()));
         rb.setImageUrl(book.getBookImages().isEmpty() ? "" : book.getBookImages().get(0).getPath());
         rb.setPublisherId(book.getPublisher() != null ? book.getPublisher().getId() : null);
+
+        // 기본적으로 가장 마지막 카테고리 ID를 설정
         rb.setCategoryId(book.getBookCategories().getLast().getCategory().getId());
 
+        // 깊이 3인 카테고리를 찾아서 설정
+        List<BookCategory> categories=book.getBookCategories();
+        for(BookCategory bc: categories) {
+            if(bc.getCategory().getDeep()==3) {
+                rb.setCategoryId(bc.getCategory().getId());
+                break;
+            }
+        }
 
         return rb;
     }
