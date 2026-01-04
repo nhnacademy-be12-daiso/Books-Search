@@ -60,7 +60,7 @@ class AsyncConfigTest {
 
     @Test
     @DisplayName("스레드 풀 용량을 초과하는 부하 상황에서 CallerRunsPolicy에 의해 메인 스레드가 작업을 수행하는지 확인")
-    void callerRunsPolicy_Test() throws InterruptedException {
+    void callerRunsPolicy_Test() {
         // 1. Thread.sleep() 대신 작업 지연을 위한 비즈니스 로직 시뮬레이션 (CountDownLatch 활용)
         int totalTasks = 30;
         CountDownLatch taskLatch = new CountDownLatch(totalTasks);

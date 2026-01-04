@@ -37,7 +37,7 @@ class BookOutboxAuditingTest {
 
     @Test
     @DisplayName("Outbox 상태 변경 시 updatedAt 필드가 갱신되어야 한다")
-    void outbox_auditing_update_test() throws InterruptedException {
+    void outbox_auditing_update_test() {
         // given
         BookOutbox outbox = entityManager.persistAndFlush(
             new BookOutbox(1L, "BOOK", "book-exchange", "book.created", "{}")
