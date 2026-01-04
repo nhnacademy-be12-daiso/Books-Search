@@ -46,7 +46,7 @@ class CompensationOutboxServiceTest {
 
     @Test
     @DisplayName("성공: 보상 이벤트가 중복이 아니면 로그와 Outbox를 저장하고 이벤트를 발행한다")
-    void saveCompensationEvent_Success_Test() throws Exception {
+    void saveCompensationEvent_Success_Test() {
         // given
         Long orderId = 123L;
         Map<String, String> event = Map.of("reason", "test");

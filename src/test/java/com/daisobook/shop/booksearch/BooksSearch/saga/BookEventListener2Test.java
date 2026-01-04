@@ -62,7 +62,7 @@ class BookEventListener2Test {
 
     @Test
     @DisplayName("성공: 주문 확정 이벤트 수신 시 중복이 아니면 재고 로그와 Outbox를 저장한다")
-    void handleOrderConfirmedEvent_Success_Test() throws Exception {
+    void handleOrderConfirmedEvent_Success_Test() {
         // given
         Long orderId = 100L;
         OrderConfirmedEvent event = createTestEvent(orderId);
