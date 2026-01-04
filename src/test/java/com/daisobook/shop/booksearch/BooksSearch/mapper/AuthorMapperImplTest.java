@@ -68,7 +68,7 @@ class AuthorMapperImplTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).authorName()).isEqualTo("김작가");
+        assertThat(result.getFirst().authorName()).isEqualTo("김작가");
     }
 
     @Test
@@ -90,6 +90,6 @@ class AuthorMapperImplTest {
 
         // Then
         assertThat(result).containsKey(100L);
-        assertThat(result.get(100L).get(0).authorName()).isEqualTo("김작가");
+        assertThat(result.get(100L).getFirst().authorName()).isEqualTo("김작가");
     }
 }

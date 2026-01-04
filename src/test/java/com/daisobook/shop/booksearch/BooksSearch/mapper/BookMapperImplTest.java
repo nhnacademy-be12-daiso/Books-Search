@@ -2,9 +2,8 @@ package com.daisobook.shop.booksearch.BooksSearch.mapper;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookAdminProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookListProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.projection.*;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
@@ -12,9 +11,12 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.AuthorRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.PublisherRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookAdminResponseDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookInfoRespDTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.order.OrderBooksInfoRespDTO;
-import com.daisobook.shop.booksearch.BooksSearch.entity.ImageType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.author.AuthorMapper;
@@ -40,18 +42,17 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BookMapperImplTest {
 
-    @Spy
-    private ObjectMapper objectMapper = new ObjectMapper();
-
+    @Spy private ObjectMapper objectMapper = new ObjectMapper();
     @Mock private CategoryMapper categoryMapper;
     @Mock private TagMapper tagMapper;
     @Mock private ReviewMapper reviewMapper;
@@ -59,130 +60,184 @@ class BookMapperImplTest {
     @Mock private ImageMapper imageMapper;
     @Mock private PublisherMapper publisherMapper;
 
-    @InjectMocks
-    private BookMapperImpl bookMapper;
+    @InjectMocks private BookMapperImpl bookMapper;
 
-    // --- 1. parsing & create ---
+    // --- [1] 데이터 파싱 및 엔티티 생성 로직 ---
 
     @Test
-    @DisplayName("파일 업로드 파싱 시 image3, 4가 image1, 2로 잘못 매핑되는 로직을 검증한다")
-    void parsing_FileMapping_Test() throws JsonProcessingException {
-        String json = "{\"title\":\"test\"}";
-        MockMultipartFile img1 = new MockMultipartFile("img1", "img1.jpg", null, "data".getBytes());
-        MockMultipartFile img3 = new MockMultipartFile("img3", "img3.jpg", null, "data".getBytes());
+    @DisplayName("parsing: 이미지 3,4번이 1,2번으로 오매핑되는 구현상 특징과 JSON 파싱을 검증한다")
+    void parsing_Detailed_Test() throws JsonProcessingException {
+        String json = "{\"isbn\":\"123\", \"title\":\"테스트도서\"}";
+        MockMultipartFile img1 = new MockMultipartFile("image1", "f1.jpg", null, "d1".getBytes());
+        MockMultipartFile img3 = new MockMultipartFile("image3", "f3.jpg", null, "d3".getBytes());
 
-        // 로직상 image3이 들어오면 image1의 이름으로 맵에 들어가는지 확인 (현재 코드의 특징)
         BookGroupReqV2DTO result = bookMapper.parsing(json, null, img1, null, img3, null);
 
-        assertThat(result.fileMap()).containsKey("img1");
-        // image3은 image1 변수를 할당받도록 구현되어 있음
-        assertThat(result.fileMap().get("img3")).isEqualTo(img1);
+        assertThat(result.bookReqDTO().title()).isEqualTo("테스트도서");
+        assertThat(result.fileMap()).containsKey("image1");
+        // 현재 코드 로직: image3이 들어오면 내부적으로 image1 변수를 할당함
+        assertThat(result.fileMap()).containsEntry("image3", img1);
     }
 
-    // --- 2. Update Data & Projections ---
-
     @Test
-    @DisplayName("BookReqV2DTO를 BookUpdateData로 변환한다")
-    void toBookUpdateData_Test() {
+    @DisplayName("create & toBookUpdateData: 엔티티 생성 및 수정 데이터 변환 시 필드 누락 여부 검증")
+    void create_and_UpdateData_Test() {
         BookReqV2DTO req = mock(BookReqV2DTO.class);
-        when(req.tags()).thenReturn(List.of(new TagReqDTO("태그1")));
-        when(req.title()).thenReturn("수정제목");
+        when(req.isbn()).thenReturn("ISBN123");
+        when(req.isDeleted()).thenReturn(true);
+        when(req.tags()).thenReturn(List.of(new TagReqDTO("Java")));
 
-        BookUpdateData result = bookMapper.toBookUpdateData(req);
+        Book book = bookMapper.create(req);
+        BookUpdateData updateData = bookMapper.toBookUpdateData(req);
 
-        assertThat(result.title()).isEqualTo("수정제목");
-        assertThat(result.tag()).containsExactly("태그1");
+        assertThat(book.getIsbn()).isEqualTo("ISBN123");
+        assertThat(book.isDeleted()).isTrue();
+        assertThat(updateData.tag()).containsExactly("Java");
     }
 
+    // --- [2] 주문 관련 DTO 변환 (복잡한 할인 계산 포함) ---
+
     @Test
-    @DisplayName("OrderBookInfo 리스트 변환 시 할인율 계산 로직을 검증한다")
-    void toOrderBookInfoRespDTOList_Test() {
+    @DisplayName("toOrderBookInfo(Entity): 할인율 계산식((할인액/정가)*100)의 정확도를 검증한다")
+    void toOrderBookInfo_Entity_Calculation_Test() {
+        // 정가 10,000원, 할인액 1,500원 -> 예상 할인율 15.0%
         Book book = new Book("isbn", "제목", null, null, null, 10000L, true, 10, Status.ON_SALE, 1);
-        Map<Long, Long> discountMap = Map.of(0L, 1000L); // 1000원 할인
+        Map<Long, Long> discountMap = Map.of(0L, 1500L); // key 0은 b.getId() 기본값
 
         OrderBooksInfoRespDTO result = bookMapper.toOrderBookInfoRespDTOList(List.of(book), discountMap);
 
-        // 1000 / 10000 * 100 = 10.0%
-        assertThat(result.orderBookInfoRespDTOList().getFirst().discountPercentage().doubleValue()).isEqualTo(10.0);
-        assertThat(result.orderBookInfoRespDTOList().getFirst().discountPrice()).isEqualTo(1000L);
-    }
-
-    // --- 3. 상세 조회 (NPE 위험 구간) ---
-
-    @Test
-    @DisplayName("상세 조회 DTO 변환 시 할인율 소수점 2자리 반환을 확인한다")
-    void toBookRespDTO_DiscountCalculation_Test() throws JsonProcessingException {
-        // Given
-        BookDetailProjection projection = mock(BookDetailProjection.class);
-        when(projection.getPrice()).thenReturn(10000L);
-        when(projection.getPublisher()).thenReturn("출판사JSON");
-
-        // Mock 하위 매퍼 설정
-        when(publisherMapper.toPublisherRespDTO(any())).thenReturn(new PublisherRespDTO(1L, "다이소출판"));
-
-        // 10000원 책, 8500원에 판매 (1500원 할인) -> 15% 할인
-        // (1.0 - 8500/10000) * 100 = 15.00
-        BookRespDTO result = bookMapper.toBookRespDTO(projection, 10, true, 8500L);
-
-        assertThat(result.discountPercentage()).isEqualTo(new BigDecimal("15.00"));
+        OrderBookInfoRespDTO dto = result.orderBookInfoRespDTOList().getFirst();
+        assertThat(dto.discountPercentage().doubleValue()).isEqualTo(15.0);
+        assertThat(dto.discountPrice()).isEqualTo(1500L);
     }
 
     @Test
-    @DisplayName("할인금액이 null일 때 toBookRespDTO는 NPE를 발생시킨다 (현재 코드 한계)")
-    void toBookRespDTO_NPE_Scenario_Test() throws JsonProcessingException {
-        // Given
-        BookDetailProjection projection = mock(BookDetailProjection.class);
-        when(projection.getPrice()).thenReturn(10000L);
+    @DisplayName("toOrderBookInfo(Projection): 프로젝션 데이터와 할인 DTO의 매핑 일치 여부 확인")
+    void toOrderBookInfo_Projection_Mapping_Test() {
+        BookInfoListProjection p = mock(BookInfoListProjection.class);
+        when(p.getBookId()).thenReturn(1L);
+        when(p.getPrice()).thenReturn(10000L);
 
-        // 이 설정이 문제! 로직 중간에 NPE가 터지면 아래 매퍼들은 호출되지 않습니다.
-        // lenient()를 붙여서 "호출되지 않아도 괜찮다"고 설정합니다.
-        lenient().when(publisherMapper.toPublisherRespDTO(any())).thenReturn(new PublisherRespDTO(1L, "출판사"));
+        DiscountDTO.Response discount = new DiscountDTO.Response(1L, 8000L, BigDecimal.valueOf(20), 2000L);
 
-        // When & Then
-        assertThatThrownBy(() -> bookMapper.toBookRespDTO(projection, 0, false, null))
-                .isInstanceOf(NullPointerException.class);
+        OrderBooksInfoRespDTO result = bookMapper.toOrderBookInfoRespDTOList(Map.of(1L, discount), List.of(p));
+
+        assertThat(result.orderBookInfoRespDTOList().getFirst().discountPrice()).isEqualTo(2000L);
     }
 
-    // --- 4. 목록 및 페이지 변환 (Map/Page) ---
+    // --- [3] 상세 및 목록 조회 (NPE 방어 및 하위 매퍼 협업) ---
 
     @Test
-    @DisplayName("BookListDataMap 생성 시 하위 매퍼들의 Map 변환 호출을 검증한다")
-    void toBookListDataMap_Test() throws JsonProcessingException {
-        // Given
+    @DisplayName("toBookRespDTO: 상세 페이지 변환 시 소수점 2자리 내림(RoundingMode.DOWN) 계산 검증")
+    void toBookRespDTO_Rounding_Test() throws JsonProcessingException {
+        BookDetailProjection p = mock(BookDetailProjection.class);
+        when(p.getPrice()).thenReturn(10000L);
+        when(publisherMapper.toPublisherRespDTO(any())).thenReturn(new PublisherRespDTO(1L, "테스트출판"));
+
+        // (1.0 - 8555/10000) * 100 = 14.45%
+        BookRespDTO result = bookMapper.toBookRespDTO(p, 10, true, 8555L);
+
+        assertThat(result.discountPercentage()).isEqualTo(new BigDecimal("14.44"));
+    }
+
+    @Test
+    @DisplayName("toBookRespDTOList & Page: Markdown 제거 및 찜 상태(likeCheck) 연산 검증")
+    void toBookRespDTO_List_and_Page_Test() {
+        BookListData data = new BookListData(1L, "i", "t", "### 설명", null, new PublisherRespDTO(1L,"p"), null, 1000L, null, null, null, null, null, null, 1, true, false);
+        Map<Long, BookListData> map = Map.of(1L, data);
+        Set<Long> likeSet = Set.of(1L);
+
+        List<BookListRespDTO> listResult = bookMapper.toBookRespDTOList(map, Map.of(), likeSet);
+        Page<BookListRespDTO> pageResult = bookMapper.toBookRespDTOPage(new PageImpl<>(List.of(data)), Map.of(), likeSet);
+
+        // Markdown "### " 제거 확인
+        assertThat(listResult.getFirst().description()).isEqualTo("설명");
+        assertThat(pageResult.getContent().getFirst().isLike()).isTrue();
+    }
+
+    // --- [4] 데이터 수집 및 필터링 로직 (toBookListDataMap) ---
+
+    @Test
+    @DisplayName("toBookListDataMap: 하위 매퍼(Author, Image 등)와의 데이터 조립 로직을 정밀 검증한다")
+    void toBookListDataMap_Deep_Test() throws JsonProcessingException {
         BookListProjection p = mock(BookListProjection.class);
         when(p.getId()).thenReturn(1L);
-        when(p.getAuthors()).thenReturn("authorsJson");
+        when(p.getAuthors()).thenReturn("authors-json");
+        when(p.getPublisher()).thenReturn("pub-json");
 
-        // authorMapper가 JSON을 DTO 맵으로 잘 바꾼다고 가정
-        Map<Long, List<AuthorRespDTO>> authorMap = Map.of(1L, List.of(new AuthorRespDTO(1L, "작가", 1L, "저자")));
-        when(authorMapper.toAuthorRespDTOMap(any())).thenReturn(authorMap);
+        // 하위 매퍼가 ID를 Key로 데이터를 반환하도록 설정 (중요: 이 부분이 필터링 로직의 핵심)
+        when(authorMapper.toAuthorRespDTOMap(any())).thenReturn(Map.of(1L, List.of(new AuthorRespDTO(1L,"작가",1L,"저자"))));
+        when(publisherMapper.toPublisherRespDTOMap(any())).thenReturn(Map.of(1L, new PublisherRespDTO(1L,"출판사")));
 
-        // When
         Map<Long, BookListData> result = bookMapper.toBookListDataMap(List.of(p));
 
-        // Then
-        assertThat(result).containsKey(1L);
         assertThat(result.get(1L).getAuthorList()).hasSize(1);
+        assertThat(result.get(1L).getPublisher().name()).isEqualTo("출판사");
+    }
+
+    // --- [5] 할인 요청 데이터 생성 (4개 메서드) ---
+
+    @Test
+    @DisplayName("toDiscountDTOMap 계열: 4가지 입력 소스(Map, Page, List, AdminPage)로부터 정확한 할인 요청 객체를 생성한다")
+    void toDiscountDTOMaps_All_Test() {
+        // 1. Data Map
+        BookListData data = mock(BookListData.class);
+        when(data.getId()).thenReturn(1L); when(data.getPrice()).thenReturn(100L);
+
+        // 2. Info List
+        BookInfoListProjection infoP = mock(BookInfoListProjection.class);
+        when(infoP.getBookId()).thenReturn(2L); when(infoP.getPrice()).thenReturn(200L);
+
+        // 3. Admin Page
+        BookAdminProjection adminP = mock(BookAdminProjection.class);
+        when(adminP.getBookId()).thenReturn(3L); when(adminP.getPrice()).thenReturn(300L);
+
+        assertThat(bookMapper.toDiscountDTOMapByBookListData(Map.of(1L, data))).containsKey(1L);
+        assertThat(bookMapper.toDiscountDTOMapByBookListData(new PageImpl<>(List.of(data)))).containsKey(1L);
+        assertThat(bookMapper.toDiscountDTOMapByBookInfoListProjection(List.of(infoP))).containsKey(2L);
+        assertThat(bookMapper.toDiscountDTOMapByBookAdminProjection(new PageImpl<>(List.of(adminP)))).containsKey(3L);
+    }
+
+    // --- [6] 기타 뷰 및 요약 변환 ---
+
+    @Test
+    @DisplayName("toOrderBookSummeryDTOList: 주문 요약 정보의 필드 매핑 검증")
+    void toOrderBookSummery_Test() {
+        BookSummeryProjection p = mock(BookSummeryProjection.class);
+        when(p.getBookId()).thenReturn(7L);
+        when(p.getTitle()).thenReturn("제목");
+        when(p.getPrice()).thenReturn(5000L);
+
+        List<OrderBookSummeryDTO> result = bookMapper.toOrderBookSummeryDTOList(List.of(p));
+
+        assertThat(result.getFirst().bookId()).isEqualTo(7L);
+        assertThat(result.getFirst().price()).isEqualTo(5000L);
     }
 
     @Test
-    @DisplayName("Admin 페이지 변환 시 이미지 맵 매핑 로직을 검증한다")
-    void toBookAdminResopnseDTOPage_Test() throws JsonProcessingException {
-        // Given
-        BookAdminProjection ap = mock(BookAdminProjection.class);
-        when(ap.getBookId()).thenReturn(1L);
-        when(ap.getImages()).thenReturn("imagesJson");
+    @DisplayName("toBookUpdateView: 수정 뷰 변환 시 하위 매퍼 호출 결과 반영 확인")
+    void toBookUpdateView_Detailed_Test() throws JsonProcessingException {
+        BookUpdateViewProjection p = mock(BookUpdateViewProjection.class);
+        when(p.getPublisher()).thenReturn("pub-json");
+        when(publisherMapper.toPublisherRespDTO(any())).thenReturn(new PublisherRespDTO(1L, "다이소"));
 
-        Page<BookAdminProjection> page = new PageImpl<>(List.of(ap));
+        BookUpdateView result = bookMapper.toBookUpdateView(p);
 
-        Map<Long, List<ImageRespDTO>> imgMap = Map.of(1L, List.of(new ImageRespDTO(1L, "path", ImageType.COVER)));
+        assertThat(result.publisher()).isEqualTo("다이소");
+    }
+
+    @Test
+    @DisplayName("toBookAdminResopnseDTOPage: 관리자 페이지 변환 시 이미지 맵 조인 로직 확인")
+    void toBookAdminResponse_Detailed_Test() throws JsonProcessingException {
+        BookAdminProjection p = mock(BookAdminProjection.class);
+        when(p.getBookId()).thenReturn(10L);
+        when(p.getImages()).thenReturn("img-json");
+
+        Map<Long, List<ImageRespDTO>> imgMap = Map.of(10L, List.of(new ImageRespDTO(1L,"path",null)));
         when(imageMapper.toIageRespDTOMap(any())).thenReturn(imgMap);
 
-        // When
-        Page<BookAdminResponseDTO> result = bookMapper.toBookAdminResopnseDTOPage(page, Map.of());
+        Page<BookAdminResponseDTO> result = bookMapper.toBookAdminResopnseDTOPage(new PageImpl<>(List.of(p)), Map.of());
 
-        // Then
         assertThat(result.getContent().getFirst().imageList()).hasSize(1);
-        assertThat(result.getContent().getFirst().bookId()).isEqualTo(1L);
     }
 }

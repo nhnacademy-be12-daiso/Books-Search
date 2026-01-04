@@ -4,6 +4,8 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.projection.CategoryListProj
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryList;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.category.CategoryTree;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.BookCategory;
+import com.daisobook.shop.booksearch.BooksSearch.entity.category.Category;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.category.NotFoundCategoryId;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.category.impl.CategoryMapperImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,58 +33,99 @@ class CategoryMapperImplTest {
     @InjectMocks
     private CategoryMapperImpl categoryMapper;
 
+    // --- 1. Entity to DTO Mapping ---
+
     @Test
-    @DisplayName("CategoryListProjection 목록을 받아 부모 경로를 포함한 문자열 경로 리스트를 생성한다")
-    void toCategoryListTest() {
+    @DisplayName("toCategoryRespDTOList(Entity): BookCategory 엔티티 리스트를 DTO 리스트로 변환한다")
+    void toCategoryRespDTOList_Entity_Test() {
         // Given
-        CategoryListProjection parent = mock(CategoryListProjection.class);
-        when(parent.getCategoryId()).thenReturn(1L);
-        when(parent.getCategoryName()).thenReturn("국내도서");
-        when(parent.getPreCategoryId()).thenReturn(null);
+        Category pre = new Category(1L, "대분류", 1);
+        Category child = new Category(2L, "소분류", 2);
+        child.setPreCategory(pre);
 
-        CategoryListProjection child = mock(CategoryListProjection.class);
-        when(child.getCategoryId()).thenReturn(2L);
-        when(child.getCategoryName()).thenReturn("소설");
-        when(child.getPreCategoryId()).thenReturn(1L);
+        BookCategory bc = mock(BookCategory.class);
+        when(bc.getCategory()).thenReturn(child);
 
-        Map<Long, CategoryListProjection> projectionMap = Map.of(1L, parent, 2L, child);
-        List<CategoryListProjection> leafList = List.of(child);
+        // When
+        List<CategoryRespDTO> result = categoryMapper.toCategoryRespDTOList(List.of(bc));
+
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().categoryName()).isEqualTo("소분류");
+        assertThat(result.getFirst().preCategoryId()).isEqualTo(1L);
+        assertThat(result.getFirst().preCategoryName()).isEqualTo("대분류");
+    }
+
+    // --- 2. JSON String / Map Mapping ---
+
+    @Test
+    @DisplayName("toCategoryRespDTOList(String): 빈 문자열이나 null 입력 시 null을 반환한다")
+    void toCategoryRespDTOList_Json_EdgeCase_Test() throws Exception {
+        assertThat(categoryMapper.toCategoryRespDTOList((String) null)).isNull();
+        assertThat(categoryMapper.toCategoryRespDTOList("  ")).isNull();
+    }
+
+    @Test
+    @DisplayName("toCategoryRespDTOMap: JSON 문자열 Map을 DTO 리스트 Map으로 변환한다")
+    void toCategoryRespDTOMap_Test() throws Exception {
+        // Given
+        String json = "[{\"categoryId\":10,\"categoryName\":\"IT\"}]";
+        Map<Long, String> inputMap = Map.of(100L, json);
+
+        // When
+        Map<Long, List<CategoryRespDTO>> result = categoryMapper.toCategoryRespDTOMap(inputMap);
+
+        // Then
+        assertThat(result).containsKey(100L);
+        assertThat(result.get(100L).getFirst().categoryName()).isEqualTo("IT");
+    }
+
+    // --- 3. Path & Tree Logic (정밀 검증) ---
+
+    @Test
+    @DisplayName("toCategoryList: 다단계(3단계) 계층 구조에서 정확한 경로 문자열을 생성하는지 확인")
+    void toCategoryList_DeepPath_Test() {
+        // Given: 1(대) > 2(중) > 3(소)
+        CategoryListProjection p1 = createMockProjection(1L, "국내", null);
+        CategoryListProjection p2 = createMockProjection(2L, "소설", 1L);
+        CategoryListProjection p3 = createMockProjection(3L, "판타지", 2L);
+
+        Map<Long, CategoryListProjection> projectionMap = Map.of(1L, p1, 2L, p2, 3L, p3);
+        List<CategoryListProjection> leafList = List.of(p3);
 
         // When
         CategoryList result = categoryMapper.toCategoryList(projectionMap, leafList);
 
         // Then
-        assertThat(result.categoryPathList()).hasSize(1);
-        // 기대 경로 포맷: "> 1:국내도서 > 2:소설"
-        assertThat(result.categoryPathList().getFirst().path())
-                .contains("1:국내도서")
-                .contains("2:소설");
+        // 기대값 포맷: "> 1:국내 > 2:소설 > 3:판타지"
+        String expectedPath = "> 1:국내 > 2:소설 > 3:판타지";
+        assertThat(result.categoryPathList().getFirst().path()).isEqualTo(expectedPath);
     }
 
     @Test
-    @DisplayName("평면 구조의 카테고리 리스트를 계층형 트리 구조로 변환한다")
-    void toCategoryTreeListTest() {
-        // Given
-        CategoryListProjection p1 = createMockProjection(1L, "ROOT", null);
-        CategoryListProjection p2 = createMockProjection(2L, "SUB", 1L);
-        List<CategoryListProjection> projections = List.of(p1, p2);
+    @DisplayName("toCategoryTreeList: 상위 카테고리가 없는(ROOT) 항목들이 트리 리스트로 모이는지 확인")
+    void toCategoryTreeList_MultipleRoots_Test() {
+        // Given: 루트가 2개인 경우
+        CategoryListProjection r1 = createMockProjection(1L, "ROOT1", null);
+        CategoryListProjection r2 = createMockProjection(2L, "ROOT2", null);
+        CategoryListProjection c1 = createMockProjection(3L, "CHILD1", 1L);
 
         // When
-        List<CategoryTree> result = categoryMapper.toCategoryTreeList(projections);
+        List<CategoryTree> result = categoryMapper.toCategoryTreeList(List.of(r1, r2, c1));
 
         // Then
-        assertThat(result).hasSize(1); // 최상위는 하나
-        assertThat(result.get(0).categoryId()).isEqualTo(1L);
-        assertThat(result.get(0).children()).hasSize(1);
-        assertThat(result.get(0).children().get(0).categoryId()).isEqualTo(2L);
+        assertThat(result).hasSize(2); // ROOT1, ROOT2
+        CategoryTree root1 = result.stream().filter(t -> t.categoryId() == 1L).findFirst().get();
+        assertThat(root1.children()).hasSize(1);
+        assertThat(root1.children().getFirst().categoryId()).isEqualTo(3L);
     }
 
     @Test
-    @DisplayName("트리 생성 중 상위 카테고리 ID가 Map에 없으면 NotFoundCategoryId 예외가 발생한다")
-    void toCategoryTreeList_Exception_Test() {
-        // Given: 부모 ID는 1인데, 1번 데이터는 리스트에 없는 경우
-        CategoryListProjection p2 = createMockProjection(2L, "SUB", 1L);
-        List<CategoryListProjection> projections = List.of(p2);
+    @DisplayName("toCategoryTreeList: 상위 카테고리 ID 불일치 시 예외 메시지에 상세 정보가 포함되는지 확인")
+    void toCategoryTreeList_Exception_Detail_Test() {
+        // Given: 부모 999는 존재하지 않음
+        CategoryListProjection child = createMockProjection(10L, "에러노드", 999L);
+        List<CategoryListProjection> projections = List.of(child);
 
         // When & Then
         assertThatThrownBy(() -> categoryMapper.toCategoryTreeList(projections))
@@ -90,21 +133,7 @@ class CategoryMapperImplTest {
                 .hasMessageContaining("관계 불일치");
     }
 
-    @Test
-    @DisplayName("JSON 문자열을 CategoryRespDTO 리스트로 역직렬화한다")
-    void toCategoryRespDTOList_Json_Test() throws Exception {
-        // Given
-        String json = "[{\"categoryId\":1,\"categoryName\":\"테스트\",\"deep\":1}]";
-
-        // When
-        List<CategoryRespDTO> result = categoryMapper.toCategoryRespDTOList(json);
-
-        // Then
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().categoryName()).isEqualTo("테스트");
-    }
-
-    // 편의를 위한 Mock 생성 메서드
+    // --- Helper ---
     private CategoryListProjection createMockProjection(Long id, String name, Long preId) {
         CategoryListProjection p = mock(CategoryListProjection.class);
         when(p.getCategoryId()).thenReturn(id);
