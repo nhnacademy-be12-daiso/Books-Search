@@ -514,4 +514,198 @@ class ImageTemplateServiceTest {
 
         assertThrows(ImageServiceException.class, () -> service.deleteObject("http://minio/test-bucket/1/a.jpg"));
     }
+
+    @Test
+    @DisplayName("createdProcess: 데이터 URL과 파일 키가 모두 없는 경우 예외 발생")
+    void createdProcess_noDataAndNoFile_throwsException() {
+        ImageMetadataReqDTO meta = mock(ImageMetadataReqDTO.class);
+        when(meta.dataUrl()).thenReturn(null);
+        when(meta.fileKey()).thenReturn(null); // 정보 없음 분기 타겟팅
+
+        ImagesReqDTO req = mock(ImagesReqDTO.class);
+        when(req.imageMetadata()).thenReturn(List.of(meta));
+
+        assertThrows(ImageServiceException.class, () -> service.createdProcess(req, Map.of()));
+    }
+
+    @Test
+    @DisplayName("updatedProcess: 파일 키는 있으나 실제 파일 맵에 파일이 없는 경우 예외 발생")
+    void updatedProcess_fileKeyPresentButFileMissing_throwsException() {
+        ImageMetadataReqDTO meta = mock(ImageMetadataReqDTO.class);
+        when(meta.sequence()).thenReturn(1);
+        when(meta.fileKey()).thenReturn("missing-key");
+        when(meta.dataUrl()).thenReturn(null);
+
+        ImagesReqDTO req = mock(ImagesReqDTO.class);
+        when(req.imageMetadata()).thenReturn(List.of(meta));
+
+        List<ImageDTO> existing = List.of(new ImageDTO(1L, 1L, 1, "old-path", null));
+
+        // fileMap에 "missing-key"가 없으므로 [이미지 업데이트] 파일이 비어있습니다 분기 실행
+        assertThrows(ImageServiceException.class, () -> service.updatedProcess(req, Map.of(), existing));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromUrl: 실행 중 ExecutionException 발생 시 처리")
+    void uploadImageFromUrl_executionException_throwsImageServiceException() throws Exception {
+        when(webClientMock.get()).thenReturn(requestUriSpec);
+        when(requestUriSpec.uri(anyString())).thenReturn(requestSpec);
+        when(requestSpec.retrieve()).thenReturn(responseSpec);
+
+        Mono<byte[]> mockMono = mock(Mono.class);
+        java.util.concurrent.CompletableFuture<byte[]> mockFuture = mock(java.util.concurrent.CompletableFuture.class);
+
+        when(responseSpec.bodyToMono(byte[].class)).thenReturn(mockMono);
+        when(mockMono.toFuture()).thenReturn(mockFuture);
+
+        // ExecutionException 강제 발생
+        when(mockFuture.get()).thenThrow(new java.util.concurrent.ExecutionException(new RuntimeException("Test Exception")));
+
+        assertThrows(ImageServiceException.class, () -> service.uploadImageFromUrl("http://test.com/a.jpg", 1L));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromUrl: 기타 알 수 없는 Exception 발생 시 처리")
+    void uploadImageFromUrl_generalException_throwsUnknownError() {
+        // getFileExtension 등에서 에러가 나도록 유도
+        assertThrows(ImageServiceException.class, () -> service.uploadImageFromUrl(null, 1L));
+    }
+
+    @Test
+    @DisplayName("putObjectToMinio: MinIO 서버 에러(MinioException) 발생 시 처리")
+    void putObjectToMinio_minioException_throwsImageServiceException() throws Exception {
+        // executeMinioPut이 호출될 때 MinioException의 하위 클래스인 ServerException 발생
+        doThrow(new io.minio.errors.ServerException("Server error", 500, "code"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        MultipartFile mf = mock(MultipartFile.class);
+        when(mf.isEmpty()).thenReturn(false);
+        when(mf.getInputStream()).thenReturn(new java.io.ByteArrayInputStream("data".getBytes()));
+        when(mf.getOriginalFilename()).thenReturn("test.jpg");
+
+        assertThrows(ImageServiceException.class, () -> service.uploadImageFromFile(mf, 1L));
+    }
+
+    @Test
+    @DisplayName("deleteObject: 파일 삭제 중 일반 예외 발생 시 처리")
+    void deleteObject_unexpectedException_throwsImageServiceException() throws Exception {
+        // removeObject 호출 시 예상치 못한 런타임 예외 발생
+        doThrow(new RuntimeException("Unexpected")).when(minioClient).removeObject(any());
+
+        assertThrows(ImageServiceException.class, () -> service.deleteObject("http://minio/test-bucket/1/a.jpg"));
+    }
+
+    @Test
+    @DisplayName("extractObjectNameFromPath: 유효하지 않은 경로로 인해 빈 이름 추출 시 예외 발생")
+    void extractObjectName_emptyResult_throwsIllegalArgument() throws Exception {
+        java.lang.reflect.Method method = ImageTemplateServiceImpl.class.getDeclaredMethod("extractObjectNameFromPath", String.class);
+        method.setAccessible(true);
+
+        // Prefix와 동일한 문자열을 넣으면 결과가 ""(빈 문자열)이 되어 예외가 터짐
+        String prefixOnly = "http://minio/test-bucket/";
+
+        // Reflection을 통한 호출은 InvocationTargetException으로 래핑되므로 원인 확인
+        java.lang.reflect.InvocationTargetException ite = assertThrows(java.lang.reflect.InvocationTargetException.class,
+                () -> method.invoke(service, prefixOnly));
+
+        assertInstanceOf(IllegalArgumentException.class, ite.getCause());
+    }
+
+    @Test
+    @DisplayName("updatedProcess: 업데이트 결과 URL이 null일 경우 예외 발생")
+    void updatedProcess_urlNull_throwsException() {
+        // updateImageFromUrl이 null을 반환하도록 spy 설정
+        doReturn(null).when(service).updateImageFromUrl(anyString(), anyString());
+
+        ImageMetadataReqDTO meta = mock(ImageMetadataReqDTO.class);
+        when(meta.sequence()).thenReturn(1);
+        when(meta.dataUrl()).thenReturn("http://new-url.com");
+
+        ImagesReqDTO req = mock(ImagesReqDTO.class);
+        when(req.imageMetadata()).thenReturn(List.of(meta));
+
+        List<ImageDTO> existing = List.of(new ImageDTO(1L, 1L, 1, "old-path", null));
+
+        // "업데이트 실패" 문구를 포함한 예외가 터져야 함
+        ImageServiceException ex = assertThrows(ImageServiceException.class,
+                () -> service.updatedProcess(req, Map.of(), existing));
+        assertTrue(ex.getMessage().contains("업데이트 실패"));
+    }
+
+    @Test
+    @DisplayName("getLegalImagePath: 리스트에 없는 시퀀스 요청 시 orElseThrow 실행")
+    void getLegalImagePath_notFound_throwsException() {
+        List<ImageDTO> emptyList = Collections.emptyList();
+
+        // updatedProcess를 통해 자연스럽게 getLegalImagePath의 orElseThrow를 유도
+        ImageMetadataReqDTO meta = mock(ImageMetadataReqDTO.class);
+        when(meta.sequence()).thenReturn(999);
+        when(meta.dataUrl()).thenReturn("http://test.com");
+
+        ImagesReqDTO req = mock(ImagesReqDTO.class);
+        when(req.imageMetadata()).thenReturn(List.of(meta));
+
+        ImageServiceException ex = assertThrows(ImageServiceException.class,
+                () -> service.updatedProcess(req, Map.of(), emptyList));
+        assertTrue(ex.getMessage().contains("경로를 찾을 수 없습니다"));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromFile: 파일 스트림 읽기 중 IOException 발생 시 처리")
+    void uploadImageFromFile_ioException_throwsImageServiceException() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(false);
+        // getInputStream 호출 시 강제로 IOException 발생
+        when(file.getInputStream()).thenThrow(new IOException("Read error"));
+
+        ImageServiceException ex = assertThrows(ImageServiceException.class,
+                () -> service.uploadImageFromFile(file, 1L));
+        assertTrue(ex.getMessage().contains("파일 스트림 처리 중 오류 발생"));
+    }
+
+    @Test
+    @DisplayName("executeMinioPut: NoSuchAlgorithmException 등 암호화 관련 예외 발생 시 처리")
+    void executeMinioPut_cryptoException_throwsImageServiceException() throws Exception {
+        // NoSuchAlgorithmException은 Checked Exception이므로 doThrow 사용
+        doThrow(new NoSuchAlgorithmException("No such algorithm"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        // executeMinioPut을 호출하는 uploadImageFromFile 실행
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(false);
+        when(file.getInputStream()).thenReturn(new ByteArrayInputStream("test".getBytes()));
+
+        assertThrows(ImageServiceException.class, () -> service.uploadImageFromFile(file, 1L));
+    }
+
+    @Test
+    @DisplayName("putObjectToMinio: InvalidKeyException 발생 시 처리")
+    void putObjectToMinio_invalidKey_throwsImageServiceException() throws Exception {
+        doThrow(new InvalidKeyException("Invalid key"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        // putObjectToMinio를 호출하는 updateImageFromFile 실행
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(false);
+        when(file.getInputStream()).thenReturn(new ByteArrayInputStream("test".getBytes()));
+
+        assertThrows(ImageServiceException.class, () -> service.updateImageFromFile(file, "1/test.jpg"));
+    }
+
+    @Test
+    @DisplayName("extractObjectNameFromPath: 경로가 null이거나 비어있을 때 예외 발생")
+    void extractObjectName_nullOrEmpty_throwsException() throws Exception {
+        java.lang.reflect.Method method = ImageTemplateServiceImpl.class.getDeclaredMethod("extractObjectNameFromPath", String.class);
+        method.setAccessible(true);
+
+        // 1. null 케이스
+        java.lang.reflect.InvocationTargetException ite1 = assertThrows(java.lang.reflect.InvocationTargetException.class,
+                () -> method.invoke(service, (Object) null));
+        assertInstanceOf(IllegalArgumentException.class, ite1.getCause());
+
+        // 2. empty 케이스
+        java.lang.reflect.InvocationTargetException ite2 = assertThrows(java.lang.reflect.InvocationTargetException.class,
+                () -> method.invoke(service, ""));
+        assertInstanceOf(IllegalArgumentException.class, ite2.getCause());
+    }
 }

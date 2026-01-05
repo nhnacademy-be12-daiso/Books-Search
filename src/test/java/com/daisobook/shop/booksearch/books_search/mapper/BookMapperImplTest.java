@@ -10,13 +10,16 @@ import com.daisobook.shop.booksearch.books_search.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.AuthorRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.PublisherRespDTO;
+import com.daisobook.shop.booksearch.books_search.dto.response.TagRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.book.BookAdminResponseDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.book.BookListRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.book.BookUpdateView;
+import com.daisobook.shop.booksearch.books_search.dto.response.category.CategoryRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.order.OrderBookInfoRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.order.OrderBookSummeryDTO;
 import com.daisobook.shop.booksearch.books_search.dto.response.order.OrderBooksInfoRespDTO;
+import com.daisobook.shop.booksearch.books_search.entity.ImageType;
 import com.daisobook.shop.booksearch.books_search.entity.book.Book;
 import com.daisobook.shop.booksearch.books_search.entity.book.Status;
 import com.daisobook.shop.booksearch.books_search.mapper.author.AuthorMapper;
@@ -47,9 +50,10 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookMapperImplTest {
@@ -291,5 +295,68 @@ class BookMapperImplTest {
         // 현재 코드상 Objects.requireNonNull(i) 때문에 NPE 발생 가능성이 높음 -> 로직 수정 필요성 감지
         assertThatThrownBy(() -> bookMapper.toBookRespDTO(p, 0, false, null))
                 .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    @DisplayName("toBookListDataPage: Projection 페이지를 BookListData 페이지로 변환 성공")
+    void toBookListDataPage_success() throws JsonProcessingException {
+        // 1. Given: 가짜 Projection 데이터 생성
+        Long bookId = 1L;
+        BookListProjection mockProjection = mock(BookListProjection.class);
+        when(mockProjection.getId()).thenReturn(bookId);
+        when(mockProjection.getIsbn()).thenReturn("12345");
+        when(mockProjection.getTitle()).thenReturn("테스트 도서");
+        when(mockProjection.getAuthors()).thenReturn("작가 정보 JSON");
+        when(mockProjection.getPublisher()).thenReturn("출판사 정보 JSON");
+        when(mockProjection.getImages()).thenReturn("이미지 정보 JSON");
+        when(mockProjection.getCategories()).thenReturn("카테고리 정보 JSON");
+        when(mockProjection.getTags()).thenReturn("태그 정보 JSON");
+
+        Page<BookListProjection> projectionPage = new PageImpl<>(List.of(mockProjection));
+
+        // 2. Mocking: 내부 매퍼들의 동작 정의 (toAuthorRespDTOMap 등)
+        AuthorRespDTO author = new AuthorRespDTO(1L, "작가명", null, null);
+        PublisherRespDTO publisher = new PublisherRespDTO(1L, "출판사명");
+        ImageRespDTO image = new ImageRespDTO(1L, "path/to/img", ImageType.COVER);
+        CategoryRespDTO category = new CategoryRespDTO(1L, "카테고리명", 1, null, null);
+        TagRespDTO tag = new TagRespDTO(1L, "태그명");
+
+        when(authorMapper.toAuthorRespDTOMap(anyMap())).thenReturn(Map.of(bookId, List.of(author)));
+        when(publisherMapper.toPublisherRespDTOMap(anyMap())).thenReturn(Map.of(bookId, publisher));
+        when(imageMapper.toIageRespDTOMap(anyMap())).thenReturn(Map.of(bookId, List.of(image)));
+        when(categoryMapper.toCategoryRespDTOMap(anyMap())).thenReturn(Map.of(bookId, List.of(category)));
+        when(tagMapper.toTagRespDTOMap(anyMap())).thenReturn(Map.of(bookId, List.of(tag)));
+
+        // 3. When: 메서드 실행
+        Page<BookListData> resultPage = bookMapper.toBookListDataPage(projectionPage);
+
+        // 4. Then: 검증
+        assertNotNull(resultPage);
+        assertEquals(1, resultPage.getContent().size());
+
+        BookListData resultData = resultPage.getContent().getFirst();
+        assertEquals(bookId, resultData.getId());
+        assertEquals("테스트 도서", resultData.getTitle());
+        assertEquals("작가명", resultData.getAuthorList().getFirst().authorName());
+        assertEquals("출판사명", resultData.getPublisher().name());
+        assertEquals("path/to/img", resultData.getImageList().getFirst().path());
+
+        // 내부 매퍼들이 각각 한 번씩 호출되었는지 확인
+        verify(authorMapper).toAuthorRespDTOMap(anyMap());
+        verify(publisherMapper).toPublisherRespDTOMap(anyMap());
+    }
+
+    @Test
+    @DisplayName("toBookListDataPage: 데이터가 없는 빈 페이지 처리")
+    void toBookListDataPage_emptyPage() throws JsonProcessingException {
+        // 1. Given: 빈 페이지
+        Page<BookListProjection> emptyProjectionPage = Page.empty();
+
+        // 2. When
+        Page<BookListData> resultPage = bookMapper.toBookListDataPage(emptyProjectionPage);
+
+        // 3. Then
+        assertNotNull(resultPage);
+        assertTrue(resultPage.isEmpty());
     }
 }
