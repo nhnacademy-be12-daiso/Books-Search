@@ -525,7 +525,8 @@ class ImageTemplateServiceTest {
         ImagesReqDTO req = mock(ImagesReqDTO.class);
         when(req.imageMetadata()).thenReturn(List.of(meta));
 
-        assertThrows(ImageServiceException.class, () -> service.createdProcess(req, Map.of()));
+        Map<String, MultipartFile> map = Map.of();
+        assertThrows(ImageServiceException.class, () -> service.createdProcess(req, map));
     }
 
     @Test
@@ -542,7 +543,8 @@ class ImageTemplateServiceTest {
         List<ImageDTO> existing = List.of(new ImageDTO(1L, 1L, 1, "old-path", null));
 
         // fileMap에 "missing-key"가 없으므로 [이미지 업데이트] 파일이 비어있습니다 분기 실행
-        assertThrows(ImageServiceException.class, () -> service.updatedProcess(req, Map.of(), existing));
+        Map<String, MultipartFile> map = Map.of();
+        assertThrows(ImageServiceException.class, () -> service.updatedProcess(req, map, existing));
     }
 
     @Test
@@ -627,8 +629,9 @@ class ImageTemplateServiceTest {
         List<ImageDTO> existing = List.of(new ImageDTO(1L, 1L, 1, "old-path", null));
 
         // "업데이트 실패" 문구를 포함한 예외가 터져야 함
+        Map<String, MultipartFile> map = Map.of();
         ImageServiceException ex = assertThrows(ImageServiceException.class,
-                () -> service.updatedProcess(req, Map.of(), existing));
+                () -> service.updatedProcess(req, map, existing));
         assertTrue(ex.getMessage().contains("업데이트 실패"));
     }
 
@@ -645,8 +648,9 @@ class ImageTemplateServiceTest {
         ImagesReqDTO req = mock(ImagesReqDTO.class);
         when(req.imageMetadata()).thenReturn(List.of(meta));
 
+        Map<String, MultipartFile> map = Map.of();
         ImageServiceException ex = assertThrows(ImageServiceException.class,
-                () -> service.updatedProcess(req, Map.of(), emptyList));
+                () -> service.updatedProcess(req, map, emptyList));
         assertTrue(ex.getMessage().contains("경로를 찾을 수 없습니다"));
     }
 
