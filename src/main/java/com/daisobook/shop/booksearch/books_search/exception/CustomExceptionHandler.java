@@ -30,7 +30,7 @@ public class CustomExceptionHandler {
             EntityNotFoundException.class,
             BookNotFoundException.class // AI 도메인
     })
-    public ResponseEntity<ErrorResponse> handleNotFound(BusinessException ex) {
+    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException ex) {
         log.warn("Resource Not Found: {}", ex.getMessage());
         return buildErrorResponse(ex, ex.getHttpStatus(), ex.getMessage());
     }
@@ -41,7 +41,7 @@ public class CustomExceptionHandler {
     @ExceptionHandler({
             DuplicateResourceException.class
     })
-    public ResponseEntity<ErrorResponse> handleConflict(BusinessException ex) {
+    public ResponseEntity<ErrorResponse> handleConflict(DuplicateResourceException ex) {
         log.warn("Resource Conflict: {}", ex.getMessage());
         return buildErrorResponse(ex, ex.getHttpStatus(), ex.getMessage());
     }
@@ -53,7 +53,7 @@ public class CustomExceptionHandler {
             InvalidRequestException.class,
             BookOutOfStockException.class // SAGA/Inventory 관련
     })
-    public ResponseEntity<ErrorResponse> handleBadRequest(BusinessException ex) {
+    public ResponseEntity<ErrorResponse> handleBadRequest(InvalidRequestException ex) {
         log.warn("Bad Request: {}", ex.getMessage());
         return buildErrorResponse(ex, ex.getHttpStatus(), ex.getMessage());
     }
