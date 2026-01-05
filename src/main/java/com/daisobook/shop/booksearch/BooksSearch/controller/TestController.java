@@ -62,18 +62,8 @@ public class TestController implements DevToolControllerDocs {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    // 여러개의 도서를 하는거 하기 어려운건지 안된는건지 포기
-//    @PostMapping(value = "/creates", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-//    public ResponseEntity<?> createBooks(ArrayList<TestReq> testReqs) throws JsonProcessingException {
-//        return ResponseEntity.ok().build();
-//    }
-
     //기존의 MinioTestController에 있던거
     private final MinIOService minioService;
-
-//    public MinioTestController(MinIOService minioService) {
-//        this.minioService = minioService;
-//    }
 
     /**
      * [테스트 1] 외부 URL 이미지를 MiniIO에 업로드합니다.

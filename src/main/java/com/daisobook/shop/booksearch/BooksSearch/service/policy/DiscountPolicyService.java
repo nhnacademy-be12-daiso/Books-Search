@@ -2,7 +2,6 @@ package com.daisobook.shop.booksearch.BooksSearch.service.policy;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
-import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.DiscountValueProjection;
 import com.daisobook.shop.booksearch.BooksSearch.entity.policy.DiscountPolicy;
 import com.fasterxml.jackson.core.JsonProcessingException;

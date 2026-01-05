@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.controller.external;
 
 import com.daisobook.shop.booksearch.BooksSearch.controller.docs.BookV2ControllerDocs;
-import com.daisobook.shop.booksearch.BooksSearch.dto.api.BookInfoDataView;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.SortBookListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.TotalDataRespDTO;
@@ -10,7 +9,6 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookListByCat
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.book.BookUpdateView;
 import com.daisobook.shop.booksearch.BooksSearch.entity.BookListType;
-import com.daisobook.shop.booksearch.BooksSearch.service.api.BookRefineService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +29,6 @@ import java.util.ArrayList;
 @RequestMapping("/api/v2/books")
 public class BookV2Controller implements BookV2ControllerDocs {
     private final BookFacade bookFacade;
-    private final BookRefineService bookRefineService;
 
     //POST: /api/v2/books 단일 도서 등록
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -120,12 +117,6 @@ public class BookV2Controller implements BookV2ControllerDocs {
     public boolean getBookRegisterInfoByIsbn(@PathVariable("isbn") String isbn){
         return bookFacade.existIsbn(isbn);
     }
-
-//    //GET: /api/v2/books/isbn-search/{isbn} ai 도서 등록시 해당 isbn이 대한 도서 정보 조회
-//    @PostMapping("/isbn-search/{isbn}")
-//    public BookInfoDataView postBookRegisterInfoByIsbn(@PathVariable("isbn") String isbn){
-//        return bookRefineService.getRefinedBook(isbn);
-//    }
 
     @GetMapping("/categories/{categoryId}")
     public BookListByCategoryRespDTO getBookListByCategoryId(@PageableDefault(size = 15, sort = "publication_date", direction = Sort.Direction.DESC) Pageable pageable,

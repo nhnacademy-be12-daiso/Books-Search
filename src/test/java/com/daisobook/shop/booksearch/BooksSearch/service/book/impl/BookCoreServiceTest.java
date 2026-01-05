@@ -158,9 +158,9 @@ class BookCoreServiceTest {
         assertThat(updated.getPublicationDate()).isEqualTo(LocalDate.of(2000,1,1));
         assertThat(updated.getPrice()).isEqualTo(2000L);
         assertThat(updated.isPackaging()).isTrue();
-        assertThat(updated.getStock()).isEqualTo(5L);
+        assertThat(updated.getStock()).isEqualTo(5);
         assertThat(updated.getStatus()).isEqualTo(Status.ON_SALE);
-        assertThat(updated.getVolumeNo()).isEqualTo(10L);
+        assertThat(updated.getVolumeNo()).isEqualTo(10);
         assertThat(updated.isDeleted()).isTrue();
 
         verify(authorService).updateAuthorOfBook(eq(book), any());

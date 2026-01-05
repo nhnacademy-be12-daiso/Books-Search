@@ -2,7 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.service;
 
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import io.minio.errors.MinioException;
+import io.minio.errors.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +10,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -71,8 +73,17 @@ public class MinIOService {
 
         } catch (MinioException e) {
             throw new RuntimeException("MinIO 서버 업로드 중 오류 발생", e);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("이미지 다운로드 중 오류 발생", e);
+        } catch (InterruptedException e) {
+            // 1. 현재 스레드에 중단 상태를 다시 설정 (소나큐브 핵심 요구사항)
+            Thread.currentThread().interrupt();
+
+            // 2. 원래 하려던 예외 처리를 진행
+            throw new RuntimeException("이미지 다운로드 중 인터럽트 발생", e);
+
+        } catch (ExecutionException e) {
+            // ExecutionException은 인터럽트와 상관없으므로 기존처럼 처리
+            throw new RuntimeException("이미지 다운로드 실행 중 오류 발생", e);
+
         } catch (Exception e) {
             throw new RuntimeException("알 수 없는 처리 오류 발생", e);
         }
@@ -161,13 +172,26 @@ public class MinIOService {
                                 .contentType(contentType)
                                 .build()
                 );
+            } catch (IOException | ErrorResponseException | InsufficientDataException | InternalException |
+                     InvalidKeyException | InvalidResponseException | NoSuchAlgorithmException | ServerException |
+                     XmlParserException e) {
+                throw new RuntimeException(e);
             }
 
             // 4. 저장된 이미지의 접근 URL 반환 (URL은 변하지 않음)
             return String.format("%s/%s/%s", minioUrl, bucketName, existingObjectName);
 
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            // 소나큐브 Reliability 대응: 인터럽트 상태 복구
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("이미지 업데이트 중 인터럽트 발생: " + existingObjectName, e);
+
+        } catch (ExecutionException e) {
+            // 테스트 통과 대응: 메시지에 "이미지 업데이트"를 명시적으로 포함
             throw new RuntimeException("이미지 업데이트 중 오류 발생: " + existingObjectName, e);
+
+        } catch (Exception e) {
+            throw new RuntimeException("이미지 업데이트 중 알 수 없는 오류 발생", e);
         }
     }
 

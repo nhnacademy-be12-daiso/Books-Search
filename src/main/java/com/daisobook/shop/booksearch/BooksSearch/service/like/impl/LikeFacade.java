@@ -1,7 +1,6 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.like.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.DiscountValueListData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.LikeBookListProjection;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.like.LikeListRespDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.like.MyLikeList;
@@ -9,9 +8,7 @@ import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.like.Like;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
-import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.like.LikeMapper;
-import com.daisobook.shop.booksearch.BooksSearch.mapper.policy.PolicyMapper;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookCoreService;
 import com.daisobook.shop.booksearch.BooksSearch.service.like.LikeService;
 import com.daisobook.shop.booksearch.BooksSearch.service.policy.DiscountPolicyService;

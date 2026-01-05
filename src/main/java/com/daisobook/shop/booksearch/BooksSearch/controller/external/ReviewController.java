@@ -4,7 +4,6 @@ import com.daisobook.shop.booksearch.BooksSearch.controller.docs.ReviewControlle
 import com.daisobook.shop.booksearch.BooksSearch.dto.point.PointPolicyType;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewGroupReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.response.ReviewRespDTO;
-//import com.daisobook.shop.booksearch.BooksSearch.service.book.BookService;
 import com.daisobook.shop.booksearch.BooksSearch.service.book.impl.BookFacade;
 import com.daisobook.shop.booksearch.BooksSearch.service.point.PointService;
 import com.daisobook.shop.booksearch.BooksSearch.service.review.ReviewService;
@@ -24,17 +23,8 @@ import java.util.List;
 public class ReviewController implements ReviewControllerDocs {
 
     private final ReviewService reviewService;
-//    private final BookService bookService;
     private final BookFacade bookFacade;
     private final PointService pointService;
-
-//    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-//    public ResponseEntity addReview(@RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO) throws JsonProcessingException {
-//        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing(reviewMetadataReqDTO);
-////        reviewService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
-//        bookService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
-//        return ResponseEntity.ok().build();
-//    }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> addReview(@RequestPart("metadata") String metadataJson,
@@ -42,7 +32,6 @@ public class ReviewController implements ReviewControllerDocs {
                                     @RequestPart(value = "image1", required = false) MultipartFile image1,
                                     @RequestPart(value = "image2", required = false) MultipartFile image2) throws JsonProcessingException {
         ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing2(metadataJson, image0, image1, image2);
-//        bookService.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
         PointPolicyType type = bookFacade.registerReview(reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
         pointService.requestReviewPoint(reviewGroupReqDTO.reviewReqDTO().userId(), type);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -62,15 +51,6 @@ public class ReviewController implements ReviewControllerDocs {
     public ReviewRespDTO getReviewById(@PathVariable("reviewId") long reviewId){
         return reviewService.getReviewById(reviewId);
     }
-
-//    @PutMapping(value = "/{reviewId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-//    public ResponseEntity updateReviewById(@RequestParam("reviewId") long reviewId,
-//                                           @RequestPart ReviewMetadataReqDTO reviewMetadataReqDTO,
-//                                           @RequestHeader("X-User-Id")long userId) throws JsonProcessingException {
-//        ReviewGroupReqDTO reviewGroupReqDTO = reviewService.parsing(reviewMetadataReqDTO);
-//        reviewService.updateReview(reviewId, reviewGroupReqDTO.reviewReqDTO(), reviewGroupReqDTO.fileMap());
-//        return ResponseEntity.ok().build();
-//    }
 
     @PutMapping(value = "/{reviewId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> updateReviewById(@PathVariable("reviewId") long reviewId,

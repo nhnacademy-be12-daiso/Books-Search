@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.BooksSearch.service.tag.impl;
 
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.BookTag;
 import com.daisobook.shop.booksearch.BooksSearch.entity.tag.Tag;
