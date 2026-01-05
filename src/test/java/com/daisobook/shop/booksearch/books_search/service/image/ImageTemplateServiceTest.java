@@ -395,7 +395,8 @@ class ImageTemplateServiceTest {
         when(meta.fileKey()).thenReturn(""); // 둘 다 없음
         when(req.imageMetadata()).thenReturn(List.of(meta));
 
-        assertThrows(ImageServiceException.class, () -> service.createdProcess(req, Map.of()));
+        Map<String, MultipartFile> map = Map.of();
+        assertThrows(ImageServiceException.class, () -> service.createdProcess(req, map));
     }
 
     @Test
@@ -431,7 +432,7 @@ class ImageTemplateServiceTest {
 
     @Test
     @DisplayName("extractObjectNameFromPath: 유효하지 않은 결과값(Empty) 추출 시 예외")
-    void extractObjectNameFromPath_emptyResult_throwsException() throws Exception {
+    void extractObjectNameFromPath_emptyResult_throwsException() {
         // Prefix만 있는 경로를 넣어 결과가 빈 문자열이 되도록 유도
         String prefixOnly = "http://minio/test-bucket/";
         assertThrows(IllegalArgumentException.class, () -> service.deleteObject(prefixOnly));
@@ -443,5 +444,74 @@ class ImageTemplateServiceTest {
     void deleteObjects_emptyList_noInteraction() {
         service.deleteObjects(Collections.emptyList());
         verifyNoInteractions(minioClient);
+    }
+
+    @Test
+    @DisplayName("updateImageFromUrl: URL이 동일할 경우 업로드를 건너뛰고 기존 URL 반환")
+    void updatedProcess_sameUrl_skipsUpload() throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        String sameUrl = "http://minio/test-bucket/1/image.jpg";
+        ImageMetadataReqDTO meta = mock(ImageMetadataReqDTO.class);
+        when(meta.sequence()).thenReturn(1);
+        when(meta.dataUrl()).thenReturn(sameUrl);
+
+        ImagesReqDTO req = mock(ImagesReqDTO.class);
+        when(req.imageMetadata()).thenReturn(List.of(meta));
+
+        List<ImageDTO> existing = List.of(new ImageDTO(1L, 1L, 1, sameUrl, null));
+
+        Map<Integer, String> result = service.updatedProcess(req, Map.of(), existing);
+
+        assertEquals(sameUrl, result.get(1));
+        // 핵심: 업로드 메서드가 호출되지 않았음을 검증
+        verify(minioClient, never()).putObject(any());
+    }
+
+    @Test
+    @DisplayName("extractObjectNameFromPath: 다양한 경로 패턴에서 이름 추출")
+    void extractObjectName_patterns() throws Exception {
+        java.lang.reflect.Method method = ImageTemplateServiceImpl.class.getDeclaredMethod("extractObjectNameFromPath", String.class);
+        method.setAccessible(true);
+
+        // 1. Full URL (Prefix 포함)
+        String url = "http://minio/test-bucket/123/uuid.jpg";
+        assertEquals("123/uuid.jpg", method.invoke(service, url));
+
+        // 2. Query Parameter 포함
+        String urlWithQuery = "http://minio/test-bucket/123/uuid.jpg?versionId=456";
+        assertEquals("123/uuid.jpg", method.invoke(service, urlWithQuery));
+
+        // 3. 순수 경로만 있는 경우
+        String purePath = "123/uuid.jpg";
+        assertEquals("123/uuid.jpg", method.invoke(service, purePath));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromUrl: ExecutionException 발생 시 처리")
+    void uploadImageFromUrl_executionException() throws Exception {
+        // WebClient 가짜 에러 유도
+        when(webClientMock.get()).thenReturn(requestUriSpec);
+        when(requestUriSpec.uri(anyString())).thenReturn(requestSpec);
+        when(requestSpec.retrieve()).thenReturn(responseSpec);
+
+        Mono<byte[]> mockMono = mock(Mono.class);
+        java.util.concurrent.CompletableFuture<byte[]> mockFuture = mock(java.util.concurrent.CompletableFuture.class);
+
+        when(responseSpec.bodyToMono(byte[].class)).thenReturn(mockMono);
+        when(mockMono.toFuture()).thenReturn(mockFuture);
+
+        // ExecutionException은 Checked Exception이므로 시뮬레이션
+        when(mockFuture.get()).thenThrow(new java.util.concurrent.ExecutionException(new RuntimeException("Thread Error")));
+
+        assertThrows(ImageServiceException.class, () -> service.uploadImageFromUrl("http://test.com/a.jpg", 1L));
+    }
+
+    @Test
+    @DisplayName("deleteObject: MinioException 발생 시 예외 변환")
+    void deleteObject_minioException() throws Exception {
+        // MinioException은 추상 클래스이므로 하위 클래스 중 하나를 사용
+        doThrow(new io.minio.errors.ServerException("Server Error", 500, "Error"))
+                .when(minioClient).removeObject(any());
+
+        assertThrows(ImageServiceException.class, () -> service.deleteObject("http://minio/test-bucket/1/a.jpg"));
     }
 }
