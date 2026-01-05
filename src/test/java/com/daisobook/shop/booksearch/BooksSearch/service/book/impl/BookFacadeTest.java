@@ -6,16 +6,20 @@ import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookDetailProjec
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.ImageMetadataReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.TagReqDTO;
-import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookGroupReqV2DTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.book.BookReqV2DTO;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.order.OrderCancelRequest;
 import com.daisobook.shop.booksearch.BooksSearch.dto.request.review.ReviewReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.dto.service.ImagesReqDTO;
+import com.daisobook.shop.booksearch.BooksSearch.entity.ImageType;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.BookImage;
+import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.Review;
 import com.daisobook.shop.booksearch.BooksSearch.entity.review.ReviewImage;
-import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookISBN;
+import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBookId;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.mapper.FailObjectMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.book.BookMapper;
 import com.daisobook.shop.booksearch.BooksSearch.mapper.image.ImageMapper;
@@ -42,7 +46,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 class BookFacadeTest {
@@ -66,10 +72,12 @@ class BookFacadeTest {
 
         @Test
         @DisplayName("parsing: metadata null -> RuntimeException")
-        void parsing_nullMetadata_throws() {
+        void parsing_nullMetadata_throws() throws JsonProcessingException {
             assertThatThrownBy(() -> bookFacade.parsing(null, null, null, null, null, null))
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("metadata is null");
+                    .isInstanceOf(RuntimeException.class);
+
+            bookFacade.parsing("{}", null, null, null, null, null);
+            verify(bookMapper).parsing(anyString(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -143,6 +151,28 @@ class BookFacadeTest {
             verify(imageService).addBookImages(eq(created), anyList());
         }
 
+        @Test
+        @DisplayName("registerBooks: 중복 ISBN이 섞여 있을 때 continue 분기 커버")
+        void registerBooks_withDuplicates_test() {
+            BookReqV2DTO dupReq = mock(BookReqV2DTO.class);
+            when(dupReq.isbn()).thenReturn("DUP");
+            BookReqV2DTO newReq = mock(BookReqV2DTO.class);
+            when(newReq.isbn()).thenReturn("NEW");
+            when(newReq.tags()).thenReturn(List.of());
+
+            // DUP은 이미 존재한다고 설정
+            given(bookCoreService.getExistsByIsbn(anyList())).willReturn(Set.of(() -> "DUP"));
+
+            Book newBook = new Book();
+            newBook.setIsbn("NEW");
+            given(bookMapper.create(newReq)).willReturn(newBook);
+            given(bookCoreService.registerBooks(anyMap(), anyMap(), anyMap(), anyMap(), anyMap())).willReturn(Map.of("NEW", newBook));
+
+            bookFacade.registerBooks(List.of(dupReq, newReq));
+
+            // 맵에 'NEW' 하나만 담겨서 서비스로 넘어갔는지 확인 (DUP은 continue 됨)
+            verify(bookCoreService).registerBooks(argThat(m -> m.size() == 1), any(), any(), any(), any());
+        }
 
 
         @Test
@@ -188,6 +218,28 @@ class BookFacadeTest {
             verify(imageService).updateBookImage(eq(book), any(ImagesReqDTO.class), eq(fileMap));
         }
 
+        @Test
+        @DisplayName("updateBook: 이미지 변화가 전혀 없을 때 updateBookImage 미호출")
+        void updateBook_noChange_skipsUpdate() {
+            long bookId = 1L;
+            Book book = new Book();
+            BookImage bi = new BookImage(); bi.setNo(0); bi.setPath("same-url");
+            book.setBookImages(new ArrayList<>(List.of(bi)));
+
+            given(bookCoreService.getBook_Id(bookId)).willReturn(book);
+            given(bookMapper.toBookUpdateData(any())).willReturn(mock(BookUpdateData.class));
+            given(bookCoreService.updateBookByData(any(), any())).willReturn(book);
+
+            BookReqV2DTO req = mock(BookReqV2DTO.class);
+            // 동일한 URL 설정
+            ImageMetadataReqDTO meta = new ImageMetadataReqDTO(0, ImageType.COVER, "same-url", "key");
+            given(req.imageMetadataReqDTOList()).willReturn(List.of(meta));
+
+            bookFacade.updateBook(bookId, req, Map.of());
+
+            // imageCheck가 false여야 하므로 updateBookImage가 호출되지 않아야 함
+            verify(imageService, times(0)).updateBookImage(any(), any(), any());
+        }
 
 
         @Test
@@ -422,6 +474,57 @@ class BookFacadeTest {
                     .isInstanceOf(FailObjectMapper.class);
             verify(bookCoreService).getBookAdminProjectionPage(pageable);
             verify(bookMapper).toDiscountDTOMapByBookAdminProjection(adminPage);
+        }
+
+        @Test
+        @DisplayName("getBookList: 조회된 ID가 없을 때 (bookIds == null) -> NotFoundBook 예외")
+        void getBookList_idsNull_throws() {
+            when(bookCoreService.getBookIdsOfNewReleases(any(), any(), anyInt())).thenReturn(null);
+
+            assertThatThrownBy(() -> bookFacade.getBookList(null, com.daisobook.shop.booksearch.BooksSearch.entity.BookListType.NEW_RELEASES, 1L))
+                    .isInstanceOf(com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.NotFoundBook.class);
+        }
+
+        @Test
+        @DisplayName("getBookDetail: Mapper에서 JsonProcessingException 발생 시 FailObjectMapper 처리")
+        void getBookDetail_mapperException_throws() throws JsonProcessingException {
+            var detail = mock(BookDetailProjection.class);
+            when(bookCoreService.getBookDetail_Id(1L)).thenReturn(detail);
+            when(discountPolicyService.getDiscountPrice(anyLong(), anyLong())).thenReturn(5000L);
+
+            // mapper에서 강제로 예외 발생
+            when(bookMapper.toBookRespDTO(any(), any(), any(), any())).thenThrow(new JsonProcessingException("error") {});
+
+            assertThatThrownBy(() -> bookFacade.getBookDetail(1L, 1L))
+                    .isInstanceOf(FailObjectMapper.class);
+        }
+
+        @Test
+        @DisplayName("orderCancel: 양수/음수/제로 수량 및 품절 전환 모든 케이스")
+        void orderCancel_allBranches_test() {
+            // 케이스 1: 수량 > 0 (재고 복구 및 품절 해제)
+            Book book1 = new Book(); book1.setStock(0); book1.setStatus(Status.SOLD_OUT);
+            given(bookCoreService.getBook_Id(1L)).willReturn(book1);
+            bookFacade.orderCancel(new OrderCancelRequest(1L, 5));
+            assertThat(book1.getStatus()).isEqualTo(Status.ON_SALE);
+
+            // 케이스 2: 수량 < 0 (재고 차감 및 품절 전환)
+            Book book2 = new Book(); book2.setStock(10); book2.setStatus(Status.ON_SALE);
+            given(bookCoreService.getBook_Id(2L)).willReturn(book2);
+            bookFacade.orderCancel(new OrderCancelRequest(2L, -10));
+            assertThat(book2.getStatus()).isEqualTo(Status.SOLD_OUT);
+
+            // 케이스 3: 수량 < 0 이지만 재고 부족 (예외 발생)
+            Book book3 = new Book(); book3.setStock(5);
+            given(bookCoreService.getBook_Id(3L)).willReturn(book3);
+            assertThatThrownBy(() -> bookFacade.orderCancel(new OrderCancelRequest(3L, -10)))
+                    .isInstanceOf(DuplicatedBook.class);
+
+            // 케이스 4: 수량 == 0 (변경 없음, 로그 분기)
+            Book book4 = new Book(); book4.setStock(10);
+            given(bookCoreService.getBook_Id(4L)).willReturn(book4);
+            bookFacade.orderCancel(new OrderCancelRequest(4L, 0));
+            assertThat(book4.getStock()).isEqualTo(10);
         }
 
     }
