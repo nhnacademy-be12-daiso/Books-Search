@@ -3,6 +3,7 @@ package com.daisobook.shop.booksearch.books_search.service.image;
 import com.daisobook.shop.booksearch.books_search.dto.request.ImageMetadataReqDTO;
 import com.daisobook.shop.booksearch.books_search.dto.service.ImageDTO;
 import com.daisobook.shop.booksearch.books_search.dto.service.ImagesReqDTO;
+import com.daisobook.shop.booksearch.books_search.exception.custom.image.ImageServiceException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
@@ -343,5 +344,104 @@ class ImageTemplateServiceTest {
         // 3. Prefix가 없는 순수 ObjectName 처리
         service.deleteObject("simple/path.jpg");
         verify(minioClient).removeObject(argThat(args -> args.object().equals("simple/path.jpg")));
+    }
+
+    /* --- 1. Catch 블록 및 예외 처리 커버리지 저격 --- */
+
+    @Test
+    @DisplayName("uploadImageFromUrl: InterruptedException 발생 시 상태 복구 확인")
+    void uploadImageFromUrl_interrupted_restoresState() throws Exception {
+        // WebClient의 Mono.toFuture().get()이 InterruptedException을 던지도록 시뮬레이션
+        Mono<byte[]> mockMono = mock(Mono.class);
+        java.util.concurrent.CompletableFuture<byte[]> mockFuture = mock(java.util.concurrent.CompletableFuture.class);
+
+        when(webClientMock.get()).thenReturn(requestUriSpec);
+        when(requestUriSpec.uri(anyString())).thenReturn(requestSpec);
+        when(requestSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(byte[].class)).thenReturn(mockMono);
+        when(mockMono.toFuture()).thenReturn(mockFuture);
+
+        when(mockFuture.get()).thenThrow(new InterruptedException("Interrupted!"));
+
+        assertThrows(ImageServiceException.class, () -> service.uploadImageFromUrl("http://test.com/a.jpg", 1L));
+        // 소나큐브 필수 체크: 인터럽트 상태가 다시 세팅되었는지 확인
+        assertTrue(Thread.interrupted());
+    }
+
+    @Test
+    @DisplayName("putObjectToMinio: MinIO 관련 예외 발생 시 ImageServiceException으로 변환 확인")
+    void putObjectToMinio_throwsImageServiceException() throws Exception {
+        // executeMinioPut 또는 putObjectToMinio 내부에서 호출되는 minioClient 에러 모킹
+        doThrow(new IOException("Connection Reset"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        // updateImageFromFile 등을 통해 내부 private 메서드 호출 유도
+        MultipartFile mf = mock(MultipartFile.class);
+        when(mf.isEmpty()).thenReturn(false);
+        when(mf.getInputStream()).thenReturn(new ByteArrayInputStream("data".getBytes()));
+        when(mf.getSize()).thenReturn(4L);
+
+        assertThrows(ImageServiceException.class, () -> service.updateImageFromFile(mf, "1/old.jpg"));
+    }
+
+    /* --- 2. 생성/수정 프로세스의 엣지 케이스 (Null/Empty) --- */
+
+    @Test
+    @DisplayName("createdProcess: 메타데이터에 URL과 FileKey 둘 다 없을 경우 예외 발생")
+    void createdProcess_noDataUrlAndNoFileKey_throwsException() {
+        ImagesReqDTO req = mock(ImagesReqDTO.class);
+        ImageMetadataReqDTO meta = mock(ImageMetadataReqDTO.class);
+        when(meta.dataUrl()).thenReturn("");
+        when(meta.fileKey()).thenReturn(""); // 둘 다 없음
+        when(req.imageMetadata()).thenReturn(List.of(meta));
+
+        assertThrows(ImageServiceException.class, () -> service.createdProcess(req, Map.of()));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromFile: 파일이 비어있을 때 IllegalArgumentException")
+    void uploadImageFromFile_emptyFile_throwsException() {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () -> service.uploadImageFromFile(file, 1L));
+    }
+
+    /* --- 3. private 헬퍼 메서드 분기 커버리지 (Reflection 사용) --- */
+
+    @Test
+    @DisplayName("determineContentType: GIF 확장자 처리 확인")
+    void determineContentType_gif_returnsGifType() throws Exception {
+        java.lang.reflect.Method method = ImageTemplateServiceImpl.class.getDeclaredMethod("determineContentType", String.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, ".gif");
+        assertEquals("image/gif", result);
+    }
+
+    @Test
+    @DisplayName("getFileExtension: 점(.)이 없는 경로에서 기본값 반환 확인")
+    void getFileExtension_noDot_returnsDefault() throws Exception {
+        java.lang.reflect.Method method = ImageTemplateServiceImpl.class.getDeclaredMethod("getFileExtension", String.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, "filename-without-extension");
+        assertEquals(".jpg", result);
+    }
+
+    @Test
+    @DisplayName("extractObjectNameFromPath: 유효하지 않은 결과값(Empty) 추출 시 예외")
+    void extractObjectNameFromPath_emptyResult_throwsException() throws Exception {
+        // Prefix만 있는 경로를 넣어 결과가 빈 문자열이 되도록 유도
+        String prefixOnly = "http://minio/test-bucket/";
+        assertThrows(IllegalArgumentException.class, () -> service.deleteObject(prefixOnly));
+    }
+
+    /* --- 4. 다중 삭제 성공 케이스 보강 --- */
+    @Test
+    @DisplayName("deleteObjects: 빈 리스트 입력 시 아무 일도 일어나지 않음")
+    void deleteObjects_emptyList_noInteraction() {
+        service.deleteObjects(Collections.emptyList());
+        verifyNoInteractions(minioClient);
     }
 }

@@ -1,7 +1,9 @@
 package com.daisobook.shop.booksearch.books_search.service;
 
+import com.daisobook.shop.booksearch.books_search.exception.custom.image.MinIOServiceException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +19,9 @@ import reactor.core.publisher.Mono;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -194,5 +198,98 @@ class MiniOServiceTest {
 
     private static void sneakyThrow(Throwable t) {
         MiniOServiceTest.<RuntimeException>sneakyThrow0(t);
+    }
+
+    @Test
+    @DisplayName("getFileExtension: 쿼리 파라미터가 포함된 URL에서 확장자 추출")
+    void getFileExtension_withQueryParams() throws Exception {
+        // Reflection을 통해 private 메서드 직접 테스트 (또는 public 메서드 호출을 통해 검증)
+        java.lang.reflect.Method method = MinIOService.class.getDeclaredMethod("getFileExtension", String.class);
+        method.setAccessible(true);
+
+        assertEquals(".png", method.invoke(minioService, "http://example.com/image.png?width=100&height=200"));
+        assertEquals(".jpg", method.invoke(minioService, "http://example.com/no-extension-url"));
+    }
+
+    @Test
+    @DisplayName("determineContentType: 다양한 확장자에 따른 타입 판별")
+    void determineContentType_logic() throws Exception {
+        java.lang.reflect.Method method = MinIOService.class.getDeclaredMethod("determineContentType", String.class);
+        method.setAccessible(true);
+
+        assertEquals("image/png", method.invoke(minioService, ".png"));
+        assertEquals("image/gif", method.invoke(minioService, ".gif"));
+        assertEquals("image/jpeg", method.invoke(minioService, ".bmp")); // 기본값
+    }
+
+    @Test
+    @DisplayName("uploadImageFromUrl: MinIO 업로드 중 상세 예외 발생 시 MinIOServiceException 발생")
+    void uploadImageFromUrl_minioPutError() throws Exception {
+        byte[] data = "test".getBytes();
+        when(responseSpec.bodyToMono(byte[].class)).thenReturn(Mono.just(data));
+
+        // minioClient.putObject가 에러를 던지도록 설정
+        doThrow(new RuntimeException("MinIO Internal Error"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        assertThrows(com.daisobook.shop.booksearch.books_search.exception.custom.image.MinIOServiceException.class,
+                () -> minioService.uploadImageFromUrl("http://test.com/a.jpg", 1L));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromFile: IOException 발생 시 처리")
+    void uploadImageFromFile_ioException() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(false);
+        when(file.getInputStream()).thenThrow(new IOException("Stream closed"));
+
+        assertThrows(com.daisobook.shop.booksearch.books_search.exception.custom.image.MinIOServiceException.class,
+                () -> minioService.uploadImageFromFile(file, 1L));
+    }
+
+    @Test
+    @DisplayName("uploadImageFromUrl: 인터럽트 발생 시 상태 복구 및 예외 발생")
+    void uploadImageFromUrl_interrupted() throws Exception {
+        // 1. Mono.toFuture().get() 호출 시 InterruptedException을 던지도록 모킹
+        // Mono를 직접 모킹하여 toFuture()가 예외를 던지는 가짜 Future를 반환하게 합니다.
+        Mono<byte[]> mockMono = mock(Mono.class);
+        CompletableFuture<byte[]> mockFuture = mock(CompletableFuture.class);
+
+        when(responseSpec.bodyToMono(byte[].class)).thenReturn(mockMono);
+        when(mockMono.toFuture()).thenReturn(mockFuture);
+
+        // get() 호출 시 InterruptedException 발생 시뮬레이션
+        when(mockFuture.get()).thenThrow(new InterruptedException("테스트용 인터럽트"));
+
+        // 2. 실행 및 검증
+        assertThrows(MinIOServiceException.class,
+                () -> minioService.uploadImageFromUrl("http://test.com/a.jpg", 1L));
+
+        // 3. 인터럽트 상태 복구 확인 (중요)
+        // Thread.interrupted()는 상태를 확인하고 동시에 초기화(clear)하므로 테스트 마지막에 확인
+        assertTrue(Thread.interrupted(), "인터럽트 상태가 복구되어야 합니다.");
+    }
+
+    @Test
+    @DisplayName("deleteObject: 알 수 없는 예외 발생 시 처리")
+    void deleteObject_generalException() throws Exception {
+        doThrow(new RuntimeException("Unknown error")).when(minioClient).removeObject(any());
+
+        assertThrows(com.daisobook.shop.booksearch.books_search.exception.custom.image.MinIOServiceException.class,
+                () -> minioService.deleteObject("test-path"));
+    }
+
+    @Test
+    @DisplayName("putObjectByUrl: MinIO 업로드 중 체크 예외 발생 시 MinIOServiceException 래핑 확인")
+    void putObjectByUrl_minioCheckedException() throws Exception {
+        // MinioClient가 체크 예외를 던지도록 설정
+        doThrow(new InvalidResponseException(500, "text/xml", "error", "testTrace"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        byte[] data = "test".getBytes();
+        when(responseSpec.bodyToMono(byte[].class)).thenReturn(Mono.just(data));
+
+        assertThrows(MinIOServiceException.class,
+                () -> minioService.uploadImageFromUrl("http://test.com/a.jpg", 1L));
     }
 }

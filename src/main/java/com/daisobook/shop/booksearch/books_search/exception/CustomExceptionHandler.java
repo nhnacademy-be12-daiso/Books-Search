@@ -5,7 +5,6 @@ import com.daisobook.shop.booksearch.books_search.exception.custom.DuplicateReso
 import com.daisobook.shop.booksearch.books_search.exception.custom.EntityNotFoundException;
 import com.daisobook.shop.booksearch.books_search.exception.custom.InvalidRequestException;
 import com.daisobook.shop.booksearch.books_search.exception.custom.ai.BookNotFoundException;
-import com.daisobook.shop.booksearch.books_search.exception.custom.ai.GeminiQuotaException;
 import com.daisobook.shop.booksearch.books_search.exception.custom.ai.LlmAnalysisException;
 import com.daisobook.shop.booksearch.books_search.exception.custom.image.ImageServiceException;
 import com.daisobook.shop.booksearch.books_search.exception.custom.mapper.FailObjectMapper;
@@ -66,7 +65,6 @@ public class CustomExceptionHandler {
             FailedSerializationException.class,
             ExternalServiceException.class,
             LlmAnalysisException.class,
-            GeminiQuotaException.class, // 쿼터 초과는 429로 보낼 수도 있지만 보통 500군으로 처리
             ImageServiceException.class
     })
     public ResponseEntity<ErrorResponse> handleInternalServerError(BusinessException ex) {

@@ -114,15 +114,18 @@ public class MinIOService {
     }
 
     private String getFileExtension(String url) {
-        int dotIndex = url.lastIndexOf('.');
-        int queryIndex = url.lastIndexOf('?');
-        // 쿼리 파라미터가 있다면 그 직전까지, 없다면 끝까지 확인
-        int end = (queryIndex != -1 && queryIndex > dotIndex) ? queryIndex : url.length();
-        
-        if (dotIndex > 0 && dotIndex < end) {
-            return url.substring(dotIndex, end).toLowerCase(); // .jpg, .png
+        // 1. 마지막 슬래시(/) 이후의 문자열(파일명)만 추출하여 도메인의 점(.)과 혼동 방지
+        String fileName = url.substring(url.lastIndexOf('/') + 1);
+
+        int dotIndex = fileName.lastIndexOf('.');
+        int queryIndex = fileName.lastIndexOf('?');
+        int end = (queryIndex != -1 && queryIndex > dotIndex) ? queryIndex : fileName.length();
+
+        // 2. 파일명에 점(.)이 존재하고, 점이 마지막 글자가 아닐 때만 추출
+        if (dotIndex != -1 && dotIndex < end - 1) {
+            return fileName.substring(dotIndex, end).toLowerCase();
         }
-        return ".jpg"; 
+        return ".jpg"; // 확장자가 없으면 기본값 반환
     }
 
     /**
