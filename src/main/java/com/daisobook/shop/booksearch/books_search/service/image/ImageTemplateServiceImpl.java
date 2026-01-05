@@ -181,7 +181,7 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
         } catch (IOException e) {
             throw new ImageServiceException("파일 스트림 처리 중 오류 발생");
         } catch (Exception e) {
-            throw new ImageServiceException("알 수 없는 처리 오류 발생");
+            throw new ImageServiceException(UNKNOWN_ERROR_MESSAGE);
         }
     }
 
