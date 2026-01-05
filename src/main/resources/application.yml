@@ -144,4 +144,4 @@ springdoc:
   swagger-ui:
     path: /api/books/swagger-ui.html
   api-docs:
-    path: /api/v3/books/api-docs
+    path: /api/books/v3/api-docs
