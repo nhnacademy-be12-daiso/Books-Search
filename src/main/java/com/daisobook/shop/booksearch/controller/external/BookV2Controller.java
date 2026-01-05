@@ -1,0 +1,127 @@
+package com.daisobook.shop.booksearch.controller.external;
+
+import com.daisobook.shop.booksearch.controller.docs.BookV2ControllerDocs;
+import com.daisobook.shop.booksearch.dto.request.book.BookGroupReqV2DTO;
+import com.daisobook.shop.booksearch.dto.response.SortBookListRespDTO;
+import com.daisobook.shop.booksearch.dto.response.TotalDataRespDTO;
+import com.daisobook.shop.booksearch.dto.response.book.BookAdminResponseDTO;
+import com.daisobook.shop.booksearch.dto.response.book.BookListByCategoryRespDTO;
+import com.daisobook.shop.booksearch.dto.response.book.BookRespDTO;
+import com.daisobook.shop.booksearch.dto.response.book.BookUpdateView;
+import com.daisobook.shop.booksearch.entity.BookListType;
+import com.daisobook.shop.booksearch.service.book.impl.BookFacade;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v2/books")
+public class BookV2Controller implements BookV2ControllerDocs {
+    private final BookFacade bookFacade;
+
+    //POST: /api/v2/books 단일 도서 등록
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Void> addBook(@RequestPart("metadata") String metadataJson,
+                                  @RequestPart(value = "image0", required = false) MultipartFile image0,
+                                  @RequestPart(value = "image1", required = false) MultipartFile image1,
+                                  @RequestPart(value = "image2", required = false) MultipartFile image2,
+                                  @RequestPart(value = "image3", required = false) MultipartFile image3,
+                                  @RequestPart(value = "image4", required = false) MultipartFile image4) throws JsonProcessingException {
+        BookGroupReqV2DTO bookGroupReqV2DTO = bookFacade.parsing(metadataJson, image0, image1, image2, image3, image4);
+        bookFacade.registerBook(bookGroupReqV2DTO.bookReqDTO(), bookGroupReqV2DTO.fileMap());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    //POST: /api/v2/books/batch 복수 도서 등록(csv파일 같은 것들)
+    @PostMapping(value = "/batch", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Void> addBooks(@RequestPart(value = "bookFile", required = false) MultipartFile bookFile) throws JsonProcessingException {
+        //TODO 해당 파일을 파싱 해야한다
+        bookFacade.registerBooks(new ArrayList<>());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    //PATCH: /api/v2/books/{bookId} 단일 도서 수정
+    @PatchMapping(value = "/{bookId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Void> motifyBook(@PathVariable("bookId") long bookId,
+                                     @RequestPart("metadata") String metadataJson,
+                                     @RequestPart(value = "image0", required = false) MultipartFile image0,
+                                     @RequestPart(value = "image1", required = false) MultipartFile image1,
+                                     @RequestPart(value = "image2", required = false) MultipartFile image2,
+                                     @RequestPart(value = "image3", required = false) MultipartFile image3,
+                                     @RequestPart(value = "image4", required = false) MultipartFile image4) throws JsonProcessingException {
+        BookGroupReqV2DTO bookGroupReqV2DTO = bookFacade.parsing(metadataJson, image0, image1, image2, image3, image4);
+        bookFacade.updateBook(bookId, bookGroupReqV2DTO.bookReqDTO(), bookGroupReqV2DTO.fileMap());
+        return ResponseEntity.noContent().build();
+    }
+
+    //DELETE: /api/v2/books/{bookID} 단일 도서 삭제 (도서 id를 통한)
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<Void> deleteBookById(@PathVariable("bookId") long bookId){
+        bookFacade.deleteBookById(bookId);
+        return ResponseEntity.noContent().build();
+    }
+
+    //DELETE: /api/v2/books?isbn="" 단일 도서 삭제 (도서 isbn을 통한)
+    @DeleteMapping("/isbn/{isbn}")
+    public ResponseEntity<Void> deleteBookByIsbn(@PathVariable("isbn") String isbn){
+        bookFacade.deleteBookByIsbn(isbn);
+        return ResponseEntity.noContent().build();
+    }
+
+    //GET: /api/v2/books?list-type="" 해당 도서 리스트 조회 (예: 베스트 셀러, 신간도서 등)
+    @GetMapping
+    public SortBookListRespDTO getBookListBySort(@PageableDefault(size = 15) Pageable pageable,
+                                                 @RequestParam("type") BookListType listType,
+                                                 @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return bookFacade.getBookList(pageable, listType, userId);
+    }
+
+    //GET: /api/v2/books/{bookId} 해당 도서 조회
+    @GetMapping("/{bookId}")
+    public BookRespDTO getBookDetail(@PathVariable("bookId") long bookId,
+                                     @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return bookFacade.getBookDetail(bookId, userId);
+    }
+
+    //GET: /api/v2/books/{bookId} 수정을 위한 해당 도서 조회
+    @GetMapping("/{bookId}/modify")
+    public BookUpdateView getBookUpdateView(@PathVariable("bookId") long bookId){
+        return bookFacade.getBookUpdateView(bookId);
+    }
+
+    //GET: /api/v2/books/admin-book-list 도서 관리 페이지에 필요한 도서 리스트
+    @GetMapping("/admin-book-list")
+    public Page<BookAdminResponseDTO> findAllForAdmin(@PageableDefault(size = 15, sort = "publication_date", direction = Sort.Direction.DESC) Pageable pageable){
+        return bookFacade.findAllForAdmin(pageable);
+    }
+
+    //GET: /api/v2/books/admin-total-info 도서 관리 페이지에 필요한 통계 데이터
+    @GetMapping("/admin-total-info")
+    public TotalDataRespDTO getTotalData(){
+        return bookFacade.getTotalDate();
+    }
+
+    //GET: /api/v2/books/isbn/{isbn} ai 도서 등록시 해당 isbn이 이미 있는지 확인용
+    @GetMapping("/isbn/{isbn}/exist")
+    public boolean getBookRegisterInfoByIsbn(@PathVariable("isbn") String isbn){
+        return bookFacade.existIsbn(isbn);
+    }
+
+    @GetMapping("/categories/{categoryId}")
+    public BookListByCategoryRespDTO getBookListByCategoryId(@PageableDefault(size = 15, sort = "publication_date", direction = Sort.Direction.DESC) Pageable pageable,
+                                                             @PathVariable("categoryId") long categoryId,
+                                                             @RequestHeader(value = "X-User-Id", required = false)Long userId){
+        return  bookFacade.getBookListByCategoryId(pageable, categoryId, userId);
+    }
+}
