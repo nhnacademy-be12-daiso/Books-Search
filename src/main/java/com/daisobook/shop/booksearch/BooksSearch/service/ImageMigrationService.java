@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class ImageMigrationService {
     private final ImageProcessor imageProcessor; // 분리된 서비스 주입
     private final BookImageRepository bookImageRepository;
 
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void migrateInBatches() {
         int pageSize = 100;
         while (true) {

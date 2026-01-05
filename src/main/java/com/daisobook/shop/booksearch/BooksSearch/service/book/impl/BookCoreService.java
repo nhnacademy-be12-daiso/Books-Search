@@ -144,7 +144,7 @@ public class BookCoreService {
         }
         if(updateCheckDTO.publicationDate() != null &&
                 !book.getPublicationDate().equals(updateCheckDTO.publicationDate())){
-            book.setIndex(updateCheckDTO.index());
+            book.setPublicationDate(updateCheckDTO.publicationDate());
         }
         if(updateCheckDTO.price() != null &&
                 !book.getPrice().equals(updateCheckDTO.price())){

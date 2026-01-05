@@ -161,8 +161,11 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
 
         } catch (MinioException e) {
             throw new RuntimeException("MinIO 서버 업로드 중 오류 발생", e);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("이미지 다운로드 중 오류 발생", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("이미지 업데이트 중 오류 발생: " + imageUrl, e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException("알 수 없는 처리 오류 발생", e);
         }
@@ -248,6 +251,7 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
             return String.format("%s/%s/%s", minioUrl, getBucketName(), fullImagePath);
 
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("이미지 업데이트 중 오류 발생: " + fullImagePath, e);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);

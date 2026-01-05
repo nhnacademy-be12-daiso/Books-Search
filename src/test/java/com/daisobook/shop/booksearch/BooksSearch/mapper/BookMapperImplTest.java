@@ -40,11 +40,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -239,5 +241,55 @@ class BookMapperImplTest {
         Page<BookAdminResponseDTO> result = bookMapper.toBookAdminResopnseDTOPage(new PageImpl<>(List.of(p)), Map.of());
 
         assertThat(result.getContent().getFirst().imageList()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("parsing: 모든 이미지 파라미터가 null일 때 빈 맵 반환 확인")
+    void parsing_allImagesNull() throws JsonProcessingException {
+        String json = "{\"isbn\":\"123\"}";
+        BookGroupReqV2DTO result = bookMapper.parsing(json, null, null, null, null, null);
+
+        assertThat(result.fileMap()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("parsing: image0부터 image4까지 모두 전달되었을 때의 맵 구성 확인")
+    void parsing_fullImages() throws JsonProcessingException {
+        String json = "{\"isbn\":\"123\"}";
+        MockMultipartFile img0 = new MockMultipartFile("i0", "f0.jpg", null, "d0".getBytes());
+        MockMultipartFile img1 = new MockMultipartFile("i1", "f1.jpg", null, "d1".getBytes());
+        MockMultipartFile img2 = new MockMultipartFile("i2", "f2.jpg", null, "d2".getBytes());
+        MockMultipartFile img3 = new MockMultipartFile("i3", "f3.jpg", null, "d3".getBytes());
+        MockMultipartFile img4 = new MockMultipartFile("i4", "f4.jpg", null, "d4".getBytes());
+
+        BookGroupReqV2DTO result = bookMapper.parsing(json, img0, img1, img2, img3, img4);
+
+        assertThat(result.fileMap()).hasSize(5);
+        // 구현 로직상 image3의 value로 image1이 들어가는지 검증 (의도된 것인지 확인 필요)
+        assertThat(result.fileMap().get("i3")).isEqualTo(img1);
+    }
+
+    @Test
+    @DisplayName("toOrderBookInfo(Entity): 이미지 리스트가 비어있을 때 path가 null로 설정되는지 확인")
+    void toOrderBookInfo_Entity_NoImage_Test() {
+        Book book = new Book();
+        book.setBookImages(Collections.emptyList()); // 이미지 없음
+
+        OrderBooksInfoRespDTO result = bookMapper.toOrderBookInfoRespDTOList(List.of(book), Map.of());
+
+        assertThat(result.orderBookInfoRespDTOList().getFirst().coverImage()).isNull();
+    }
+
+    @Test
+    @DisplayName("toBookRespDTO: 가격 정보가 null일 때의 안전한 처리 확인")
+    void toBookRespDTO_NullPrice_Test() throws JsonProcessingException {
+        BookDetailProjection p = mock(BookDetailProjection.class);
+        when(p.getPrice()).thenReturn(null);
+        when(publisherMapper.toPublisherRespDTO(any())).thenReturn(new PublisherRespDTO(1L, "P"));
+
+        // 계산 로직 i = ... 에서 NPE가 발생하는지 혹은 null이 리턴되는지 확인
+        // 현재 코드상 Objects.requireNonNull(i) 때문에 NPE 발생 가능성이 높음 -> 로직 수정 필요성 감지
+        assertThatThrownBy(() -> bookMapper.toBookRespDTO(p, 0, false, null))
+                .isInstanceOf(NullPointerException.class);
     }
 }

@@ -2,6 +2,7 @@ package com.daisobook.shop.booksearch.BooksSearch.service.book.impl;
 
 import com.daisobook.shop.booksearch.BooksSearch.dto.BookUpdateData;
 import com.daisobook.shop.booksearch.BooksSearch.dto.projection.BookIdProjection;
+import com.daisobook.shop.booksearch.BooksSearch.dto.request.AuthorReqDTO;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Book;
 import com.daisobook.shop.booksearch.BooksSearch.entity.book.Status;
 import com.daisobook.shop.booksearch.BooksSearch.exception.custom.book.DuplicatedBook;
@@ -229,5 +230,101 @@ class BookCoreServiceTest {
 
         assertThat(sut.getCountAll()).isEqualTo(10L);
         assertThat(sut.getCountByStatus(Status.ON_SALE)).isEqualTo(3L);
+    }
+
+    @Test
+    @DisplayName("validateExistsByIsbn: ISBN이 존재하지 않으면 NotFoundBookISBN 발생")
+    void validateExistsByIsbn_notFound_throws() {
+        when(bookRepository.existsBookByIsbn("12345")).thenReturn(false);
+
+        assertThatThrownBy(() -> sut.validateExistsByIsbn("12345"))
+                .isInstanceOf(NotFoundBookISBN.class);
+    }
+
+    @Test
+    @DisplayName("registerBooks: 여러 권의 도서를 한꺼번에 등록")
+    void registerBooks_success() {
+        // Given
+        Book book = new Book();
+        Map<String, Book> bookMap = Map.of("key1", book);
+        Map<String, Long> categoryMap = Map.of("key1", 1L);
+        Map<String, List<String>> tagMap = Map.of("key1", List.of("tag1"));
+        Map<String, List<AuthorReqDTO>> authorMap = Map.of("key1", List.of());
+        Map<String, String> publisherMap = Map.of("key1", "pub1");
+
+        // When
+        sut.registerBooks(bookMap, categoryMap, tagMap, authorMap, publisherMap);
+
+        // Then
+        verify(categoryService).assignCategoriesToBooks(eq(bookMap), anyMap());
+        verify(tagService).assignTagsToBooks(eq(bookMap), anyMap());
+        verify(authorService).assignAuthorsToBooks(eq(bookMap), anyMap());
+        verify(publisherService).assignPublisherToBooks(eq(bookMap), anyMap());
+        verify(bookRepository).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("updateBookByData: 모든 필드가 null일 때 변경이 일어나지 않는지 확인")
+    void updateBookByData_noChanges_whenDtoIsNull() {
+        Book book = new Book();
+        book.setTitle("Original");
+        book.setPrice(0L); // NPE 방지를 위해 기본값 세팅
+        book.setStock(0);
+        // ... 필요한 다른 필드들도 기본값 세팅 ...
+
+        BookUpdateData emptyDto = mock(BookUpdateData.class);
+        // mock은 기본적으로 null을 반환하므로 updateCheckDTO.price() != null 조건을 타지 않음
+
+        // When
+        sut.updateBookByData(book, emptyDto);
+
+        // Then
+        assertThat(book.getTitle()).isEqualTo("Original");
+    }
+
+    @Test
+    @DisplayName("getBookDetail_Id: 결과가 null이면 NotFoundBookId 발생")
+    void getBookDetail_Id_notFound_throws() {
+        when(bookRepository.getBookDetailById(1L, false)).thenReturn(null);
+
+        assertThatThrownBy(() -> sut.getBookDetail_Id(1L))
+                .isInstanceOf(NotFoundBookId.class);
+    }
+
+    @Test
+    @DisplayName("getBookUpdateView_Id: 결과가 null이면 NotFoundBookId 발생")
+    void getBookUpdateView_Id_notFound_throws() {
+        when(bookRepository.getBookUpdateView(1L)).thenReturn(null);
+
+        assertThatThrownBy(() -> sut.getBookUpdateView_Id(1L))
+                .isInstanceOf(NotFoundBookId.class);
+    }
+
+    @Test
+    @DisplayName("getBookIdsFromBookOfTheWeek: limit과 pageable이 null일 때 기본값 처리 확인")
+    void getBookIdsFromBookOfTheWeek_defaults() {
+        // When
+        sut.getBookIdsFromBookOfTheWeek(null, null);
+
+        // Then: PageRequest.of(0, 10)으로 호출되었는지 검증
+        verify(bookOfTheWeekRepository).getBookId(argThat(p ->
+                p.getPageNumber() == 0 && p.getPageSize() == 10
+        ));
+    }
+
+    @Test
+    @DisplayName("deleteBook: Repository의 delete 호출 확인")
+    void deleteBook_callsRepository() {
+        Book book = new Book();
+        sut.deleteBook(book);
+        verify(bookRepository).delete(book);
+    }
+
+    @Test
+    @DisplayName("getBookByCategoryIdList: 카테고리 ID 리스트로 조회 호출 확인")
+    void getBookByCategoryIdList_callsRepository() {
+        List<Long> ids = List.of(1L, 2L);
+        sut.getBookByCategoryIdList(null, ids);
+        verify(bookRepository).getBookByCategoryIdIn(any(), eq(ids), eq(false));
     }
 }
