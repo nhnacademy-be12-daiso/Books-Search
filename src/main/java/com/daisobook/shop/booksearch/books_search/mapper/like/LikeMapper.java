@@ -10,5 +10,5 @@ import java.util.Map;
 
 public interface LikeMapper {
     List<LikeListRespDTO> toLikeListRespDTOList(List<LikeBookListProjection> listProjectionList, Map<Long, DiscountDTO.Response> discountResponseMap) throws JsonProcessingException;
-    Map<Long, DiscountDTO.Request> toDiscountDTOMap(List<LikeBookListProjection> listProjectionList);;
+    Map<Long, DiscountDTO.Request> toDiscountDTOMap(List<LikeBookListProjection> listProjectionList);
 }

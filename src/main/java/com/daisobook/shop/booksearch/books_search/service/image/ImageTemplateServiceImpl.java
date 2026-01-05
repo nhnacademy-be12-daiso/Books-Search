@@ -23,6 +23,9 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
     private final MinioClient minioClient;
     private final WebClient webClient;
 
+    private static final String UNKNOWN_ERROR_MESSAGE = "알 수 없는 처리 오류 발생";
+    private static final String UPDATE_ERROR_PREFIX = "이미지 업데이트 중 오류 발생: ";
+
     @Value("${minio.url}")
     private String minioUrl;
 
@@ -146,11 +149,11 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ImageServiceException("이미지 업데이트 중 오류 발생: " + imageUrl);
+            throw new ImageServiceException(UPDATE_ERROR_PREFIX + imageUrl);
         } catch (ExecutionException e) {
             throw new ImageServiceException("이미지 업데이트 중 스레드 오류 발생: " + imageUrl);
         } catch (Exception e) {
-            throw new ImageServiceException("알 수 없는 처리 오류 발생");
+            throw new ImageServiceException(UNKNOWN_ERROR_MESSAGE);
         }
     }
 
@@ -213,7 +216,7 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ImageServiceException("이미지 업데이트 중 오류 발생: " + fullImagePath);
+            throw new ImageServiceException(UPDATE_ERROR_PREFIX + fullImagePath);
         } catch (ExecutionException e) {
             throw new ImageServiceException("이미지 파일 업로드/처리 중 실행 오류 발생: " + fullImagePath);
         }
@@ -256,7 +259,7 @@ public abstract class ImageTemplateServiceImpl implements ImageService {
         } catch (IOException e) {
             throw new ImageServiceException("파일 스트림 처리 중 오류 발생");
         } catch (Exception e) {
-            throw new ImageServiceException("알 수 없는 처리 오류 발생");
+            throw new ImageServiceException(UNKNOWN_ERROR_MESSAGE);
         }
     }
 

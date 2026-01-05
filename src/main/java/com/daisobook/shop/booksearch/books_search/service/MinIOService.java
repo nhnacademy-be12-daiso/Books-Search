@@ -1,5 +1,6 @@
 package com.daisobook.shop.booksearch.books_search.service;
 
+import com.daisobook.shop.booksearch.books_search.exception.custom.image.MinIOServiceException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
@@ -20,6 +21,8 @@ public class MinIOService {
 
     private final MinioClient minioClient;
     private final WebClient webClient;
+
+    private static final String UNKNOWN_ERROR_MESSAGE = "알 수 없는 처리 오류 발생";
 
     @Value("${minio.bucketName.test}")
     private String bucketName;
@@ -56,36 +59,25 @@ public class MinIOService {
             String contentType = determineContentType(fileExtension);
 
             // 3. MinIO에 업로드 (byte array를 스트림으로 변환)
-            try (InputStream is = new ByteArrayInputStream(imageBytes)) {
-                minioClient.putObject(
-                    PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectName)
-                        .stream(is, imageBytes.length, -1)
-                        .contentType(contentType)
-                        .build()
-                );
-            }
+            putObjectByUrl(objectName, imageBytes, contentType);
 
             // 4. 저장된 이미지의 접근 URL 반환
             // MinIO 서버 URL + 버킷 이름 + 객체 이름
             return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
 
-        } catch (MinioException e) {
-            throw new RuntimeException("MinIO 서버 업로드 중 오류 발생", e);
         } catch (InterruptedException e) {
             // 1. 현재 스레드에 중단 상태를 다시 설정 (소나큐브 핵심 요구사항)
             Thread.currentThread().interrupt();
 
             // 2. 원래 하려던 예외 처리를 진행
-            throw new RuntimeException("이미지 다운로드 중 인터럽트 발생", e);
+            throw new MinIOServiceException("이미지 다운로드 중 인터럽트 발생");
 
         } catch (ExecutionException e) {
             // ExecutionException은 인터럽트와 상관없으므로 기존처럼 처리
-            throw new RuntimeException("이미지 다운로드 실행 중 오류 발생", e);
+            throw new MinIOServiceException("이미지 다운로드 실행 중 오류 발생");
 
         } catch (Exception e) {
-            throw new RuntimeException("알 수 없는 처리 오류 발생", e);
+            throw new MinIOServiceException(UNKNOWN_ERROR_MESSAGE);
         }
     }
 
@@ -109,24 +101,15 @@ public class MinIOService {
             }
 
             // 3. MinIO에 업로드
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .stream(inputStream, file.getSize(), -1) // 파일 크기를 명시
-                            .contentType(contentType)
-                            .build()
-            );
+            putObjectByFile(objectName, file, contentType);
 
             // 4. 저장된 이미지의 접근 URL 반환
             return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
 
-        } catch (MinioException e) {
-            throw new RuntimeException("MinIO 서버 업로드 중 오류 발생", e);
         } catch (IOException e) {
-            throw new RuntimeException("파일 스트림 처리 중 오류 발생", e);
+            throw new MinIOServiceException("파일 스트림 처리 중 오류 발생");
         } catch (Exception e) {
-            throw new RuntimeException("알 수 없는 처리 오류 발생", e);
+            throw new MinIOServiceException(UNKNOWN_ERROR_MESSAGE);
         }
     }
 
@@ -163,20 +146,7 @@ public class MinIOService {
             String contentType = determineContentType(fileExtension);
 
             // 3. MinIO에 덮어쓰기 업로드
-            try (InputStream is = new ByteArrayInputStream(imageBytes)) {
-                minioClient.putObject(
-                        PutObjectArgs.builder()
-                                .bucket(bucketName)
-                                .object(existingObjectName) // <--- 기존 객체 이름 사용
-                                .stream(is, imageBytes.length, -1)
-                                .contentType(contentType)
-                                .build()
-                );
-            } catch (IOException | ErrorResponseException | InsufficientDataException | InternalException |
-                     InvalidKeyException | InvalidResponseException | NoSuchAlgorithmException | ServerException |
-                     XmlParserException e) {
-                throw new RuntimeException(e);
-            }
+            putObjectByUrl(existingObjectName, imageBytes, contentType);
 
             // 4. 저장된 이미지의 접근 URL 반환 (URL은 변하지 않음)
             return String.format("%s/%s/%s", minioUrl, bucketName, existingObjectName);
@@ -184,14 +154,14 @@ public class MinIOService {
         } catch (InterruptedException e) {
             // 소나큐브 Reliability 대응: 인터럽트 상태 복구
             Thread.currentThread().interrupt();
-            throw new RuntimeException("이미지 업데이트 중 인터럽트 발생: " + existingObjectName, e);
+            throw new MinIOServiceException("이미지 업데이트 중 인터럽트 발생: " + existingObjectName);
 
         } catch (ExecutionException e) {
             // 테스트 통과 대응: 메시지에 "이미지 업데이트"를 명시적으로 포함
-            throw new RuntimeException("이미지 업데이트 중 오류 발생: " + existingObjectName, e);
+            throw new MinIOServiceException("이미지 업데이트 중 오류 발생: " + existingObjectName);
 
         } catch (Exception e) {
-            throw new RuntimeException("이미지 업데이트 중 알 수 없는 오류 발생", e);
+            throw new MinIOServiceException("이미지 업데이트 중 알 수 없는 오류 발생");
         }
     }
 
@@ -209,24 +179,49 @@ public class MinIOService {
             }
 
             // MinIO에 덮어쓰기 업로드
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(existingObjectName) // <--- 기존 객체 이름 사용
-                            .stream(inputStream, newFile.getSize(), -1)
-                            .contentType(contentType)
-                            .build()
-            );
+            putObjectByFile(existingObjectName, newFile, contentType);
 
             // 저장된 이미지의 접근 URL 반환
             return String.format("%s/%s/%s", minioUrl, bucketName, existingObjectName);
 
-        } catch (MinioException e) {
-            throw new RuntimeException("MinIO 서버 업데이트 중 오류 발생", e);
         } catch (IOException e) {
-            throw new RuntimeException("파일 스트림 처리 중 오류 발생", e);
+            throw new MinIOServiceException("파일 스트림 처리 중 오류 발생");
         } catch (Exception e) {
-            throw new RuntimeException("알 수 없는 처리 오류 발생", e);
+            throw new MinIOServiceException(UNKNOWN_ERROR_MESSAGE);
+        }
+    }
+
+    private void putObjectByUrl(String objectName, byte[] imageBytes, String contentType){
+        try (InputStream inputStream = new ByteArrayInputStream(imageBytes)) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .stream(inputStream, imageBytes.length, -1)
+                            .contentType(contentType)
+                            .build()
+            );
+        } catch (IOException | ErrorResponseException | InsufficientDataException | InternalException |
+                 InvalidKeyException | InvalidResponseException | NoSuchAlgorithmException | ServerException |
+                 XmlParserException e) {
+            throw new MinIOServiceException("이미지 url 업로드중 오류 발생");
+        }
+    }
+
+    private void putObjectByFile(String objectName, MultipartFile file, String contentType){
+        try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .stream(inputStream, file.getSize(), -1)
+                            .contentType(contentType)
+                            .build()
+            );
+        } catch (IOException | ErrorResponseException | InsufficientDataException | InternalException |
+                 InvalidKeyException | InvalidResponseException | NoSuchAlgorithmException | ServerException |
+                 XmlParserException e) {
+            throw new MinIOServiceException("이미지 file 업로드중 오류 발생");
         }
     }
 
@@ -243,9 +238,9 @@ public class MinIOService {
                             .build()
             );
         } catch (MinioException e) {
-            throw new RuntimeException("MinIO 삭제 오류 발생: " + objectName, e);
+            throw new MinIOServiceException("MinIO 삭제 오류 발생: " + objectName);
         } catch (Exception e) {
-            throw new RuntimeException("파일 삭제 중 알 수 없는 오류 발생: " + objectName, e);
+            throw new MinIOServiceException("파일 삭제 중 알 수 없는 오류 발생: " + objectName);
         }
     }
     
