@@ -139,3 +139,9 @@ minio:
     review: daiso-review-image
     test: daiso-book-image
 #    test: daiso-book-cover
+
+springdoc:
+  swagger-ui:
+    path: /api/books/swagger-ui.html
+  api-docs:
+    path: /api/v3/books/api-docs
