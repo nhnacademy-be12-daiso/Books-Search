@@ -52,6 +52,10 @@ jobs:
             
             echo "Booksearch Server Update Start"
             
+            export BOOKS_GEMINI_API_KEY="${{ secrets.BOOKS_GEMINI_API_KEY }}"
+            export MINIO_ACCESS_KEY="${{ secrets.MINIO_ACCESS_KEY }}"
+            export MINIO_SECRET_KEY="${{ secrets.MINIO_SECRET_KEY }}"
+            
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
             cd ~/infra
