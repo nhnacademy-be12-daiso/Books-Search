@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.books_search.entity.tag;
 
-import com.daisobook.shop.booksearch.books_search.dto.request.TagReqDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

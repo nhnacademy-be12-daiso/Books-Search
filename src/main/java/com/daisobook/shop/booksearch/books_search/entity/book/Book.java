@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.books_search.entity.book;
 
-import com.daisobook.shop.booksearch.books_search.dto.request.book.BookReqDTO;
 import com.daisobook.shop.booksearch.books_search.entity.author.BookAuthor;
 import com.daisobook.shop.booksearch.books_search.entity.category.BookCategory;
 import com.daisobook.shop.booksearch.books_search.entity.publisher.Publisher;

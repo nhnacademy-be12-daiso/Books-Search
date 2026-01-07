@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.books_search.entity.book;
 
-import com.daisobook.shop.booksearch.books_search.dto.service.ImageDTO;
 import com.daisobook.shop.booksearch.books_search.entity.ImageType;
 import jakarta.persistence.*;
 import lombok.Getter;

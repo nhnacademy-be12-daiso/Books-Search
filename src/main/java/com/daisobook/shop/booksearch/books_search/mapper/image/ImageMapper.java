@@ -4,7 +4,6 @@ import com.daisobook.shop.booksearch.books_search.dto.request.ImageMetadataReqDT
 import com.daisobook.shop.booksearch.books_search.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.books_search.entity.book.Book;
-import com.daisobook.shop.booksearch.books_search.entity.book.BookImage;
 import com.daisobook.shop.booksearch.books_search.entity.review.Review;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
