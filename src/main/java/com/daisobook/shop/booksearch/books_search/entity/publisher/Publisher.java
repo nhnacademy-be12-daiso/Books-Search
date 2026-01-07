@@ -30,10 +30,6 @@ public class Publisher {
         this.bookList = new ArrayList<>();
     }
 
-    public static Publisher create(PublisherReqDTO dto){
-        return new Publisher(dto.name());
-    }
-
     @Setter
     @OneToMany(mappedBy = "publisher")
     @BatchSize(size = 100)

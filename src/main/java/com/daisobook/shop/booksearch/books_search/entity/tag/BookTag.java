@@ -17,17 +17,11 @@ public class BookTag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-//    @Setter
-//    @Column(name="book_id")
-//    private long bookId;
     @Setter
     @ManyToOne
     @JoinColumn(name = "book_id")
     private Book book;
 
-//    @Setter
-//    @Column(name="tag_id")
-//    private long tagId;
     @Setter
     @ManyToOne
     @JoinColumn(name = "tag_id")

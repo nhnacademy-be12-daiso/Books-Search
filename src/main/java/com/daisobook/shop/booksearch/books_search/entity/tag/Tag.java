@@ -30,10 +30,6 @@ public class Tag {
         this.bookTags = new ArrayList<>();
     }
 
-    public static Tag create(TagReqDTO tagReqDTO){
-        return new Tag(tagReqDTO.tagName());
-    }
-
     @OneToMany(mappedBy = "tag")
     @BatchSize(size = 100)
     private List<BookTag> bookTags;

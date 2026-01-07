@@ -41,7 +41,4 @@ public class BookImage {
         this.imageType = imageType;
     }
 
-    public static BookImage create(ImageDTO imageDTO){
-        return new BookImage(imageDTO.no(), imageDTO.path(), imageDTO.imageType());
-    }
 }

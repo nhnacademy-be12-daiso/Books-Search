@@ -75,6 +75,7 @@ public class Book {
     @Column(name = "review_summary")
     private String reviewSummary;
 
+    @SuppressWarnings("java:S107")
     public Book(String isbn, String title, String index, String description,
                 LocalDate publicationDate, Long price, boolean isPackaging, Integer stock, Status status,
                 Integer volumeNo){
@@ -94,13 +95,6 @@ public class Book {
         this.bookAuthors = new ArrayList<>();
         this.bookImages = new ArrayList<>();
         this.reviews = new ArrayList<>();
-    }
-
-    public static Book create(BookReqDTO dto, Publisher publisher){
-        Book newBook = new Book(dto.isbn(), dto.title(), dto.index(), dto.description(),
-                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status(), dto.volumeNo());
-        newBook.setPublisher(publisher);
-        return newBook;
     }
 
     @Setter
