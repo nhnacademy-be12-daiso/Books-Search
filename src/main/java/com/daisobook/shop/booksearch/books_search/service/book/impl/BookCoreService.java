@@ -33,17 +33,12 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class BookCoreService {
-    private final LikeService likeService;
-    private final ReviewService reviewService;
-
     private final BookRepository bookRepository;
 
     private final CategoryV2Service categoryService;
     private final TagV2Service tagService;
     private final AuthorV2Service authorService;
     private final PublisherV2Service publisherService;
-
-    private final BookImageServiceImpl imageService;
 
     private final BookOfTheWeekRepository bookOfTheWeekRepository;
     private final BookSearchSyncPublisher bookSearchSyncPublisher;

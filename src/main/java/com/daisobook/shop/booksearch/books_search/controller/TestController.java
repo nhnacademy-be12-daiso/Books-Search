@@ -106,7 +106,6 @@ public class TestController implements DevToolControllerDocs {
 
     @PostMapping("/migrate-images")
     public String migrate() {
-//        imageMigrationService.migrateAllImages();
         imageMigrationService.migrateInBatches();
         return "Migration process started. Check logs for details.";
     }

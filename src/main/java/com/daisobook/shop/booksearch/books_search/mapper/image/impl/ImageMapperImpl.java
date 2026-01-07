@@ -4,7 +4,6 @@ import com.daisobook.shop.booksearch.books_search.dto.request.ImageMetadataReqDT
 import com.daisobook.shop.booksearch.books_search.dto.response.ImageRespDTO;
 import com.daisobook.shop.booksearch.books_search.dto.service.ImagesReqDTO;
 import com.daisobook.shop.booksearch.books_search.entity.book.Book;
-import com.daisobook.shop.booksearch.books_search.entity.book.BookImage;
 import com.daisobook.shop.booksearch.books_search.entity.review.Review;
 import com.daisobook.shop.booksearch.books_search.mapper.image.ImageMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,13 +38,6 @@ public class ImageMapperImpl implements ImageMapper {
         }
 
         return imagesReqDTOMap;
-    }
-
-    @Override
-    public List<ImageRespDTO> toImageRespDTOList(List<BookImage> bookImages) {
-        return bookImages.stream()
-                .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
-                .toList();
     }
 
     @Override

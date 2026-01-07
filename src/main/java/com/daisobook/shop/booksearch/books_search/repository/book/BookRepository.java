@@ -19,74 +19,14 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     Book findBookById(long id);
 
-//    Book findBookByIsbn(String isbn);
-
-//    List<Book> findAllByAuthor(String author);
-
-//    List<Book> findAllByIsbnIn(Collection<String> isbns);
-
-//    @Query("SELECT b FROM Book b " +
-//            "JOIN FETCH b.bookCategories bc " +
-//            "JOIN FETCH bc.category c " +
-//            "WHERE c.name = ?1")
-//    List<Book> findBooksByCategoryName(String categoryName);
-
-//    @Query("SELECT b FROM Book b " +
-//            "JOIN FETCH b.bookTags bt " +
-//            "JOIN FETCH bt.tag t " +
-//            "WHERE t.name = ?1")
-//    List<Book> findBooksByTagName(String tagName);
-
-//    List<Book> findAllByPublisher_Name(String publisherName);
-
-//    List<Book> findBooksByIdIn(List<Long> ids);
-
     List<Book> findAllByIdIn(List<Long> ids);
-
-//    List<Book> findAllByPublicationDateAfterOrderByPublicationDateDesc(LocalDate publicationDateAfter, Sort sort, Limit limit);
-
-//    @Query("SELECT b FROM Book b JOIN FETCH b.reviews WHERE b.id IN :bookIds")
-//    List<Book> findAllByIdWithReviews(List<Long> bookIds);
 
     @Query("SELECT b.isbn FROM Book b WHERE b.isbn IN :isbns")
     List<BookIsbnProjection> findBooksByIsbnIn(List<String> isbns);
 
-//    @Query("""
-//    SELECT DISTINCT b
-//    FROM Book b
-//    LEFT JOIN FETCH b.bookAuthors ba
-//    LEFT JOIN FETCH ba.author
-//    LEFT JOIN FETCH ba.role
-//    LEFT JOIN FETCH b.bookCategories bc
-//    LEFT JOIN FETCH bc.category
-//    LEFT JOIN FETCH b.bookTags bt
-//    LEFT JOIN FETCH bt.tag
-//    LEFT JOIN FETCH b.bookImages
-//    LEFT JOIN FETCH b.publisher
-//    WHERE b.id = ?1
-//""")
-//    Book getBookById(long id); //저렇게 다수의 일대다 인경우 패치종인으로 다 가져오지 못한다 하나의 관계에대해서만 가져올수 있다
-
     @Query("SELECT b.id AS id FROM Book b WHERE b.isbn = ?1")
     BookIdProjection getBookId(String isbn);
 
-//    @Query("""
-//    SELECT DISTINCT b
-//    FROM Book b
-//    LEFT JOIN FETCH b.bookAuthors ba
-//    LEFT JOIN FETCH ba.author
-//    LEFT JOIN FETCH ba.role
-//    LEFT JOIN FETCH b.bookCategories bc
-//    LEFT JOIN FETCH bc.category
-//    LEFT JOIN FETCH b.bookTags bt
-//    LEFT JOIN FETCH bt.tag
-//    LEFT JOIN FETCH b.bookImages
-//    LEFT JOIN FETCH b.publisher
-//    LEFT JOIN FETCH b.reviews r
-//    LEFT JOIN FETCH r.reviewImages
-//    WHERE b.id = ?1
-//""")
-//    Book getBookDetailById(long id);
 @Query(value = """
                 SELECT DISTINCT
                     b.book_id as id,
@@ -164,8 +104,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                         )
                 """, nativeQuery = true)
 BookDetailProjection getBookDetailById(@Param("bookId") Long bookId, @Param("includeDeleted") boolean includeDeleted);
-//DATE_FORMAT(r.created_at, '%Y-%m-%dT%H:%i:%sZ') zone에 대한 정보 받기 - 그냥 json으로 받으려고 하면 zone정보가 날아간다
-//DATE_FORMAT(r.created_at, '%Y-%m-%dT%H:%i:%s.%f+09:00') - 한국으로 기준
 
     @Query(value = """
                 SELECT DISTINCT

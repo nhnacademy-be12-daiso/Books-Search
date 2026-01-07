@@ -1,6 +1,5 @@
 package com.daisobook.shop.booksearch.books_search.entity.publisher;
 
-import com.daisobook.shop.booksearch.books_search.dto.request.PublisherReqDTO;
 import com.daisobook.shop.booksearch.books_search.entity.book.Book;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -28,10 +27,6 @@ public class Publisher {
     public Publisher(String name){
         this.name = name;
         this.bookList = new ArrayList<>();
-    }
-
-    public static Publisher create(PublisherReqDTO dto){
-        return new Publisher(dto.name());
     }
 
     @Setter

@@ -29,9 +29,6 @@ public class MinioConfig {
         return MinioClient.builder()
                 .endpoint(minioUrl)
                 .credentials(accessKey, secretKey)
-                // HTTPS를 사용하지 않는 경우 secure(false)를 설정합니다. 
-                // 운영 환경에서는 반드시 secure(true)를 사용해야 합니다.
-//                .secure(minioUrl.startsWith("https"))
                 .build();
     }
 }

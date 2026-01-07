@@ -23,9 +23,6 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-//    @Setter
-//    @Column(name="book_id")
-//    private long bookId;
     @Setter
     @ManyToOne
     @JoinColumn(name = "book_id")
