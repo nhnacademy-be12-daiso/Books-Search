@@ -106,4 +106,4 @@ graph LR
 * **비즈니스 로직 응집도 향상**: 복합적인 워크플로우를 Facade 레이어에서 오케스트레이션하여 각 모듈 간의 결합도를 낮추고 유지보수성을 확보했습니다.
 
 ## Code Quality (SonarQube)
-![resources/19차.png](resources/19차.png)
+![resources/19차.png](https://github.com/nhnacademy-be12-daiso/Books-Search/blob/main/resources/19%EC%B0%A8.png?raw=true)
