@@ -39,10 +39,10 @@ spring:
       max-request-size: 20MB
   data:
     redis:
-      host: s4.java21.net
-      port: 6379
-      password: '*N2vya7H@muDTwdNMR!'
-      database: 379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+      password: ${SPRING_REDIS_PASSWORD}
+      database: ${BOOK_SPRING_DATA_REDIS_DATABASE}
     jpa:
       repositories:
         bootstrap-mode: default
