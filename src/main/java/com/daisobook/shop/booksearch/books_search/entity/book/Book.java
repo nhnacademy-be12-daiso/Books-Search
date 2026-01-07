@@ -42,14 +42,6 @@ public class Book {
     @Column(name="description", columnDefinition = "TEXT")
     private String description;
 
-//    @Setter
-//    @Column(name="author", length = 60)
-//    private String author;
-
-//    @Setter
-//    @Column(name="publisher", length = 60)
-//    private String publisher;
-
     @Setter
     @Column(name="publication_date")
     private LocalDate publicationDate;
@@ -71,10 +63,6 @@ public class Book {
     @Column(name="status", length = 20, nullable = false)
     private Status status;
 
-//    @Setter
-//    @Column(name = "image_url")
-//    private String imageUrl;
-
     @Setter
     @Column(name = "volume_no")
     private Integer volumeNo;
@@ -87,21 +75,18 @@ public class Book {
     @Column(name = "review_summary")
     private String reviewSummary;
 
-    public Book(String isbn, String title, String index, String description/*, String author*//*, String publisher*/,
+    public Book(String isbn, String title, String index, String description,
                 LocalDate publicationDate, Long price, boolean isPackaging, Integer stock, Status status,
-                /*String imageUrl,*/ Integer volumeNo){
+                Integer volumeNo){
         this.isbn = isbn;
         this.title = title;
         this.index = index;
         this.description = description;
-//        this.author = author;
-//        this.publisher = publisher;
         this.publicationDate = publicationDate;
         this.price = price;
         this.isPackaging = isPackaging;
         this.stock = stock;
         this.status = status;
-//        this.imageUrl = imageUrl;
         this.volumeNo = volumeNo;
 
         this.bookCategories = new ArrayList<>();
@@ -112,8 +97,8 @@ public class Book {
     }
 
     public static Book create(BookReqDTO dto, Publisher publisher){
-        Book newBook = new Book(dto.isbn(), dto.title(), dto.index(), dto.description()/*, dto.author()*//*, dto.publisher()*/,
-                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status()/*, dto.imageUrl()*/, dto.volumeNo());
+        Book newBook = new Book(dto.isbn(), dto.title(), dto.index(), dto.description(),
+                dto.publicationDate(), dto.price(), dto.isPackaging(), dto.stock(), dto.status(), dto.volumeNo());
         newBook.setPublisher(publisher);
         return newBook;
     }

@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TestReq {
         private String metadata;
-//        @JsonProperty("image0")
         private MultipartFile image0;
         private MultipartFile image1;
         private MultipartFile image2;

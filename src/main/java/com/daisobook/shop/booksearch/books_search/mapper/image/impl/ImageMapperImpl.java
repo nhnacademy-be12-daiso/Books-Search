@@ -42,13 +42,6 @@ public class ImageMapperImpl implements ImageMapper {
     }
 
     @Override
-    public List<ImageRespDTO> toImageRespDTOList(List<BookImage> bookImages) {
-        return bookImages.stream()
-                .map(bi -> new ImageRespDTO(bi.getNo(), bi.getPath(), bi.getImageType()))
-                .toList();
-    }
-
-    @Override
     public List<ImageRespDTO> toImageRespDTOList(String imagesData) throws JsonProcessingException {
         if(imagesData == null || imagesData.isBlank()){
             return null;

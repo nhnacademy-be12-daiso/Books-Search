@@ -135,23 +135,6 @@ public class AuthorV2ServiceImpl implements AuthorV2Service {
     @Override
     @Transactional
     public void updateAuthorOfBook(Book book, List<AuthorReqDTO> authorReqDTOs) {
-        //작가 체크
-//        Map<String, String> author = book.getBookAuthors().stream()
-//                .collect(Collectors.toMap(ba -> ba.getAuthor().getName(),
-//                        ba -> ba.getRole() != null ? ba.getRole().getName() : ""));
-//
-//        boolean checkAuthor = false;
-//        Set<String> authorName = author.keySet();
-//        for(AuthorReqDTO ar : authorReqDTOs){
-//            if(authorName.contains(ar.authorName())){
-//                if(author.get(ar.authorName()).equals(ar.roleNames()) ||
-//                        author.get(ar.authorName()).isEmpty() && ar.roleNames() == null){
-//                    continue;
-//                }
-//                checkAuthor = true;
-//                break;
-//            }
-//        }
 
         Set<String> updateAuthorNames = authorReqDTOs.stream()
                 .map(AuthorReqDTO::authorName)

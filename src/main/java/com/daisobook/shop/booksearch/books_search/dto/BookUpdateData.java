@@ -17,7 +17,6 @@ public record BookUpdateData (
         Boolean isPackaging,
         Integer stock,
         Status status,
-//        List<ImageMetadataReqDTO> imageList,
         Integer volumeNo,
         Long category,
         List<String> tag,

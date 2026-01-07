@@ -103,15 +103,6 @@ public class LikeServiceImpl implements LikeService {
         return likeRepository.findAllByUserIdAndBookIn(userId, books);
     }
 
-    //없어도 될것같다
-//    @Override
-//    @Transactional
-//    public void updateLike(long likeId) {
-//        exist(likeId);
-//
-//        Like like = likeRepository.findLikeById(likeId);
-//    }
-
     @Override
     public void deleteLike(long userId, Book book) {
         if(book == null){

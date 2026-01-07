@@ -32,20 +32,6 @@ public class BookEventListener2 {
     private final BookOutboxRepository bookOutboxRepository;
     private final CompensationOutboxService compensationOutboxService;
 
-//    @RabbitListener(bindings = @QueueBinding(
-//            value = @Queue(
-//                    value = "#{@Saga.ORDER_SUCCESS.getQueue()}",
-//                    durable = "true",
-//                    arguments = {
-//                            @Argument(name = "x-dead-letter-exchange", value = "team3.book.dlx"),
-//                            @Argument(name = "x-dead-letter-routing-key", value = "fail.book")
-//                    }
-//            ),
-//            exchange = @Exchange(
-//                    value = "#{@Saga.ORDER_SUCCESS.getExchange()}"
-//            ),
-//            key = "#{@Saga.ORDER_SUCCESS.getRoutingKey()}"
-//    ))
     @RabbitListener(queues = "team3.saga.book.queue.v2.dev")
     @Transactional
     public void handleOrderConfirmedEvent(OrderConfirmedEvent event) {
@@ -59,8 +45,6 @@ public class BookEventListener2 {
         }
 
         try {
-            // TODO 실제 재고 차감 로직
-
             BookDeduplicationLog logEntry = new BookDeduplicationLog(msgId.toString());
             bookDeduplicationRepository.save(logEntry);
             // 멱등성을 위한 로그 기록
@@ -86,7 +70,6 @@ public class BookEventListener2 {
             log.info("[Book API] 재고 차감 성공");
 
         } catch(BookOutOfStockException e) { // <<<<<<<<<<<< 예외 처리 제대로 하기
-            // TODO 재고 부족 혹은 실패 시 보상 트랜잭션 이벤트 발행
             log.error("[Book API] ===== 재고 부족으로 인한 보상 트랜잭션 시작 =====");
             log.error("[Book API] Order ID : {}", event.getOrderId());
 

@@ -9,9 +9,5 @@ import java.util.List;
 public interface AuthorRepository extends JpaRepository<Author, Long> {
     boolean existsByName(String name);
 
-//    Author findAuthorByName(String name);
-//
-//    Author findAuthorById(long id);
-
     List<Author> findAllByNameIn(Collection<String> names);
 }
