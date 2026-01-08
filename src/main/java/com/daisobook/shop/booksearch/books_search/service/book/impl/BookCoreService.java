@@ -13,10 +13,7 @@ import com.daisobook.shop.booksearch.books_search.repository.book.BookRepository
 import com.daisobook.shop.booksearch.books_search.search.component.BookSearchSyncPublisher;
 import com.daisobook.shop.booksearch.books_search.service.author.AuthorV2Service;
 import com.daisobook.shop.booksearch.books_search.service.category.CategoryV2Service;
-import com.daisobook.shop.booksearch.books_search.service.image.impl.BookImageServiceImpl;
-import com.daisobook.shop.booksearch.books_search.service.like.LikeService;
 import com.daisobook.shop.booksearch.books_search.service.publisher.PublisherV2Service;
-import com.daisobook.shop.booksearch.books_search.service.review.ReviewService;
 import com.daisobook.shop.booksearch.books_search.service.tag.TagV2Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
